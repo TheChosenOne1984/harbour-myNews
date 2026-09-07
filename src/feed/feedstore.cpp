@@ -383,8 +383,11 @@ bool FeedStore::updateFeedMetadata(qint64 feedId, const ParsedFeed &parsed)
     query.addBindValue(parsed.siteUrl.isEmpty() ? current.siteUrl : parsed.siteUrl);
 
     // A manual override always wins: the user corrected us, so a later declared value
-    // must not silently undo that (section 7).
-    if (current.langSource == QLatin1String("manual") || parsed.lang.isEmpty()) {
+    // must not silently undo that. A catalogue value is likewise not overwritten -- it
+    // was checked by hand, unlike the document's own claim (section 7).
+    if (current.langSource == QLatin1String("manual")
+        || current.langSource == QLatin1String("catalogue")
+        || parsed.lang.isEmpty()) {
         query.addBindValue(current.lang.isEmpty() ? QVariant() : QVariant(current.lang));
         query.addBindValue(current.langSource.isEmpty() ? QVariant()
                                                         : QVariant(current.langSource));

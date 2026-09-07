@@ -24,6 +24,8 @@ private slots:
     void addFeedIsIdempotent();
     void removingFeedCascadesToArticles();
     void manualLanguageOverrideSurvivesRefresh();
+    void catalogueLanguageSurvivesRefresh();
+    void declaredLanguageIsUpdatedByRefresh();
     void languageOverrideReachesArticles();
     void ingestDeduplicatesByGuid();
     void ingestUpdatesChangedTitleAndRehashes();
@@ -129,6 +131,41 @@ void TestFeedStore::manualLanguageOverrideSurvivesRefresh()
     QCOMPARE(record.title, QStringLiteral("Neuer Titel"));
     QCOMPARE(record.lang, QStringLiteral("nds"));
     QCOMPARE(record.langSource, QStringLiteral("manual"));
+}
+
+void TestFeedStore::catalogueLanguageSurvivesRefresh()
+{
+    // A catalogue entry was checked by hand; the document's own claim was not, and
+    // section 7 says the checked value wins.
+    const qint64 feedId = m_store->addFeed(QStringLiteral("https://example.invalid/b2"),
+                                           QString(), QStringLiteral("nds"),
+                                           QStringLiteral("catalogue"));
+    ParsedFeed parsed;
+    parsed.format = ParsedFeed::Rss2;
+    parsed.lang = QStringLiteral("de");
+    QVERIFY(m_store->updateFeedMetadata(feedId, parsed));
+
+    FeedRecord record;
+    QVERIFY(m_store->feedById(feedId, &record));
+    QCOMPARE(record.lang, QStringLiteral("nds"));
+    QCOMPARE(record.langSource, QStringLiteral("catalogue"));
+}
+
+void TestFeedStore::declaredLanguageIsUpdatedByRefresh()
+{
+    // A value we only took from the document may be replaced by the document.
+    const qint64 feedId = m_store->addFeed(QStringLiteral("https://example.invalid/b3"),
+                                           QString(), QStringLiteral("en"),
+                                           QStringLiteral("declared"));
+    ParsedFeed parsed;
+    parsed.format = ParsedFeed::Rss2;
+    parsed.lang = QStringLiteral("de");
+    QVERIFY(m_store->updateFeedMetadata(feedId, parsed));
+
+    FeedRecord record;
+    QVERIFY(m_store->feedById(feedId, &record));
+    QCOMPARE(record.lang, QStringLiteral("de"));
+    QCOMPARE(record.langSource, QStringLiteral("declared"));
 }
 
 void TestFeedStore::languageOverrideReachesArticles()

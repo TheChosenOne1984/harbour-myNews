@@ -1,5 +1,5 @@
 {
-  "_comment": "Feed list for building the clustering corpus. Compiled by hand from each publisher's own feed page (see project_description.md section 10 -- do not bulk-import third-party feed directories). This is a development corpus, not the shipped catalogue.",
+  "_comment": "Feed list for building the clustering corpus. Compiled by hand from each publisher's own feed page (see project_description.md section 10 -- do not bulk-import third-party feed directories). This is a development corpus, not the shipped catalogue, but it has the same shape: every entry states its language, because section 7 assigns languages rather than detecting them.",
   "feeds": [
     { "source": "NDR Hamburg",   "lang": "de", "region": "hamburg",  "url": "https://www.ndr.de/nachrichten/hamburg/index-rss.xml" },
     { "source": "Abendblatt HH", "lang": "de", "region": "hamburg",  "url": "https://www.abendblatt.de/hamburg/rss" },

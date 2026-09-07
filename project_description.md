@@ -225,17 +225,50 @@ before wiring it into the app. This is much faster to iterate than on-device.
 
 ---
 
-## 7. Language detection
+## 7. Feed language
 
-Per feed, resolved once and cached in `feed.lang`:
+**Assigned, never detected.** The automatic detection this section originally specified
+(Cavnar-Trenkle trigram profiles) has been dropped — see the rationale below.
 
-1. Declared value from the feed (`<language>` / `xml:lang`) if present and parseable.
-2. Otherwise detect from concatenated titles of the first fetch using character trigram profiles
-   (Cavnar-Trenkle). A few KB of embedded model data per supported language; no external
-   dependency, no network call.
-3. User override in the subscription's settings, stored with `lang_source='manual'`.
+Every feed carries a language, resolved once when it is added and cached in `feed.lang`:
 
-Article `lang` inherits from its feed. Per-article detection is not needed for MVP.
+| Order | Source | `lang_source` |
+| --- | --- | --- |
+| 1 | The catalogue entry (§10), which is hand-compiled and states it | `catalogue` |
+| 2 | The document's own `<language>` / `xml:lang` | `declared` |
+| 3 | The device's UI language, as a pre-selection | `declared` |
+| 4 | Whatever the user confirms or changes | `manual` |
+
+A `manual` value wins over every later refresh: once the user has corrected us, a feed
+that declares something else must not silently undo it.
+
+Adding a feed by hand therefore fetches it once first, so the language picker opens
+pre-filled rather than empty — the user confirms with one tap instead of answering a
+question they may not care about.
+
+**OPML import is the one path without our metadata**, since OPML has no standard language
+attribute. It never prompts: each feed gets its declared language, or the device language
+when it declares none, and the entries that were not confirmed are marked in the
+subscriptions list so they can be corrected in one place. An import stays a single action.
+OPML *export* writes the language as an attribute, so a round-trip through this app
+preserves it.
+
+Article `lang` inherits from its feed. Per-article detection is not needed.
+
+### Why detection was dropped
+
+Language is a **partition predicate** for clustering (§6), not information shown to the
+user. What matters is that feeds reporting the same stories carry the same label
+consistently — not that the label is linguistically correct. A value the user assigned
+satisfies that better than any guess.
+
+The catalogue is hand-compiled anyway (§10 forbids importing third-party directories), so
+carrying a language field there costs nothing. And this section already conceded that the
+declared value is "often absent and sometimes wrong"; detection existed to paper over
+that, but a human answer is strictly better than a heuristic.
+
+Dropping it removes embedded model data per supported language, one code path, and a
+class of failures that would have been silent.
 
 ---
 
@@ -314,7 +347,10 @@ Users get a curated starter list, extensible with arbitrary feed URLs and OPML i
 
 - **Scope for MVP:** Hamburg local plus German national. International only via manual add or
   OPML import — do not attempt to ship a global catalogue.
-- **Host the catalogue remotely** as a JSON or OPML file (static hosting is enough). Do not compile
+- **Host the catalogue remotely** as a JSON file (static hosting is enough). JSON rather than
+  OPML: the catalogue is ours, and it has to carry a language per feed (§7) plus region and
+  category, none of which OPML has a place for. OPML stays what it is good for — exchanging
+  subscriptions with other readers. Do not compile
   it into the binary. Rationale: if a publisher asks to be removed, that must be a commit, not an
   app store release cycle.
 - Ship a bundled copy as offline fallback for first run; refresh from remote on a slow cadence

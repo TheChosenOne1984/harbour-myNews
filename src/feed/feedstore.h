@@ -19,7 +19,13 @@ struct FeedRecord
     QString title;
     QString siteUrl;
     QString lang;
-    QString langSource;      //!< "declared" | "detected" | "manual"
+    /*!
+     * Where feed.lang came from: "catalogue" | "declared" | "manual".
+     *
+     * There is no "detected": section 7 assigns the language rather than guessing it.
+     * "manual" wins over every later refresh.
+     */
+    QString langSource;
     QString etag;            //!< for If-None-Match
     QString lastModified;    //!< for If-Modified-Since
     qint64 lastFetch = 0;
@@ -107,7 +113,13 @@ public:
 
     // --- Feeds -------------------------------------------------------------------
 
-    /*! Inserts, or returns the existing id when the URL is already subscribed. */
+    /*!
+     * Inserts, or returns the existing id when the URL is already subscribed.
+     *
+     * \a lang should always be given (section 7): it is a partition predicate for
+     * clustering, and a feed without one only ever clusters with other feeds that have
+     * none. The catalogue supplies it, and the add-feed flow pre-fills it.
+     */
     qint64 addFeed(const QString &url, const QString &title = QString(),
                    const QString &lang = QString(),
                    const QString &langSource = QStringLiteral("declared"));

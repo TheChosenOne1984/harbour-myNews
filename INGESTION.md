@@ -87,8 +87,12 @@ corpus (section 11).
 
 ## Not done yet
 
-- **Language detection** (section 7). `feed.lang` is taken from the document or set by
-  hand; the Cavnar-Trenkle fallback for feeds that declare nothing is not implemented.
+- **The add-feed flow** (section 7). Languages are assigned, not detected — that decision
+  replaced the original Cavnar-Trenkle plan, so there is nothing to implement on the
+  detection side. What is still missing is the UI half: fetching a feed once before
+  showing a pre-filled language picker, and the OPML import defaults. Both land with
+  subscriptions in milestone 6. `FeedStore` already refuses to let a later refresh
+  overwrite a `manual` or `catalogue` language.
 - **Threading.** Everything runs on one thread today. The store is built for a worker
   thread to own it, but nothing moves it there yet — that lands with the UI, where it
   matters.
