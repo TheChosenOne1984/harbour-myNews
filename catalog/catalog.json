@@ -1,7 +1,7 @@
 {
   "version": 1,
   "updated": "2026-09-07",
-  "_comment": "Curated starter list for myNews. Fetched by the app on first start and cached locally; nothing is bundled (project_description.md section 10). Compiled by hand from each publisher's own feed page -- do not bulk-import a third party's feed directory (section 87a UrhG). Every entry states its language, because section 7 assigns languages rather than detecting them. Removing a publisher on request is a commit to this file, not an app release. 'description' is English, the source language; 'description_<lang>' overrides it, same convention as the UI translations.",
+  "_comment": "Curated starter list for myNews. Fetched by the app on first start and cached locally; nothing is bundled (project_description.md section 10). Compiled by hand from each publisher's own feed page -- do not bulk-import a third party's feed directory (section 87a UrhG). Every entry states its language, because section 7 assigns languages rather than detecting them. Removing a publisher on request is a commit to this file, not an app release. Descriptions state what a source is and what it covers -- nothing else. No political characterisation, no assessment of quality or seriousness: this is a list the user picks from, not one we rank. 'description' is English, the source language; 'description_<lang>' overrides it, same convention as the UI translations.",
   "categories": [
     {
       "id": "hamburg",
@@ -48,8 +48,8 @@
       "lang": "de",
       "category": "hamburg",
       "site_url": "https://www.mopo.de/",
-      "description": "Hamburg tabloid daily, city and regional coverage.",
-      "description_de": "Hamburger Boulevardzeitung mit Stadt- und Regionalberichterstattung."
+      "description": "Hamburg daily newspaper, city and regional coverage.",
+      "description_de": "Hamburger Tageszeitung mit Stadt- und Regionalberichterstattung."
     },
     {
       "url": "https://taz.de/Hamburg/!p4622;rss/",
@@ -57,8 +57,8 @@
       "lang": "de",
       "category": "hamburg",
       "site_url": "https://taz.de/Hamburg/",
-      "description": "Hamburg edition of the left-leaning national daily.",
-      "description_de": "Hamburg-Ausgabe der linken überregionalen Tageszeitung."
+      "description": "Hamburg edition of the national daily newspaper.",
+      "description_de": "Hamburg-Ausgabe der überregionalen Tageszeitung."
     },
     {
       "url": "https://www.hinzundkunzt.de/feed/",
@@ -165,8 +165,8 @@
       "lang": "de",
       "category": "national",
       "site_url": "https://www.n-tv.de/",
-      "description": "Rolling news from the commercial news channel.",
-      "description_de": "Fortlaufende Nachrichten des privaten Nachrichtensenders."
+      "description": "Rolling news from the private television news channel.",
+      "description_de": "Fortlaufende Nachrichten des privaten Fernsehnachrichtensenders."
     },
     {
       "url": "https://www.stern.de/feed/standard/all/",
@@ -183,8 +183,8 @@
       "lang": "de",
       "category": "national",
       "site_url": "https://taz.de/",
-      "description": "Left-leaning national daily newspaper.",
-      "description_de": "Linke überregionale Tageszeitung."
+      "description": "National daily newspaper.",
+      "description_de": "Überregionale Tageszeitung."
     },
     {
       "url": "https://www.tagesspiegel.de/contentexport/feed/home",
