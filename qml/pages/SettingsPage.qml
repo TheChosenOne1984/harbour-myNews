@@ -118,27 +118,38 @@ Page {
                 wrapMode: Text.Wrap
                 font.pixelSize: Theme.fontSizeExtraSmall
                 color: Theme.secondaryColor
-                //: warns that the grouping defaults were measured and are easy to spoil
-                text: qsTr("The defaults were measured against real feeds. Raising the "
-                           + "similarity much above the default starts merging different "
-                           + "stories.")
+                //: explains that the grouping sliders only fine-tune a measured default
+                text: qsTr("These were measured against real feeds. The range is limited "
+                           + "to values that still work: a higher similarity would start "
+                           + "merging unrelated stories.")
             }
 
             Slider {
                 width: parent.width
-                minimumValue: 4
-                maximumValue: 24
+                // Deliberately narrow. The measured cliff is just above the maximum, and
+                // a reader who slid past it would experience unrelated stories being
+                // merged as the app being broken, not as a setting they chose.
+                minimumValue: App.clusterThresholdMinimum
+                maximumValue: App.clusterThresholdMaximum
                 stepSize: 1
                 value: Settings.clusterThreshold
-                valueText: value
-                label: qsTr("Similarity threshold")
+                valueText: value === App.clusterThresholdMaximum
+                    //: marks the loosest grouping the app allows
+                    ? qsTr("%1 · loosest").arg(value)
+                    : (value === App.clusterThresholdMinimum
+                       //: marks the strictest grouping the app allows
+                       ? qsTr("%1 · strictest").arg(value)
+                       : String(value))
+                label: qsTr("Group articles that are this similar")
                 onReleased: Settings.clusterThreshold = value
             }
 
             Slider {
                 width: parent.width
-                minimumValue: 6
-                maximumValue: 168
+                // No value of the window breaks anything -- a short one simply groups
+                // less -- so this one stays wide.
+                minimumValue: App.clusterWindowMinimum
+                maximumValue: App.clusterWindowMaximum
                 stepSize: 6
                 value: Settings.clusterWindowHours
                 valueText: qsTr("%n hour(s)", "", value)

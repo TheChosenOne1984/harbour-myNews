@@ -203,8 +203,17 @@ Group articles reporting the same story across different feeds.
 6. **Lead article** for a cluster: prefer the member with a cached image; tie-break by source
    priority (user's subscription order), then by earliest `published`.
 
-Both **time window and Hamming threshold must be exposed as tunable settings** (developer/advanced
-settings are fine) — the defaults are starting points, not validated values.
+Both **time window and Hamming threshold are exposed as settings** — but as fine-tuning,
+not free rein. The defaults are no longer starting points: they were measured against real
+feeds (see CLUSTERING.md), and the threshold has a cliff just above the default past which
+the clusterer merges unrelated stories. The offered range therefore stops at the last value
+that still behaves (8–14), and `Settings` clamps to the same bounds so a hand-edited
+configuration file cannot get around it. A reader who slid past that point would experience
+it as the app being broken, not as a choice they made.
+
+The time window stays widely adjustable (6h–168h): no value of it breaks anything, a short
+window simply groups less. Restrict the knob that can do damage; leave alone the one that
+cannot.
 
 ### Why the time window matters
 

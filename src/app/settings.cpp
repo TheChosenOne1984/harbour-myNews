@@ -115,14 +115,18 @@ void Settings::setRetentionDays(int days)
 
 int Settings::clusterThreshold() const
 {
+    // Clamped to the range that was measured to behave, not to what the algorithm
+    // technically accepts. Past the upper bound the clusterer merges unrelated stories,
+    // which a user would experience as the app being broken rather than as their choice.
     const cluster::Params defaults;
     return clampInt(m_settings->value(KeyClusterThreshold, defaults.hammingThreshold).toInt(),
-                    0, 64);
+                    cluster::Params::MinThreshold, cluster::Params::MaxThreshold);
 }
 
 void Settings::setClusterThreshold(int bits)
 {
-    const int clamped = clampInt(bits, 0, 64);
+    const int clamped = clampInt(bits, cluster::Params::MinThreshold,
+                                 cluster::Params::MaxThreshold);
     if (clamped == clusterThreshold())
         return;
     m_settings->setValue(KeyClusterThreshold, clamped);
@@ -133,12 +137,14 @@ int Settings::clusterWindowHours() const
 {
     const cluster::Params defaults;
     return clampInt(m_settings->value(KeyClusterWindow,
-                                      int(defaults.windowSeconds / 3600)).toInt(), 1, 8760);
+                                      int(defaults.windowSeconds / 3600)).toInt(),
+                    cluster::Params::MinWindowHours, cluster::Params::MaxWindowHours);
 }
 
 void Settings::setClusterWindowHours(int hours)
 {
-    const int clamped = clampInt(hours, 1, 8760);
+    const int clamped = clampInt(hours, cluster::Params::MinWindowHours,
+                                 cluster::Params::MaxWindowHours);
     if (clamped == clusterWindowHours())
         return;
     m_settings->setValue(KeyClusterWindow, clamped);

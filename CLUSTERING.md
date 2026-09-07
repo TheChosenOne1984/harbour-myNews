@@ -123,7 +123,7 @@ title-only configuration missed, and it lost certain ones.
 | n-gram width | 4 | **5** | `cluster::DefaultNGramSize` |
 | weighting | frequency | **binary** | `cluster::DefaultWeighting` |
 | hashed text | title + teaser | **title, kicker stripped** | `cluster::clusterSubject()` |
-| Hamming threshold | 12 | **14** | `cluster::Params::hammingThreshold` |
+| Hamming threshold | 12 | **13** | `cluster::Params::hammingThreshold` |
 | time window | 48h | **48h** (unchanged) | `cluster::Params::windowSeconds` |
 
 At these values, on this corpus:
@@ -135,20 +135,49 @@ grouped pairs 86: strong 81, weak 0 (0.0%), mean Jaccard 0.81
 largest cluster 4 articles, 22 ms
 ```
 
-### Why 14, and where the edge is
+### Why 13, and where the edge is
 
-Quality is flat from threshold 8 to 14 and then falls off sharply:
+A second corpus, gathered a day after the first, moved this number. On corpus 1 threshold
+14 produced no false groupings at all; on corpus 2 it produced two. Both are shown, because
+the disagreement is the finding:
 
-| threshold | multi-clusters | largest | weak pairs | mean Jaccard |
+| threshold | multi-clusters (2) | weak pairs (1) | weak pairs (2) | mean Jaccard (2) |
 | --- | --- | --- | --- | --- |
-| 10 | 55 | 4 | 0.0% | 0.92 |
-| 12 | 58 | 4 | 0.0% | 0.87 |
-| **14** | **60** | **4** | **0.0%** | **0.81** |
-| 16 | 75 | 6 | 16.1% | 0.56 |
-| 18 | 143 | 13 | 52.0% | 0.25 |
+| 8 | 56 | 0.0% | 0.0% | 0.93 |
+| 10 | 57 | 0.0% | 0.0% | 0.91 |
+| 12 | 59 | 0.0% | 0.0% | 0.87 |
+| **13** | **59** | **0.0%** | **0.0%** | **0.86** |
+| 14 | 62 | 0.0% | 1.2% | 0.80 |
+| 15 | 68 | — | 4.9% | 0.70 |
+| 16 | 79 | 16.1% | 17.9% | 0.56 |
+| 17 | 109 | — | 33.2% | 0.42 |
 
-14 is the last value before the cliff. Anything at or above 16 starts merging distinct
-stories, and by 20 the largest cluster runs to dozens of articles.
+Reading what threshold 14 adds over 13 on corpus 2 shows the trade honestly: seven correct
+merges (the Naidoo proceedings across two more publishers, a stabbing in Ahrensburg, a CDU
+leadership bid, three Hamburg local stories carried by two editions of the same paper) and
+two wrong ones — *"Wann es zur Neuwahl in Sachsen-Anhalt käme"* pulled into *"Reaktionen
+aus Hamburg"*, and an election map merged with a protest report. Both wrong pairs are
+election coverage: articles that share a topic vocabulary without being the same story.
+
+**13 is the highest value that was clean on both corpora**, and it is the default. The
+gain from 13 to 14 is three clusters; the cost is entering the range where false merges
+begin. This supersedes the single-corpus recommendation of 14 in the first version of this
+document — one news cycle was not enough to settle it, exactly as the caveat at the end
+warned.
+
+### The range the settings offer
+
+The threshold is a setting, but not a free one: **8 to 14**, clamped in `Settings` as well
+as bounded in the UI, so a hand-edited configuration file cannot get around it either.
+
+Past the top of that range the clusterer stops grouping stories and starts merging
+unrelated ones — 18% wrong pairs at 16, a third at 17 — and a reader who slid there would
+experience it as the app being broken rather than as a setting they chose. Below 8 nothing
+measurable changes: 6 and 8 differ by two clusters.
+
+The **time window stays widely adjustable (6h to 168h)**, because no value of it breaks
+anything: a short window simply groups less. Restricting the knob that can do damage and
+leaving alone the one that cannot is the whole of the policy.
 
 ### The time window is a safety rail, not a knob
 
@@ -177,11 +206,11 @@ optimise this.
 
 ## What this does not establish
 
-- **One snapshot, one news cycle.** The corpus was taken on a single day dominated by one
-  story (the Sachsen-Anhalt election), which over-represents kicker collisions and
-  under-represents slow-moving topics. `tools/fetch-corpus.py --merge` accumulates across
-  runs; the thresholds should be re-checked against a corpus gathered over several days
-  before they are treated as settled.
+- **Two snapshots, one news cycle each.** Both corpora were dominated by the same story
+  (the Sachsen-Anhalt election), which over-represents topic-vocabulary collisions. The
+  second corpus already moved the recommended threshold from 14 to 13; a third might move
+  it again. `tools/fetch-corpus.py --merge` accumulates across runs, and the value should
+  be re-checked against a corpus spanning several days before it is treated as settled.
 - **German only.** Every source is German. The algorithm is language-agnostic by
   construction, but the kicker convention and the 5-gram width have only been validated
   against one language.

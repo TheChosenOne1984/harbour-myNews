@@ -49,6 +49,13 @@ class AppController : public QObject
     Q_PROPERTY(QString catalogError READ catalogError NOTIFY catalogErrorChanged)
 
     Q_PROPERTY(int subscriptionCount READ subscriptionCount NOTIFY subscriptionCountChanged)
+
+    // The bounds the settings sliders offer. Exposed from the algorithm rather than
+    // written into QML, so the limits and the clamp cannot drift apart.
+    Q_PROPERTY(int clusterThresholdMinimum READ clusterThresholdMinimum CONSTANT)
+    Q_PROPERTY(int clusterThresholdMaximum READ clusterThresholdMaximum CONSTANT)
+    Q_PROPERTY(int clusterWindowMinimum READ clusterWindowMinimum CONSTANT)
+    Q_PROPERTY(int clusterWindowMaximum READ clusterWindowMaximum CONSTANT)
     Q_PROPERTY(int unreadCount READ unreadCount NOTIFY unreadCountChanged)
 
     /*! Headline of the newest cluster, for the cover page. */
@@ -78,6 +85,10 @@ public:
     QString catalogError() const { return m_catalogError; }
     int subscriptionCount() const { return m_subscriptions.rowCount(); }
     int unreadCount() const { return m_unreadCount; }
+    int clusterThresholdMinimum() const { return cluster::Params::MinThreshold; }
+    int clusterThresholdMaximum() const { return cluster::Params::MaxThreshold; }
+    int clusterWindowMinimum() const { return cluster::Params::MinWindowHours; }
+    int clusterWindowMaximum() const { return cluster::Params::MaxWindowHours; }
     QString leadHeadline() const { return m_leadHeadline; }
     bool needsCatalogConsent() const;
     bool catalogDeclined() const;

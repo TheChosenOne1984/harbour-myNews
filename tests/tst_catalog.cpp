@@ -215,8 +215,10 @@ void TestCatalog::settingsDefaults()
     QCOMPARE(settings.catalogUrl(), app::Settings::defaultCatalogUrl());
     QCOMPARE(settings.retentionDays(), 14);
     // The measured clustering defaults, see CLUSTERING.md.
-    QCOMPARE(settings.clusterThreshold(), 14);
+    QCOMPARE(settings.clusterThreshold(), cluster::Params().hammingThreshold);
     QCOMPARE(settings.clusterWindowHours(), 48);
+    QVERIFY(settings.clusterThreshold() >= cluster::Params::MinThreshold);
+    QVERIFY(settings.clusterThreshold() <= cluster::Params::MaxThreshold);
 }
 
 void TestCatalog::settingsCatalogueIsNotContactedBeforeConsent()
@@ -266,14 +268,17 @@ void TestCatalog::settingsClampOutOfRangeValues()
     QTemporaryDir dir;
     app::Settings settings(dir.path() + QStringLiteral("/s.ini"), nullptr);
 
+    // Clamped to the range measured to behave, not to what the algorithm accepts: a
+    // hand-edited configuration file must not be able to break clustering either.
     settings.setClusterThreshold(999);
-    QCOMPARE(settings.clusterThreshold(), 64);
+    QCOMPARE(settings.clusterThreshold(), cluster::Params::MaxThreshold);
     settings.setClusterThreshold(-5);
-    QCOMPARE(settings.clusterThreshold(), 0);
+    QCOMPARE(settings.clusterThreshold(), cluster::Params::MinThreshold);
+    QVERIFY(cluster::Params::MaxThreshold < 16);   // 16 reached 18% false groupings
     settings.setRetentionDays(0);
     QCOMPARE(settings.retentionDays(), 1);
     settings.setClusterWindowHours(0);
-    QCOMPARE(settings.clusterWindowHours(), 1);
+    QCOMPARE(settings.clusterWindowHours(), cluster::Params::MinWindowHours);
 }
 
 void TestCatalog::settingsCatalogUrlFallsBackToDefault()
@@ -308,14 +313,14 @@ void TestCatalog::settingsResetRestoresDefaults()
     QTemporaryDir dir;
     app::Settings settings(dir.path() + QStringLiteral("/s.ini"), nullptr);
 
-    settings.setClusterThreshold(3);
+    settings.setClusterThreshold(cluster::Params::MinThreshold);
     settings.setRetentionDays(90);
 
     QSignalSpy spy(&settings, &app::Settings::clusterThresholdChanged);
     settings.resetToDefaults();
 
     QCOMPARE(spy.size(), 1);
-    QCOMPARE(settings.clusterThreshold(), 14);
+    QCOMPARE(settings.clusterThreshold(), cluster::Params().hammingThreshold);
     QCOMPARE(settings.retentionDays(), 14);
 }
 

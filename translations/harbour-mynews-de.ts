@@ -296,15 +296,6 @@
         <source>Grouping</source>
         <translation>Gruppierung</translation>
     </message>
-    <message>
-        <source>The defaults were measured against real feeds. Raising the similarity much above the default starts merging different stories.</source>
-        <extracomment>warns that the grouping defaults were measured and are easy to spoil</extracomment>
-        <translation>Die Vorgaben wurden an echten Feeds gemessen. Wird die Ähnlichkeit deutlich erhöht, verschmelzen verschiedene Meldungen.</translation>
-    </message>
-    <message>
-        <source>Similarity threshold</source>
-        <translation>Ähnlichkeitsschwelle</translation>
-    </message>
     <message numerus="yes">
         <source>%n hour(s)</source>
         <translation>
@@ -341,6 +332,25 @@
     <message>
         <source>Declined. Add feeds by URL instead.</source>
         <translation>Abgelehnt. Feeds stattdessen per Adresse hinzufügen.</translation>
+    </message>
+    <message>
+        <source>These were measured against real feeds. The range is limited to values that still work: a higher similarity would start merging unrelated stories.</source>
+        <extracomment>explains that the grouping sliders only fine-tune a measured default</extracomment>
+        <translation>Diese Werte wurden an echten Feeds gemessen. Der Bereich ist auf Werte begrenzt, die noch funktionieren: eine höhere Ähnlichkeit würde anfangen, verschiedene Meldungen zu verschmelzen.</translation>
+    </message>
+    <message>
+        <source>%1 · loosest</source>
+        <extracomment>marks the loosest grouping the app allows</extracomment>
+        <translation>%1 · großzügigst</translation>
+    </message>
+    <message>
+        <source>%1 · strictest</source>
+        <extracomment>marks the strictest grouping the app allows</extracomment>
+        <translation>%1 · strengst</translation>
+    </message>
+    <message>
+        <source>Group articles that are this similar</source>
+        <translation>Artikel ab dieser Ähnlichkeit gruppieren</translation>
     </message>
 </context>
 <context>
