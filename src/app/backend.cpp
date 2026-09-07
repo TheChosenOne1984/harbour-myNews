@@ -26,6 +26,8 @@ Backend::Backend(QObject *parent)
     : QObject(parent)
 {
     qRegisterMetaType<QVector<feed::FeedRecord>>("QVector<feed::FeedRecord>");
+    qRegisterMetaType<QVector<feed::ClusterSummary>>("QVector<feed::ClusterSummary>");
+    qRegisterMetaType<QVector<feed::ArticleRecord>>("QVector<feed::ArticleRecord>");
     qRegisterMetaType<catalog::Catalog>("catalog::Catalog");
 }
 
@@ -58,6 +60,7 @@ void Backend::initialise(const QString &databasePath, const QString &catalogCach
             [this](const feed::FeedRefresher::Summary &summary) {
         setBusy(false);
         emitFeeds();
+        emitClusters();
         emit refreshFinished(summary.feedsSucceeded, summary.feedsFailed,
                              summary.articlesInserted, QString());
     });
@@ -93,6 +96,49 @@ void Backend::initialise(const QString &databasePath, const QString &catalogCach
 
     emit initialised(true, QString());
     emitFeeds();
+    emitClusters();
+}
+
+void Backend::emitClusters()
+{
+    if (!m_store)
+        return;
+    emit clustersChanged(m_store->clusterSummaries(m_clusterLimit));
+    emit unreadCountChanged(m_store->unreadCount());
+}
+
+void Backend::reloadClusters(int limit)
+{
+    if (limit > 0)
+        m_clusterLimit = limit;
+    emitClusters();
+}
+
+void Backend::markClusterRead(qint64 clusterId)
+{
+    if (!m_store)
+        return;
+    // Every member, not only the lead: the cluster is one story to the reader, and
+    // leaving the others unread would make the same headline reappear.
+    const QVector<feed::ArticleRecord> members = m_store->articlesInCluster(clusterId);
+    for (const feed::ArticleRecord &article : members)
+        m_store->markRead(article.id, true);
+    emit unreadCountChanged(m_store->unreadCount());
+}
+
+void Backend::markAllRead()
+{
+    if (!m_store)
+        return;
+    m_store->markAllRead();
+    emit unreadCountChanged(m_store->unreadCount());
+}
+
+void Backend::loadClusterMembers(qint64 clusterId)
+{
+    if (!m_store)
+        return;
+    emit clusterMembersLoaded(clusterId, m_store->articlesInCluster(clusterId));
 }
 
 void Backend::emitFeeds()
@@ -146,8 +192,11 @@ void Backend::subscribe(const QString &url, const QString &title, const QString 
 
 void Backend::unsubscribe(qint64 feedId)
 {
-    if (m_store && m_store->removeFeed(feedId))
+    if (m_store && m_store->removeFeed(feedId)) {
         emitFeeds();
+        // Removing a feed takes its articles with it, so the list has to be re-read.
+        emitClusters();
+    }
 }
 
 void Backend::setFeedEnabled(qint64 feedId, bool enabled)
@@ -231,7 +280,10 @@ void Backend::purge(int retentionDays)
     if (!m_store)
         return;
     const qint64 cutoff = nowSeconds() - static_cast<qint64>(retentionDays) * 24 * 3600;
-    emit purged(m_store->purgeArticlesOlderThan(cutoff));
+    const int deleted = m_store->purgeArticlesOlderThan(cutoff);
+    if (deleted > 0)
+        emitClusters();
+    emit purged(deleted);
 }
 
 } // namespace app

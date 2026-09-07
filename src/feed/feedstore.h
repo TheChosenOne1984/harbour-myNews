@@ -3,6 +3,7 @@
 
 #include <QSqlDatabase>
 #include <QString>
+#include <QStringList>
 #include <QVector>
 #include <QtGlobal>
 
@@ -65,6 +66,27 @@ struct ClusterRecord
     QString lang;
     qint64 published = 0;    //!< newest member, which is what the list sorts on
     int memberCount = 0;
+};
+
+/*!
+ * \brief A cluster with everything the article list shows, in one row.
+ *
+ * Assembled by the store rather than by the model walking members per row: the feed page
+ * shows a page of clusters at a time, and a query per row would be a query per scroll.
+ */
+struct ClusterSummary
+{
+    qint64 clusterId = -1;
+    qint64 leadArticleId = -1;
+    QString title;
+    QString teaser;
+    QString link;
+    QString imageUrl;
+    QString imageState;
+    qint64 published = 0;      //!< newest member, which is what the list sorts on
+    int memberCount = 0;
+    bool unread = false;       //!< true while any member is unread
+    QStringList sources;       //!< feed titles, the lead article's first
 };
 
 /*! What one ingest run changed, for logging and for the UI's refresh feedback. */
@@ -161,6 +183,9 @@ public:
 
     /*! Clusters newest first -- the feed page's model. */
     QVector<ClusterRecord> clusters(int limit = 100, int offset = 0) const;
+
+    /*! The same, with the lead article and contributing sources joined in. */
+    QVector<ClusterSummary> clusterSummaries(int limit = 100, int offset = 0) const;
     bool clusterById(qint64 clusterId, ClusterRecord *out) const;
 
     QVector<ArticleRecord> articlesInCluster(qint64 clusterId) const;

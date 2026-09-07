@@ -439,7 +439,10 @@ bool FeedStore::updateFeedMetadata(qint64 feedId, const ParsedFeed &parsed)
     QSqlQuery query(m_db);
     query.prepare(QStringLiteral(
         "UPDATE feed SET title = ?, site_url = ?, lang = ?, lang_source = ? WHERE id = ?"));
-    query.addBindValue(parsed.title.isEmpty() ? current.title : parsed.title);
+    // The feed's own title is only used when we have none. A catalogue entry or a name
+    // the user typed was chosen by a person; a feed's <title> is frequently "Home",
+    // "News" or the bare domain, and those become the source pills under a headline.
+    query.addBindValue(current.title.isEmpty() ? parsed.title : current.title);
     query.addBindValue(parsed.siteUrl.isEmpty() ? current.siteUrl : parsed.siteUrl);
 
     // A manual override always wins: the user corrected us, so a later declared value
@@ -789,6 +792,84 @@ QVector<ClusterRecord> FeedStore::clusters(int limit, int offset) const
     }
     while (query.next())
         result.append(clusterFromRecord(query));
+    return result;
+}
+
+QVector<ClusterSummary> FeedStore::clusterSummaries(int limit, int offset) const
+{
+    QVector<ClusterSummary> result;
+
+    QSqlQuery query(m_db);
+    query.prepare(QStringLiteral(
+        "SELECT c.id, c.member_count, c.published, a.id, a.title, a.teaser, a.link,"
+        "       a.image_url, a.image_state"
+        "  FROM cluster c JOIN article a ON a.id = c.lead_article_id"
+        " WHERE c.member_count > 0"
+        " ORDER BY c.published DESC LIMIT ? OFFSET ?"));
+    query.addBindValue(limit);
+    query.addBindValue(offset);
+    if (!query.exec()) {
+        setError(QStringLiteral("cannot list clusters"), query.lastError().text());
+        return result;
+    }
+
+    QHash<qint64, int> rowOf;
+    QStringList ids;
+    while (query.next()) {
+        ClusterSummary summary;
+        summary.clusterId = query.value(0).toLongLong();
+        summary.memberCount = query.value(1).toInt();
+        summary.published = query.value(2).toLongLong();
+        summary.leadArticleId = query.value(3).toLongLong();
+        summary.title = query.value(4).toString();
+        summary.teaser = query.value(5).toString();
+        summary.link = query.value(6).toString();
+        summary.imageUrl = query.value(7).toString();
+        summary.imageState = query.value(8).toString();
+
+        rowOf.insert(summary.clusterId, result.size());
+        ids.append(QString::number(summary.clusterId));
+        result.append(summary);
+    }
+    if (result.isEmpty())
+        return result;
+
+    // One further query for every member of every cluster on this page, rather than one
+    // per row. The id list is built from integers we just read out of the database, so
+    // there is nothing to bind and nothing to inject.
+    QSqlQuery members(m_db);
+    if (!members.exec(QStringLiteral(
+            "SELECT ar.cluster_id, ar.id, ar.read, f.title, f.url"
+            "  FROM article ar JOIN feed f ON f.id = ar.feed_id"
+            " WHERE ar.cluster_id IN (%1)"
+            " ORDER BY ar.cluster_id, ar.published ASC").arg(ids.join(QLatin1Char(','))))) {
+        setError(QStringLiteral("cannot list cluster members"), members.lastError().text());
+        return result;
+    }
+
+    while (members.next()) {
+        const qint64 clusterId = members.value(0).toLongLong();
+        const auto it = rowOf.constFind(clusterId);
+        if (it == rowOf.constEnd())
+            continue;
+
+        ClusterSummary &summary = result[it.value()];
+        const qint64 articleId = members.value(1).toLongLong();
+        if (members.value(2).toInt() == 0)
+            summary.unread = true;
+
+        QString source = members.value(3).toString();
+        if (source.isEmpty())
+            source = members.value(4).toString();
+        if (summary.sources.contains(source))
+            continue;
+        // The lead article's source leads the pill row, whatever order the members came
+        // back in -- it is the one whose headline is being shown.
+        if (articleId == summary.leadArticleId)
+            summary.sources.prepend(source);
+        else
+            summary.sources.append(source);
+    }
     return result;
 }
 

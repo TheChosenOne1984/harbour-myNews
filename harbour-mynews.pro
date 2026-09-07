@@ -14,10 +14,11 @@ CONFIG += sailfishapp sailfishapp_i18n link_pkgconfig
 # with "undefined reference to SailfishApp::main". See task0-findings.md section 9.
 PKGCONFIG += sailfishapp
 
-# Added together with the article detail page (milestone 4). Verified to build and to
-# pass Harbour validation, but the emulator has no WebView, so it stays out until the
-# page that needs it exists.
-# PKGCONFIG += qt5embedwidget
+# Deliberately NOT linking qt5embedwidget. Sailfish.WebView is a QML plugin loaded at
+# runtime, so importing it from a file behind a Loader is enough; linking the library
+# would make the binary refuse to start wherever the plugin is absent -- the emulator,
+# for one -- and cost every UI test for the sake of a page that cannot render there
+# anyway. The package is a runtime Requires in the .spec instead.
 
 QT += sql network concurrent
 
@@ -40,7 +41,9 @@ SOURCES += \
     src/feed/opml.cpp \
     src/i18n/languagemanager.cpp \
     src/i18n/languagenames.cpp \
+    src/i18n/relativetime.cpp \
     src/model/catalogmodel.cpp \
+    src/model/clustermodel.cpp \
     src/model/subscriptionmodel.cpp
 
 HEADERS += \
@@ -59,7 +62,9 @@ HEADERS += \
     src/feed/opml.h \
     src/i18n/languagemanager.h \
     src/i18n/languagenames.h \
+    src/i18n/relativetime.h \
     src/model/catalogmodel.h \
+    src/model/clustermodel.h \
     src/model/subscriptionmodel.h
 
 INCLUDEPATH += $$PWD/src
@@ -67,7 +72,12 @@ INCLUDEPATH += $$PWD/src
 DISTFILES += \
     qml/harbour-mynews.qml \
     qml/cover/CoverPage.qml \
+    qml/components/SourcePill.qml \
+    qml/components/Thumbnail.qml \
     qml/pages/AddFeedPage.qml \
+    qml/pages/ArticlePage.qml \
+    qml/pages/ClusterSourcesPage.qml \
+    qml/pages/WebViewLoader.qml \
     qml/pages/CatalogPage.qml \
     qml/pages/FeedPage.qml \
     qml/pages/LanguagePickerPage.qml \

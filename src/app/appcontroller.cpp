@@ -1,5 +1,6 @@
 #include "appcontroller.h"
 
+#include <QColor>
 #include <QFile>
 #include <QLocale>
 #include <QStandardPaths>
@@ -7,6 +8,10 @@
 
 #include "app/backend.h"
 #include "i18n/languagenames.h"
+#include "i18n/relativetime.h"
+
+#include <QCryptographicHash>
+#include <QDateTime>
 
 namespace app {
 
@@ -41,6 +46,38 @@ AppController::AppController(QObject *parent)
         m_catalog.setSubscribedUrls(m_subscriptions.subscribedUrls());
         setCatalogError(QString());
         emit hasCatalogChanged();
+    });
+
+    connect(m_backend, &Backend::clustersChanged, this,
+            [this](const QVector<feed::ClusterSummary> &clusters) {
+        m_clusters.setClusters(clusters);
+        const QString headline = clusters.isEmpty() ? QString() : clusters.first().title;
+        if (headline != m_leadHeadline) {
+            m_leadHeadline = headline;
+            emit leadHeadlineChanged();
+        }
+    });
+
+    connect(m_backend, &Backend::unreadCountChanged, this, [this](int count) {
+        if (count == m_unreadCount)
+            return;
+        m_unreadCount = count;
+        emit unreadCountChanged();
+    });
+
+    connect(m_backend, &Backend::clusterMembersLoaded, this,
+            [this](qint64 clusterId, const QVector<feed::ArticleRecord> &members) {
+        QVariantList list;
+        for (const feed::ArticleRecord &article : members) {
+            QVariantMap map;
+            map.insert(QStringLiteral("articleId"), article.id);
+            map.insert(QStringLiteral("title"), article.title);
+            map.insert(QStringLiteral("link"), article.link);
+            map.insert(QStringLiteral("published"), article.published);
+            map.insert(QStringLiteral("read"), article.read);
+            list.append(map);
+        }
+        emit clusterMembersLoaded(clusterId, list);
     });
 
     connect(m_backend, &Backend::busyChanged, this, [this](bool busy) { setBusy(busy); });
@@ -233,6 +270,48 @@ void AppController::addFeed(const QString &url, const QString &lang, const QStri
     QMetaObject::invokeMethod(m_backend, "subscribe", Qt::QueuedConnection,
                               Q_ARG(QString, url), Q_ARG(QString, title),
                               Q_ARG(QString, lang), Q_ARG(QString, QStringLiteral("manual")));
+}
+
+void AppController::markClusterRead(qint64 clusterId)
+{
+    // The row updates straight away; the database catches up on the worker thread. A
+    // reader tapping an article should not wait for a write to come back.
+    m_clusters.setRowRead(clusterId, true);
+    QMetaObject::invokeMethod(m_backend, "markClusterRead", Qt::QueuedConnection,
+                              Q_ARG(qint64, clusterId));
+}
+
+void AppController::markAllRead()
+{
+    m_clusters.setAllRead();
+    QMetaObject::invokeMethod(m_backend, "markAllRead", Qt::QueuedConnection);
+}
+
+void AppController::loadClusterMembers(qint64 clusterId)
+{
+    QMetaObject::invokeMethod(m_backend, "loadClusterMembers", Qt::QueuedConnection,
+                              Q_ARG(qint64, clusterId));
+}
+
+QString AppController::relativeTime(qint64 published) const
+{
+    return i18n::relativeTime(published, QDateTime::currentMSecsSinceEpoch() / 1000);
+}
+
+QString AppController::sourceColour(const QString &source) const
+{
+    // Section 8: a missing thumbnail becomes a source-coloured tile, not a broken-image
+    // icon or a blank gap. The colour has to be stable for a source across restarts, so
+    // it comes from a hash of the name rather than from a counter.
+    if (source.isEmpty())
+        return QStringLiteral("#606060");
+
+    const QByteArray digest =
+        QCryptographicHash::hash(source.toUtf8(), QCryptographicHash::Md5);
+    const int hue = static_cast<quint8>(digest.at(0)) * 360 / 256;
+    // Fixed saturation and lightness keep every tile legible against Silica's dark
+    // ambience and stop one source shouting louder than another.
+    return QColor::fromHsl(hue, 110, 90).name();
 }
 
 void AppController::importOpml(const QString &filePath)

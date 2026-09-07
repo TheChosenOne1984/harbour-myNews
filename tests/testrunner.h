@@ -11,6 +11,7 @@ int runFeedFetcherTests(int argc, char **argv);
 int runCatalogTests(int argc, char **argv);
 int runModelTests(int argc, char **argv);
 int runOpmlTests(int argc, char **argv);
+int runClusterViewTests(int argc, char **argv);
 int runClusterTests(int argc, char **argv);
 
 #endif // TESTS_TESTRUNNER_H

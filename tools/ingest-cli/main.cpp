@@ -44,10 +44,13 @@ int addFeedsFromFile(feed::FeedStore &store, const QString &path)
     for (const QJsonValue &value : feeds) {
         const QJsonObject obj = value.toObject();
         const qint64 before = store.feeds().size();
-        store.addFeed(obj.value(QStringLiteral("url")).toString(),
-                      obj.value(QStringLiteral("source")).toString(),
+        // The catalogue calls it "title"; the older corpus file called it "source".
+        QString title = obj.value(QStringLiteral("title")).toString();
+        if (title.isEmpty())
+            title = obj.value(QStringLiteral("source")).toString();
+        store.addFeed(obj.value(QStringLiteral("url")).toString(), title,
                       obj.value(QStringLiteral("lang")).toString(),
-                      QStringLiteral("manual"));
+                      QStringLiteral("catalogue"));
         if (store.feeds().size() > before)
             ++added;
     }

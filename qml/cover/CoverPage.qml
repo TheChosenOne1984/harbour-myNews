@@ -8,8 +8,8 @@ import Sailfish.Silica 1.0
 CoverBackground {
     id: cover
 
-    readonly property int unreadCount: 0
-    readonly property string leadHeadline: ""
+    readonly property int unreadCount: App.unreadCount
+    readonly property string leadHeadline: App.leadHeadline
 
     Column {
         anchors {
@@ -53,7 +53,8 @@ CoverBackground {
     CoverActionList {
         CoverAction {
             iconSource: "image://theme/icon-cover-refresh"
-            onTriggered: console.log("cover refresh -- wired up in milestone 3")
+            enabled: App.subscriptionCount > 0 && !App.busy
+            onTriggered: App.refresh()
         }
     }
 }

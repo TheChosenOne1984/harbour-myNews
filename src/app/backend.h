@@ -41,6 +41,12 @@ public slots:
 
     void reloadFeeds();
 
+    /*! Re-reads the article list. */
+    void reloadClusters(int limit);
+
+    void markClusterRead(qint64 clusterId);
+    void markAllRead();
+
     void refreshFeeds(int hammingThreshold, int windowHours);
     void refreshCatalog(const QString &url, bool force);
 
@@ -62,9 +68,17 @@ public slots:
     /*! Retention (§4). Cutoff is computed by the caller from the setting. */
     void purge(int retentionDays);
 
+    /*! Loads the members of one cluster so the detail view can offer the other sources. */
+    void loadClusterMembers(qint64 clusterId);
+
 signals:
     void initialised(bool ok, const QString &error);
     void feedsChanged(const QVector<feed::FeedRecord> &feeds);
+    void clustersChanged(const QVector<feed::ClusterSummary> &clusters);
+    void unreadCountChanged(int count);
+
+    /*! The members of one cluster, for the "other sources" list. */
+    void clusterMembersLoaded(qint64 clusterId, const QVector<feed::ArticleRecord> &members);
     void catalogChanged(const catalog::Catalog &catalog);
 
     void busyChanged(bool busy);
@@ -85,6 +99,9 @@ signals:
 private:
     void setBusy(bool busy);
     void emitFeeds();
+    void emitClusters();
+
+    int m_clusterLimit = 200;
 
     feed::FeedStore *m_store = nullptr;
     feed::FeedFetcher *m_fetcher = nullptr;
@@ -100,6 +117,8 @@ private:
 } // namespace app
 
 Q_DECLARE_METATYPE(QVector<feed::FeedRecord>)
+Q_DECLARE_METATYPE(QVector<feed::ClusterSummary>)
+Q_DECLARE_METATYPE(QVector<feed::ArticleRecord>)
 Q_DECLARE_METATYPE(catalog::Catalog)
 
 #endif // APP_BACKEND_H

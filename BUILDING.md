@@ -163,10 +163,21 @@ Where the app keeps its files inside the emulator, all within the Sailjail white
 
 Delete all three to reproduce a first start.
 
-**Verifying QML.** QML errors only surface at runtime, and the pulley menus cannot be
-driven from `VBoxManage`, which sends keystrokes but not taps. To check that every page
-renders, temporarily add timers to `qml/harbour-mynews.qml` that push each page in turn,
-screenshot between them, and revert the file afterwards.
+**Verifying QML.** QML errors only surface at runtime, and nothing in the emulator can be
+tapped: `VBoxManage` sends keystrokes but not taps, and the pointing device cannot be
+driven from the guest either — writing to `/dev/input/eventN` sends events *to* a device
+rather than injecting them, and real injection would need `/dev/uinput` plus a compiled
+helper, which lipstick's `VBoxTouch` plugin may not even listen to. So to check that a
+page renders, temporarily add timers to `qml/harbour-mynews.qml` that push it with
+plausible parameters, screenshot, and revert the file afterwards.
+
+**Sailjail re-asks whenever the permission set changes.** Adding a permission to the
+`.desktop` file revokes the stored grant, and the prompt cannot be answered without a tap.
+Editing `/home/.system/var/lib/sailjail/settings/user-100000.settings` does not help:
+`sailjaild` re-derives the entry when it starts and resets `Allowed` and `Granted`. That
+is correct behaviour — an app that asks for more in an update has to ask the user again —
+but it means a screenshot run after a permission change needs the `.desktop` file
+temporarily reduced to the permissions the page under test actually needs.
 
 ## Translations
 

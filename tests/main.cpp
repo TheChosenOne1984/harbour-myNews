@@ -12,6 +12,7 @@ int main(int argc, char *argv[])
     failures += runCatalogTests(argc, argv);
     failures += runModelTests(argc, argv);
     failures += runOpmlTests(argc, argv);
+    failures += runClusterViewTests(argc, argv);
     failures += runClusterTests(argc, argv);
     return failures;
 }

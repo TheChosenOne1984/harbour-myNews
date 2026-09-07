@@ -27,6 +27,7 @@ private slots:
     void addFeedIsIdempotent();
     void removingFeedCascadesToArticles();
     void manualLanguageOverrideSurvivesRefresh();
+    void curatedTitleSurvivesRefresh();
     void catalogueLanguageSurvivesRefresh();
     void declaredLanguageIsUpdatedByRefresh();
     void languageOverrideReachesArticles();
@@ -190,6 +191,30 @@ void TestFeedStore::manualLanguageOverrideSurvivesRefresh()
     QCOMPARE(record.title, QStringLiteral("Neuer Titel"));
     QCOMPARE(record.lang, QStringLiteral("nds"));
     QCOMPARE(record.langSource, QStringLiteral("manual"));
+}
+
+void TestFeedStore::curatedTitleSurvivesRefresh()
+{
+    // A feed's own <title> is often "Home", "News" or a bare domain, and it ends up in
+    // the source pills under a headline. A name chosen by a person wins.
+    const qint64 curated = m_store->addFeed(QStringLiteral("https://example.invalid/b4"),
+                                            QStringLiteral("Der Tagesspiegel"),
+                                            QStringLiteral("de"),
+                                            QStringLiteral("catalogue"));
+    ParsedFeed parsed;
+    parsed.format = ParsedFeed::Rss2;
+    parsed.title = QStringLiteral("tagesspiegel.de: News");
+    QVERIFY(m_store->updateFeedMetadata(curated, parsed));
+
+    FeedRecord record;
+    QVERIFY(m_store->feedById(curated, &record));
+    QCOMPARE(record.title, QStringLiteral("Der Tagesspiegel"));
+
+    // A feed added with no title at all still gets one from the document.
+    const qint64 bare = m_store->addFeed(QStringLiteral("https://example.invalid/b5"));
+    QVERIFY(m_store->updateFeedMetadata(bare, parsed));
+    QVERIFY(m_store->feedById(bare, &record));
+    QCOMPARE(record.title, QStringLiteral("tagesspiegel.de: News"));
 }
 
 void TestFeedStore::catalogueLanguageSurvivesRefresh()

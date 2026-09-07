@@ -7,6 +7,8 @@ URL:        https://github.com/kaiwiechers/myNews
 Source0:    %{name}-%{version}.tar.bz2
 
 Requires:   sailfishsilica-qt5 >= 0.10.9
+# The article view. A runtime dependency rather than a link-time one: see the .pro.
+Requires:   sailfish-components-webview-qt5
 
 BuildRequires:  pkgconfig(sailfishapp) >= 1.0.2
 BuildRequires:  pkgconfig(Qt5Core)
@@ -17,10 +19,6 @@ BuildRequires:  pkgconfig(Qt5Network)
 BuildRequires:  pkgconfig(Qt5Concurrent)
 BuildRequires:  pkgconfig(Qt5Concurrent)
 BuildRequires:  desktop-file-utils
-
-# Added with the article detail page (milestone 4):
-#   Requires:       sailfish-components-webview-qt5
-#   BuildRequires:  pkgconfig(qt5embedwidget)
 
 %description
 Aggregates RSS/Atom feeds entirely on the device and groups

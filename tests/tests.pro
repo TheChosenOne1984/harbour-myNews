@@ -30,6 +30,7 @@ SOURCES += \
     tst_catalog.cpp \
     tst_models.cpp \
     tst_opml.cpp \
+    tst_clusterview.cpp \
     tst_cluster.cpp \
     $$PWD/../src/feed/feedparser.cpp \
     $$PWD/../src/feed/feedstore.cpp \
@@ -40,6 +41,8 @@ SOURCES += \
     $$PWD/../src/model/subscriptionmodel.cpp \
     $$PWD/../src/model/catalogmodel.cpp \
     $$PWD/../src/i18n/languagenames.cpp \
+    $$PWD/../src/i18n/relativetime.cpp \
+    $$PWD/../src/model/clustermodel.cpp \
     $$PWD/../src/feed/opml.cpp \
     $$PWD/../src/cluster/normalize.cpp \
     $$PWD/../src/cluster/simhash.cpp \
@@ -56,6 +59,8 @@ HEADERS += \
     $$PWD/../src/model/subscriptionmodel.h \
     $$PWD/../src/model/catalogmodel.h \
     $$PWD/../src/i18n/languagenames.h \
+    $$PWD/../src/i18n/relativetime.h \
+    $$PWD/../src/model/clustermodel.h \
     $$PWD/../src/feed/opml.h \
     $$PWD/../src/cluster/normalize.h \
     $$PWD/../src/cluster/simhash.h \

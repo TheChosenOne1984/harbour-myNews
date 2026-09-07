@@ -39,6 +39,23 @@
     </message>
 </context>
 <context>
+    <name>ArticlePage</name>
+    <message>
+        <source>Other sources (%1)</source>
+        <extracomment>opens the list of other publishers that ran the same story</extracomment>
+        <translation>Weitere Quellen (%1)</translation>
+    </message>
+    <message>
+        <source>Open in browser</source>
+        <extracomment>fallback for pages the built-in view cannot show, e.g. paywalled ones</extracomment>
+        <translation>Im Browser öffnen</translation>
+    </message>
+    <message>
+        <source>The built-in browser is not available here.</source>
+        <translation>Der eingebaute Browser ist hier nicht verfügbar.</translation>
+    </message>
+</context>
+<context>
     <name>CatalogPage</name>
     <message>
         <source>Add feed by URL</source>
@@ -121,6 +138,29 @@
     </message>
 </context>
 <context>
+    <name>ClusterSourcesPage</name>
+    <message>
+        <source>Sources</source>
+        <translation>Quellen</translation>
+    </message>
+    <message numerus="yes">
+        <source>%n article(s) on this story</source>
+        <translation>
+            <numerusform>%n Artikel zu dieser Meldung</numerusform>
+            <numerusform>%n Artikel zu dieser Meldung</numerusform>
+        </translation>
+    </message>
+    <message>
+        <source>currently open</source>
+        <extracomment>marks the article the reader came from</extracomment>
+        <translation>gerade geöffnet</translation>
+    </message>
+    <message>
+        <source>Loading…</source>
+        <translation>Wird geladen …</translation>
+    </message>
+</context>
+<context>
     <name>CoverPage</name>
     <message numerus="yes">
         <source>%n unread</source>
@@ -169,6 +209,26 @@
     <message>
         <source>Pull down to refresh.</source>
         <translation>Zum Aktualisieren nach unten ziehen.</translation>
+    </message>
+    <message numerus="yes">
+        <source>%n unread</source>
+        <translation>
+            <numerusform>%n ungelesen</numerusform>
+            <numerusform>%n ungelesen</numerusform>
+        </translation>
+    </message>
+    <message>
+        <source>Open in browser</source>
+        <translation>Im Browser öffnen</translation>
+    </message>
+    <message>
+        <source>Mark as read</source>
+        <translation>Als gelesen markieren</translation>
+    </message>
+    <message>
+        <source>+%1</source>
+        <extracomment>more contributing sources than fit on the row</extracomment>
+        <translation>+%1</translation>
     </message>
 </context>
 <context>

@@ -7,6 +7,7 @@
 
 #include "app/settings.h"
 #include "model/catalogmodel.h"
+#include "model/clustermodel.h"
 #include "model/subscriptionmodel.h"
 
 namespace app {
@@ -29,6 +30,7 @@ class AppController : public QObject
 
     Q_PROPERTY(model::SubscriptionModel *subscriptions READ subscriptions CONSTANT)
     Q_PROPERTY(model::CatalogModel *catalog READ catalog CONSTANT)
+    Q_PROPERTY(model::ClusterModel *clusters READ clusters CONSTANT)
     Q_PROPERTY(app::Settings *settings READ settings CONSTANT)
 
     Q_PROPERTY(bool ready READ isReady NOTIFY readyChanged)
@@ -47,6 +49,10 @@ class AppController : public QObject
     Q_PROPERTY(QString catalogError READ catalogError NOTIFY catalogErrorChanged)
 
     Q_PROPERTY(int subscriptionCount READ subscriptionCount NOTIFY subscriptionCountChanged)
+    Q_PROPERTY(int unreadCount READ unreadCount NOTIFY unreadCountChanged)
+
+    /*! Headline of the newest cluster, for the cover page. */
+    Q_PROPERTY(QString leadHeadline READ leadHeadline NOTIFY leadHeadlineChanged)
 
     /*! True while the user has not yet decided about contacting the catalogue host. */
     Q_PROPERTY(bool needsCatalogConsent READ needsCatalogConsent NOTIFY catalogConsentChanged)
@@ -61,6 +67,7 @@ public:
 
     model::SubscriptionModel *subscriptions() { return &m_subscriptions; }
     model::CatalogModel *catalog() { return &m_catalog; }
+    model::ClusterModel *clusters() { return &m_clusters; }
     Settings *settings() { return m_settings; }
     void setSettings(Settings *settings);
 
@@ -70,6 +77,8 @@ public:
     bool hasCatalog() const { return m_catalog.totalCount() > 0; }
     QString catalogError() const { return m_catalogError; }
     int subscriptionCount() const { return m_subscriptions.rowCount(); }
+    int unreadCount() const { return m_unreadCount; }
+    QString leadHeadline() const { return m_leadHeadline; }
     bool needsCatalogConsent() const;
     bool catalogDeclined() const;
 
@@ -94,6 +103,19 @@ public:
     Q_INVOKABLE void probeFeed(const QString &url);
     Q_INVOKABLE void addFeed(const QString &url, const QString &lang, const QString &title);
 
+    Q_INVOKABLE void markClusterRead(qint64 clusterId);
+    Q_INVOKABLE void markAllRead();
+
+    /*! Asks for the members of a cluster; answered by clusterMembersLoaded(). */
+    Q_INVOKABLE void loadClusterMembers(qint64 clusterId);
+
+    /*! Short translated age, e.g. "5 min". Follows the chosen UI language, unlike
+     *  Silica's formatter, which follows the device locale. */
+    Q_INVOKABLE QString relativeTime(qint64 published) const;
+
+    /*! A stable colour per source name, for the thumbnail placeholder (section 8). */
+    Q_INVOKABLE QString sourceColour(const QString &source) const;
+
     Q_INVOKABLE void importOpml(const QString &filePath);
     Q_INVOKABLE void exportOpml(const QString &filePath);
     Q_INVOKABLE QString defaultOpmlExportPath() const;
@@ -111,6 +133,11 @@ signals:
     void catalogErrorChanged();
     void subscriptionCountChanged();
     void catalogConsentChanged();
+    void unreadCountChanged();
+    void leadHeadlineChanged();
+
+    /*! Members of the cluster asked for by loadClusterMembers(). */
+    void clusterMembersLoaded(qint64 clusterId, const QVariantList &members);
 
     /*! Result of probeFeed(), for the add-feed page. */
     void feedProbed(const QString &url, const QString &title, const QString &lang,
@@ -128,6 +155,9 @@ private:
     Settings *m_settings = nullptr;
     model::SubscriptionModel m_subscriptions;
     model::CatalogModel m_catalog;
+    model::ClusterModel m_clusters;
+    int m_unreadCount = 0;
+    QString m_leadHeadline;
 
     bool m_ready = false;
     bool m_busy = false;
