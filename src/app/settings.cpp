@@ -38,10 +38,11 @@ Settings::~Settings() = default;
 
 QString Settings::defaultCatalogUrl()
 {
-    // Placeholder. The hosting decision is still open (section 12); until it is made this
-    // is a setting a user can point somewhere real, and the first-run empty state has to
-    // cope with it failing.
-    return QStringLiteral("https://raw.githubusercontent.com/kaiwiechers/myNews/main/catalog/catalog.json");
+    // A default, not a constant: the user can point this anywhere, which is what keeps a
+    // URL the first run depends on from being a single point of failure (section 10).
+    // Verified to answer 304 to a conditional GET, including for the weak ETag it issues
+    // when the response is gzipped -- which is the path the app actually takes.
+    return QStringLiteral("https://catalog.cf-my-news.workers.dev");
 }
 
 QString Settings::uiLanguage() const

@@ -210,4 +210,12 @@ Page {
 
         VerticalScrollDecorator { }
     }
+
+    // The catalogue is fetched when this page is opened, not at startup: someone who only
+    // adds feeds by URL never causes the request at all. refreshCatalog(false) honours the
+    // weekly cadence, so opening the page repeatedly costs nothing.
+    Component.onCompleted: {
+        if (!App.needsCatalogConsent && !App.catalogDeclined)
+            App.refreshCatalog(false)
+    }
 }

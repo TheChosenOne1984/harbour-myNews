@@ -238,6 +238,12 @@ void TestCatalog::settingsCatalogueIsNotContactedBeforeConsent()
     // The prompt has to name the host it is about.
     settings.setCatalogUrl(QStringLiteral("https://catalog.example.invalid/list.json"));
     QCOMPARE(settings.catalogHost(), QStringLiteral("catalog.example.invalid"));
+
+    // The consent prompt shows this host, so the default has to yield a real one.
+    settings.setCatalogUrl(QString());
+    QVERIFY2(!settings.catalogHost().isEmpty(),
+             qPrintable(app::Settings::defaultCatalogUrl()));
+    QVERIFY(app::Settings::defaultCatalogUrl().startsWith(QStringLiteral("https://")));
 }
 
 void TestCatalog::settingsResetKeepsConsentDecision()

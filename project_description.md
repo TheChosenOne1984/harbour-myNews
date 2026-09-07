@@ -354,7 +354,11 @@ Users get a curated starter list, extensible with arbitrary feed URLs and OPML i
 
 - **Scope for MVP:** Hamburg local plus German national. International only via manual add or
   OPML import — do not attempt to ship a global catalogue.
-- **Host the catalogue remotely** as a JSON file (static hosting is enough). JSON rather than
+- **Host the catalogue remotely** as a JSON file (static hosting is enough).
+  Hosted at `https://catalog.cf-my-news.workers.dev`, which is the default in the
+  settings. Verified to answer 304 to a conditional GET including for the weak ETag it
+  issues on a gzipped response — which is the path the app actually takes, since Qt always
+  asks for gzip. JSON rather than
   OPML: the catalogue is ours, and it has to carry a language per feed (§7) plus region and
   category, none of which OPML has a place for. OPML stays what it is good for — exchanging
   subscriptions with other readers. Do not compile
