@@ -390,10 +390,11 @@ Users get a curated starter list, extensible with arbitrary feed URLs and OPML i
 - **Compile the list yourself** from publishers' own feed pages. Do not bulk-import a third
   party's curated feed directory — such directories can be protected as database works
   (§ 87a UrhG).
-- **Descriptions state what a source is and what it covers — nothing else.** No political
-  characterisation, no assessment of quality or seriousness. This is a list the user picks
-  from, not one we rank, and characterising one publisher's politics obliges us to
-  characterise every publisher's. Enforced by a test over the shipped file.
+- **Descriptions categorise, they do not evaluate.** Saying what a source *is* — a daily,
+  a tabloid, a city magazine, a public or a private broadcaster — is a factual label and
+  belongs there. Saying where it stands politically, or how good it is, does not: this is
+  a list the user picks from, not one we rank, and characterising one publisher's politics
+  obliges us to characterise every publisher's. Enforced by a test over the shipped file.
 - **No publisher logos in the app package.** Use the favicon fetched at runtime from the feed's
   own domain, or a text label with an accent colour. Publisher *names* as descriptive references
   are fine; bundled logos imply a partnership that does not exist.

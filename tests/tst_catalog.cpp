@@ -167,27 +167,34 @@ void TestCatalog::shippedCatalogueFileIsValid()
         QVERIFY2(entry.displayDescription(QStringLiteral("de")) != entry.description,
                  qPrintable(entry.title + QStringLiteral(" has no German description")));
 
-        // A description says what a source is and what it covers -- nothing else. This is
-        // a list the user picks from, not one we rank, and characterising one publisher's
+        // Descriptions categorise, they do not evaluate. What a source *is* -- a daily,
+        // a tabloid, a city magazine, a public or private broadcaster -- is a factual
+        // label. Where it stands politically, or how good it is, is not: this is a list
+        // the user picks from, not one we rank, and characterising one publisher's
         // politics obliges us to characterise every publisher's. Kept as a test rather
         // than a note so the next addition cannot quietly reintroduce it.
         static const QStringList judgements{
-            QStringLiteral("left"),      QStringLiteral("right-wing"),
-            QStringLiteral("liberal"),   QStringLiteral("conservative"),
-            QStringLiteral("tabloid"),   QStringLiteral("populist"),
-            QStringLiteral("quality"),   QStringLiteral("serious"),
+            // political placement
+            QStringLiteral("linke"),     QStringLiteral("links"),
+            QStringLiteral("rechte"),    QStringLiteral("rechts"),
+            QStringLiteral("konservativ"), QStringLiteral("liberal"),
+            QStringLiteral("populis"),
+            QStringLiteral("left-leaning"), QStringLiteral("left-wing"),
+            QStringLiteral("right-leaning"), QStringLiteral("right-wing"),
+            QStringLiteral("conservative"), QStringLiteral("populist"),
+            // assessments of quality or standing
+            QStringLiteral("seriös"),    QStringLiteral("renommiert"),
+            QStringLiteral("führend"),   QStringLiteral("angesehen"),
             QStringLiteral("respected"), QStringLiteral("leading"),
-            QStringLiteral("link"),      QStringLiteral("rechts"),
-            QStringLiteral("konservativ"), QStringLiteral("boulevard"),
-            QStringLiteral("seriös"),    QStringLiteral("populistisch"),
-            QStringLiteral("qualitätsmedium"), QStringLiteral("führend"),
+            QStringLiteral("reputable"), QStringLiteral("trusted"),
+            QStringLiteral("high-quality"),
         };
         for (const QString &word : judgements) {
             for (const QString &text : {entry.description,
                                         entry.displayDescription(QStringLiteral("de"))}) {
                 QVERIFY2(!text.contains(word, Qt::CaseInsensitive),
                          qPrintable(entry.title + QStringLiteral(": \"") + text
-                                    + QStringLiteral("\" characterises the source (\"")
+                                    + QStringLiteral("\" evaluates the source (\"")
                                     + word + QStringLiteral("\")")));
             }
         }

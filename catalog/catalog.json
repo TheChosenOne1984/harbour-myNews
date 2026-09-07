@@ -1,7 +1,7 @@
 {
   "version": 1,
   "updated": "2026-09-07",
-  "_comment": "Curated starter list for myNews. Fetched by the app on first start and cached locally; nothing is bundled (project_description.md section 10). Compiled by hand from each publisher's own feed page -- do not bulk-import a third party's feed directory (section 87a UrhG). Every entry states its language, because section 7 assigns languages rather than detecting them. Removing a publisher on request is a commit to this file, not an app release. Descriptions state what a source is and what it covers -- nothing else. No political characterisation, no assessment of quality or seriousness: this is a list the user picks from, not one we rank. 'description' is English, the source language; 'description_<lang>' overrides it, same convention as the UI translations.",
+  "_comment": "Curated starter list for myNews. Fetched by the app on first start and cached locally; nothing is bundled (project_description.md section 10). Compiled by hand from each publisher's own feed page -- do not bulk-import a third party's feed directory (section 87a UrhG). Every entry states its language, because section 7 assigns languages rather than detecting them. Removing a publisher on request is a commit to this file, not an app release. Descriptions categorise, they do not evaluate. Saying what a source is -- a daily, a tabloid, a city magazine, a public or a private broadcaster -- is a factual label and welcome. Saying where it stands politically, or how good it is, is not: this is a list the user picks from, not one we rank. 'description' is English, the source language; 'description_<lang>' overrides it, same convention as the UI translations.",
   "categories": [
     {
       "id": "hamburg",
@@ -48,8 +48,8 @@
       "lang": "de",
       "category": "hamburg",
       "site_url": "https://www.mopo.de/",
-      "description": "Hamburg daily newspaper, city and regional coverage.",
-      "description_de": "Hamburger Tageszeitung mit Stadt- und Regionalberichterstattung."
+      "description": "Hamburg tabloid daily, city and regional coverage.",
+      "description_de": "Hamburger Boulevardzeitung mit Stadt- und Regionalberichterstattung."
     },
     {
       "url": "https://taz.de/Hamburg/!p4622;rss/",
