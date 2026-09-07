@@ -10,10 +10,12 @@ const QString KeyUiLanguage = QStringLiteral("ui/language");
 const QString KeyCatalogUrl = QStringLiteral("catalog/url");
 const QString KeyCatalogConsent = QStringLiteral("catalog/consent");
 const QString KeyRetentionDays = QStringLiteral("storage/retentionDays");
+const QString KeyThumbnailCacheMb = QStringLiteral("storage/thumbnailCacheMb");
 const QString KeyClusterThreshold = QStringLiteral("cluster/hammingThreshold");
 const QString KeyClusterWindow = QStringLiteral("cluster/windowHours");
 
 constexpr int DefaultRetentionDays = 14;
+constexpr int DefaultThumbnailCacheMb = 100;   // section 8
 
 int clampInt(int value, int lo, int hi)
 {
@@ -113,6 +115,21 @@ void Settings::setRetentionDays(int days)
     emit retentionDaysChanged();
 }
 
+int Settings::thumbnailCacheMegabytes() const
+{
+    return clampInt(m_settings->value(KeyThumbnailCacheMb, DefaultThumbnailCacheMb).toInt(),
+                    10, 1000);
+}
+
+void Settings::setThumbnailCacheMegabytes(int megabytes)
+{
+    const int clamped = clampInt(megabytes, 10, 1000);
+    if (clamped == thumbnailCacheMegabytes())
+        return;
+    m_settings->setValue(KeyThumbnailCacheMb, clamped);
+    emit thumbnailCacheMegabytesChanged();
+}
+
 int Settings::clusterThreshold() const
 {
     // Clamped to the range that was measured to behave, not to what the algorithm
@@ -166,12 +183,14 @@ void Settings::resetToDefaults()
     // Consent is deliberately NOT reset: withdrawing a decision the user made about
     // contacting a third party is not something "restore defaults" should do silently.
     m_settings->remove(KeyRetentionDays);
+    m_settings->remove(KeyThumbnailCacheMb);
     m_settings->remove(KeyClusterThreshold);
     m_settings->remove(KeyClusterWindow);
 
     emit uiLanguageChanged();
     emit catalogUrlChanged();
     emit retentionDaysChanged();
+    emit thumbnailCacheMegabytesChanged();
     emit clusterThresholdChanged();
     emit clusterWindowHoursChanged();
 }

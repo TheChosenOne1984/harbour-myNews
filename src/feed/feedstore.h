@@ -189,12 +189,19 @@ public:
     bool clusterById(qint64 clusterId, ClusterRecord *out) const;
 
     QVector<ArticleRecord> articlesInCluster(qint64 clusterId) const;
+
+    /*! Every article id, so the thumbnail cache can drop files for purged articles. */
+    QVector<qint64> allArticleIds() const;
     bool articleById(qint64 articleId, ArticleRecord *out) const;
     bool markRead(qint64 articleId, bool read = true);
     int markAllRead();
     int unreadCount() const;
 
     bool setImageState(qint64 articleId, const QString &state);
+
+    /*! Records an image URL discovered from the article page, so a later run can fetch
+     *  the picture directly instead of reading the page again. */
+    bool setImageUrl(qint64 articleId, const QString &url);
 
     // --- Retention ---------------------------------------------------------------
 

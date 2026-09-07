@@ -25,8 +25,18 @@ AppController::AppController(QObject *parent)
     connect(m_backend, &Backend::initialised, this, [this](bool ok, const QString &error) {
         m_ready = ok;
         emit readyChanged();
-        if (!ok)
+        if (!ok) {
             setStatusMessage(error);
+            return;
+        }
+        if (!m_settings)
+            return;
+        applyThumbnailCacheLimit();
+        // Section 4: retention runs on start, in the background. It also takes the
+        // thumbnails of the articles it deletes, which is what keeps the cache from
+        // filling with pictures for stories that no longer exist.
+        QMetaObject::invokeMethod(m_backend, "purge", Qt::QueuedConnection,
+                                  Q_ARG(int, m_settings->retentionDays()));
     });
 
     connect(m_backend, &Backend::feedsChanged, this,
@@ -80,6 +90,11 @@ AppController::AppController(QObject *parent)
         emit clusterMembersLoaded(clusterId, list);
     });
 
+    connect(m_backend, &Backend::thumbnailReady, this,
+            [this](qint64 articleId, const QString &path) {
+        m_clusters.setRowThumbnail(articleId, path);
+    });
+
     connect(m_backend, &Backend::busyChanged, this, [this](bool busy) { setBusy(busy); });
 
     connect(m_backend, &Backend::refreshFinished, this,
@@ -125,10 +140,21 @@ AppController::~AppController()
     m_thread.wait(5000);
 }
 
+void AppController::applyThumbnailCacheLimit()
+{
+    if (!m_settings)
+        return;
+    QMetaObject::invokeMethod(m_backend, "setThumbnailCacheLimit", Qt::QueuedConnection,
+                              Q_ARG(qint64, qint64(m_settings->thumbnailCacheMegabytes())
+                                                * 1024 * 1024));
+}
+
 void AppController::setSettings(Settings *settings)
 {
     m_settings = settings;
     if (m_settings) {
+        connect(m_settings, &Settings::thumbnailCacheMegabytesChanged,
+                this, &AppController::applyThumbnailCacheLimit);
         connect(m_settings, &Settings::catalogConsentChanged,
                 this, &AppController::catalogConsentChanged);
     }
@@ -139,12 +165,20 @@ void AppController::setSettings(Settings *settings)
     }
 }
 
-void AppController::start(const QString &databasePath, const QString &catalogCachePath)
+void AppController::start(const QString &databasePath, const QString &catalogCachePath,
+                          const QString &thumbnailDirectory)
 {
     m_thread.start();
     QMetaObject::invokeMethod(m_backend, "initialise", Qt::QueuedConnection,
                               Q_ARG(QString, databasePath),
-                              Q_ARG(QString, catalogCachePath));
+                              Q_ARG(QString, catalogCachePath),
+                              Q_ARG(QString, thumbnailDirectory));
+}
+
+void AppController::requestThumbnail(qint64 articleId)
+{
+    QMetaObject::invokeMethod(m_backend, "requestThumbnail", Qt::QueuedConnection,
+                              Q_ARG(qint64, articleId));
 }
 
 void AppController::setStatusMessage(const QString &text)

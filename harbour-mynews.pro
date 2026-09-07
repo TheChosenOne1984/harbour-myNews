@@ -39,6 +39,9 @@ SOURCES += \
     src/feed/feedrefresher.cpp \
     src/feed/feedstore.cpp \
     src/feed/opml.cpp \
+    src/image/ogimage.cpp \
+    src/image/thumbnailcache.cpp \
+    src/image/thumbnailservice.cpp \
     src/i18n/languagemanager.cpp \
     src/i18n/languagenames.cpp \
     src/i18n/relativetime.cpp \
@@ -60,6 +63,9 @@ HEADERS += \
     src/feed/feedrefresher.h \
     src/feed/feedstore.h \
     src/feed/opml.h \
+    src/image/ogimage.h \
+    src/image/thumbnailcache.h \
+    src/image/thumbnailservice.h \
     src/i18n/languagemanager.h \
     src/i18n/languagenames.h \
     src/i18n/relativetime.h \

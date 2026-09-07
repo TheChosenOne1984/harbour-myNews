@@ -104,7 +104,11 @@ Page {
                 width: page.thumbnailSize
                 height: page.thumbnailSize
                 source: model.sources.length > 0 ? model.sources[0] : ""
-                imageUrl: model.imageState === "cached" ? model.imageUrl : ""
+                articleId: model.leadArticleId
+                // The local file, never the publisher's URL: the list must not make a
+                // network request per visible row, and an already-downscaled JPEG is what
+                // keeps scrolling smooth (section 8).
+                imageUrl: model.thumbnailPath !== "" ? "file://" + model.thumbnailPath : ""
                 dimmed: !item.isUnread
             }
 

@@ -12,8 +12,7 @@ TEMPLATE = app
 TARGET = tst_mynews
 CONFIG += console testcase
 CONFIG -= app_bundle
-QT += core testlib sql network
-QT -= gui
+QT += core testlib sql network gui
 
 QMAKE_CXXFLAGS += -std=c++17
 
@@ -31,6 +30,7 @@ SOURCES += \
     tst_models.cpp \
     tst_opml.cpp \
     tst_clusterview.cpp \
+    tst_thumbnails.cpp \
     tst_cluster.cpp \
     $$PWD/../src/feed/feedparser.cpp \
     $$PWD/../src/feed/feedstore.cpp \
@@ -40,6 +40,9 @@ SOURCES += \
     $$PWD/../src/app/settings.cpp \
     $$PWD/../src/model/subscriptionmodel.cpp \
     $$PWD/../src/model/catalogmodel.cpp \
+    $$PWD/../src/image/ogimage.cpp \
+    $$PWD/../src/image/thumbnailcache.cpp \
+    $$PWD/../src/image/thumbnailservice.cpp \
     $$PWD/../src/i18n/languagenames.cpp \
     $$PWD/../src/i18n/relativetime.cpp \
     $$PWD/../src/model/clustermodel.cpp \
@@ -58,6 +61,9 @@ HEADERS += \
     $$PWD/../src/app/settings.h \
     $$PWD/../src/model/subscriptionmodel.h \
     $$PWD/../src/model/catalogmodel.h \
+    $$PWD/../src/image/ogimage.h \
+    $$PWD/../src/image/thumbnailcache.h \
+    $$PWD/../src/image/thumbnailservice.h \
     $$PWD/../src/i18n/languagenames.h \
     $$PWD/../src/i18n/relativetime.h \
     $$PWD/../src/model/clustermodel.h \

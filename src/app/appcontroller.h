@@ -70,7 +70,8 @@ public:
     ~AppController() override;
 
     /*! Starts the worker thread and opens the database. */
-    void start(const QString &databasePath, const QString &catalogCachePath);
+    void start(const QString &databasePath, const QString &catalogCachePath,
+               const QString &thumbnailDirectory);
 
     model::SubscriptionModel *subscriptions() { return &m_subscriptions; }
     model::CatalogModel *catalog() { return &m_catalog; }
@@ -113,6 +114,12 @@ public:
     /*! Fetches a URL once so the add-feed page can pre-fill the language picker. */
     Q_INVOKABLE void probeFeed(const QString &url);
     Q_INVOKABLE void addFeed(const QString &url, const QString &lang, const QString &title);
+
+    /*!
+     * Asks for a row's thumbnail. Called when the row becomes visible, never in advance
+     * for the whole list (section 8).
+     */
+    Q_INVOKABLE void requestThumbnail(qint64 articleId);
 
     Q_INVOKABLE void markClusterRead(qint64 clusterId);
     Q_INVOKABLE void markAllRead();
@@ -160,6 +167,7 @@ private:
     void setStatusMessage(const QString &text);
     void setBusy(bool busy);
     void setCatalogError(const QString &error);
+    void applyThumbnailCacheLimit();
 
     QThread m_thread;
     Backend *m_backend;

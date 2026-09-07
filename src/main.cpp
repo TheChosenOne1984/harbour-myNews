@@ -44,7 +44,10 @@ int main(int argc, char *argv[])
     view->show();
 
     controller.start(dataDir + QStringLiteral("/mynews.db"),
-                     cacheDir + QStringLiteral("/catalog.json"));
+                     cacheDir + QStringLiteral("/catalog.json"),
+                     // Section 8: thumbnails belong under CacheLocation, so the system
+                     // may reclaim them. A missing file is simply fetched again.
+                     cacheDir + QStringLiteral("/thumbnails"));
 
     return app->exec();
 }

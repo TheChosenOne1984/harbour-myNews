@@ -913,6 +913,17 @@ QVector<ArticleRecord> FeedStore::articlesInCluster(qint64 clusterId) const
     return result;
 }
 
+QVector<qint64> FeedStore::allArticleIds() const
+{
+    QVector<qint64> ids;
+    QSqlQuery query(m_db);
+    if (!query.exec(QStringLiteral("SELECT id FROM article")))
+        return ids;
+    while (query.next())
+        ids.append(query.value(0).toLongLong());
+    return ids;
+}
+
 bool FeedStore::markRead(qint64 articleId, bool read)
 {
     QSqlQuery query(m_db);
@@ -949,6 +960,15 @@ bool FeedStore::setImageState(qint64 articleId, const QString &state)
 }
 
 // --- Retention -----------------------------------------------------------------------
+
+bool FeedStore::setImageUrl(qint64 articleId, const QString &url)
+{
+    QSqlQuery query(m_db);
+    query.prepare(QStringLiteral("UPDATE article SET image_url = ? WHERE id = ?"));
+    query.addBindValue(url.isEmpty() ? QVariant() : QVariant(url));
+    query.addBindValue(articleId);
+    return query.exec();
+}
 
 int FeedStore::purgeArticlesOlderThan(qint64 cutoff)
 {

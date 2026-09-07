@@ -14,6 +14,10 @@ class FeedFetcher;
 class FeedRefresher;
 }
 namespace catalog { class CatalogService; }
+namespace image {
+class ThumbnailCache;
+class ThumbnailService;
+}
 
 namespace app {
 
@@ -37,7 +41,8 @@ public:
 
 public slots:
     /*! Opens the database and reads the cached catalogue. Must run on the worker thread. */
-    void initialise(const QString &databasePath, const QString &catalogCachePath);
+    void initialise(const QString &databasePath, const QString &catalogCachePath,
+                    const QString &thumbnailDirectory);
 
     void reloadFeeds();
 
@@ -71,6 +76,11 @@ public slots:
     /*! Loads the members of one cluster so the detail view can offer the other sources. */
     void loadClusterMembers(qint64 clusterId);
 
+    /*! Asked for when a row becomes visible -- never for a whole batch (section 8). */
+    void requestThumbnail(qint64 articleId);
+
+    void setThumbnailCacheLimit(qint64 bytes);
+
 signals:
     void initialised(bool ok, const QString &error);
     void feedsChanged(const QVector<feed::FeedRecord> &feeds);
@@ -93,6 +103,7 @@ signals:
     void opmlImported(int added, int skipped, const QString &error);
     void opmlExported(const QString &filePath, const QString &error);
     void purged(int articlesDeleted);
+    void thumbnailReady(qint64 articleId, const QString &path);
 
     void message(const QString &text);
 
@@ -107,6 +118,8 @@ private:
     feed::FeedFetcher *m_fetcher = nullptr;
     feed::FeedRefresher *m_refresher = nullptr;
     catalog::CatalogService *m_catalog = nullptr;
+    image::ThumbnailCache *m_thumbnails = nullptr;
+    image::ThumbnailService *m_thumbnailService = nullptr;
 
     /*! Request id used for one-off probe fetches; distinct from feed ids. */
     static constexpr qint64 ProbeRequestId = -2000;

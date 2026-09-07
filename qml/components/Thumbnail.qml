@@ -18,6 +18,15 @@ Item {
     property url imageUrl
     property bool dimmed
 
+    /*!
+     * Article whose picture this box shows. Setting it asks for the thumbnail -- which is
+     * what makes the request lazy: it happens because a row became visible, not because
+     * an article was ingested (section 8).
+     */
+    property var articleId
+    onArticleIdChanged: if (articleId !== undefined) App.requestThumbnail(articleId)
+    Component.onCompleted: if (articleId !== undefined) App.requestThumbnail(articleId)
+
     Rectangle {
         anchors.fill: parent
         radius: Theme.paddingSmall

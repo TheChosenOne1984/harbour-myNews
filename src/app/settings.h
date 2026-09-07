@@ -34,6 +34,8 @@ class Settings : public QObject
     Q_PROPERTY(QString defaultCatalogUrl READ defaultCatalogUrl CONSTANT)
     Q_PROPERTY(int retentionDays READ retentionDays WRITE setRetentionDays
                    NOTIFY retentionDaysChanged)
+    Q_PROPERTY(int thumbnailCacheMegabytes READ thumbnailCacheMegabytes
+                   WRITE setThumbnailCacheMegabytes NOTIFY thumbnailCacheMegabytesChanged)
     Q_PROPERTY(int clusterThreshold READ clusterThreshold WRITE setClusterThreshold
                    NOTIFY clusterThresholdChanged)
     Q_PROPERTY(int clusterWindowHours READ clusterWindowHours WRITE setClusterWindowHours
@@ -91,6 +93,10 @@ public:
     int retentionDays() const;
     void setRetentionDays(int days);
 
+    /*! Cap on the thumbnail cache. Storage is finite on a phone and the user owns it. */
+    int thumbnailCacheMegabytes() const;
+    void setThumbnailCacheMegabytes(int megabytes);
+
     //! Hamming distance, 0-64. Measured default is 14; above 16 clusters run away.
     int clusterThreshold() const;
     void setClusterThreshold(int bits);
@@ -110,6 +116,7 @@ signals:
     void catalogUrlChanged();
     void catalogConsentChanged();
     void retentionDaysChanged();
+    void thumbnailCacheMegabytesChanged();
     void clusterThresholdChanged();
     void clusterWindowHoursChanged();
 

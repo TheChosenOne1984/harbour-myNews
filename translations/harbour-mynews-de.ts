@@ -352,6 +352,15 @@
         <source>Group articles that are this similar</source>
         <translation>Artikel ab dieser Ähnlichkeit gruppieren</translation>
     </message>
+    <message>
+        <source>%1 MB</source>
+        <extracomment>cap on the space used by cached article images</extracomment>
+        <translation>%1 MB</translation>
+    </message>
+    <message>
+        <source>Space for images</source>
+        <translation>Speicher für Bilder</translation>
+    </message>
 </context>
 <context>
     <name>SubscriptionsPage</name>

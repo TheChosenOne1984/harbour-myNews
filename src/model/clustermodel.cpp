@@ -22,6 +22,7 @@ QHash<int, QByteArray> ClusterModel::roleNames() const
         {LinkRole, "link"},
         {ImageUrlRole, "imageUrl"},
         {ImageStateRole, "imageState"},
+        {ThumbnailPathRole, "thumbnailPath"},
         {PublishedRole, "published"},
         {MemberCountRole, "memberCount"},
         {UnreadRole, "unread"},
@@ -52,6 +53,8 @@ QVariant ClusterModel::data(const QModelIndex &index, int role) const
         return cluster.imageUrl;
     case ImageStateRole:
         return cluster.imageState;
+    case ThumbnailPathRole:
+        return m_thumbnails.value(cluster.leadArticleId);
     case PublishedRole:
         return cluster.published;
     case MemberCountRole:
@@ -81,9 +84,33 @@ void ClusterModel::setClusters(const QVector<feed::ClusterSummary> &clusters)
     const bool sizeChanged = clusters.size() != m_clusters.size();
     beginResetModel();
     m_clusters = clusters;
+    // Paths already known stay: a refresh must not make cached thumbnails disappear and
+    // be requested all over again.
     endResetModel();
     if (sizeChanged)
         emit countChanged();
+}
+
+int ClusterModel::rowOfArticle(qint64 articleId) const
+{
+    for (int i = 0; i < m_clusters.size(); ++i) {
+        if (m_clusters.at(i).leadArticleId == articleId)
+            return i;
+    }
+    return -1;
+}
+
+void ClusterModel::setRowThumbnail(qint64 articleId, const QString &path)
+{
+    if (m_thumbnails.value(articleId) == path)
+        return;
+    m_thumbnails.insert(articleId, path);
+
+    const int row = rowOfArticle(articleId);
+    if (row < 0)
+        return;
+    // One role on one row: the image appears without the list moving under the reader.
+    emit dataChanged(index(row), index(row), {ThumbnailPathRole});
 }
 
 void ClusterModel::setRowRead(qint64 clusterId, bool read)

@@ -110,6 +110,18 @@ Page {
                 onReleased: Settings.retentionDays = value
             }
 
+            Slider {
+                width: parent.width
+                minimumValue: 10
+                maximumValue: 500
+                stepSize: 10
+                value: Settings.thumbnailCacheMegabytes
+                //: cap on the space used by cached article images
+                valueText: qsTr("%1 MB").arg(value)
+                label: qsTr("Space for images")
+                onReleased: Settings.thumbnailCacheMegabytes = value
+            }
+
             SectionHeader { text: qsTr("Grouping") }
 
             Label {

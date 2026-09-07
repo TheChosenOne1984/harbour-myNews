@@ -2,6 +2,7 @@
 #define MODEL_CLUSTERMODEL_H
 
 #include <QAbstractListModel>
+#include <QHash>
 #include <QVector>
 
 #include "feed/feedstore.h"
@@ -38,6 +39,7 @@ public:
         LinkRole,
         ImageUrlRole,
         ImageStateRole,
+        ThumbnailPathRole,   //!< local file, empty until one has been cached
         PublishedRole,
         MemberCountRole,
         UnreadRole,
@@ -54,6 +56,9 @@ public:
 
     void setClusters(const QVector<feed::ClusterSummary> &clusters);
 
+    /*! Fills in a thumbnail that has just been cached, without refetching the page. */
+    void setRowThumbnail(qint64 articleId, const QString &path);
+
     /*! Marks one row read without refetching the page. */
     void setRowRead(qint64 clusterId, bool read);
     void setAllRead();
@@ -64,7 +69,10 @@ signals:
     void countChanged();
 
 private:
+    int rowOfArticle(qint64 articleId) const;
+
     QVector<feed::ClusterSummary> m_clusters;
+    QHash<qint64, QString> m_thumbnails;   //!< lead article id -> file path
 };
 
 } // namespace model

@@ -10,6 +10,8 @@
 #include "feed/feedparser.h"
 #include "feed/feedrefresher.h"
 #include "feed/opml.h"
+#include "image/thumbnailcache.h"
+#include "image/thumbnailservice.h"
 
 namespace app {
 namespace {
@@ -34,6 +36,7 @@ Backend::Backend(QObject *parent)
 Backend::~Backend()
 {
     delete m_store;
+    delete m_thumbnails;
 }
 
 void Backend::setBusy(bool busy)
@@ -44,7 +47,8 @@ void Backend::setBusy(bool busy)
     emit busyChanged(busy);
 }
 
-void Backend::initialise(const QString &databasePath, const QString &catalogCachePath)
+void Backend::initialise(const QString &databasePath, const QString &catalogCachePath,
+                         const QString &thumbnailDirectory)
 {
     m_store = new feed::FeedStore(databasePath);
     if (!m_store->open()) {
@@ -55,6 +59,12 @@ void Backend::initialise(const QString &databasePath, const QString &catalogCach
     m_fetcher = new feed::FeedFetcher(this);
     m_refresher = new feed::FeedRefresher(m_store, m_fetcher, this);
     m_catalog = new catalog::CatalogService(m_fetcher, catalogCachePath, this);
+
+    m_thumbnails = new image::ThumbnailCache(thumbnailDirectory);
+    m_thumbnails->open();
+    m_thumbnailService = new image::ThumbnailService(m_store, m_fetcher, m_thumbnails, this);
+    connect(m_thumbnailService, &image::ThumbnailService::thumbnailReady,
+            this, &Backend::thumbnailReady);
 
     connect(m_refresher, &feed::FeedRefresher::finished, this,
             [this](const feed::FeedRefresher::Summary &summary) {
@@ -275,14 +285,31 @@ void Backend::exportOpml(const QString &filePath)
     emit opmlExported(filePath, QString());
 }
 
+void Backend::requestThumbnail(qint64 articleId)
+{
+    if (m_thumbnailService)
+        m_thumbnailService->request(articleId);
+}
+
+void Backend::setThumbnailCacheLimit(qint64 bytes)
+{
+    if (m_thumbnails)
+        m_thumbnails->setMaxBytes(bytes);
+}
+
 void Backend::purge(int retentionDays)
 {
     if (!m_store)
         return;
     const qint64 cutoff = nowSeconds() - static_cast<qint64>(retentionDays) * 24 * 3600;
     const int deleted = m_store->purgeArticlesOlderThan(cutoff);
-    if (deleted > 0)
+    if (deleted > 0) {
+        // Section 8: purging articles takes their thumbnails with them, or the cache
+        // fills up with pictures for stories that no longer exist.
+        if (m_thumbnails)
+            m_thumbnails->removeAllExcept(m_store->allArticleIds());
         emitClusters();
+    }
     emit purged(deleted);
 }
 
