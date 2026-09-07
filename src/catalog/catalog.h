@@ -13,12 +13,16 @@ struct Entry
 {
     QString url;
     QString title;
-    QString lang;         //!< BCP-47, mandatory: section 7 assigns languages, never guesses
+    QString lang;         //!< BCP-47 primary subtag; mandatory (section 7)
     QString category;     //!< id of a Category
     QString siteUrl;
-    QString description;
+    QString description;  //!< English, the source language
+    QHash<QString, QString> localisedDescriptions;   //!< BCP-47 -> description
 
     bool isValid() const { return !url.isEmpty() && !title.isEmpty() && !lang.isEmpty(); }
+
+    /*! The description for a UI language, falling back to English. */
+    QString displayDescription(const QString &lang) const;
 };
 
 /*! A grouping, with a display name that can be localised. */

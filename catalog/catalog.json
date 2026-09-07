@@ -1,7 +1,7 @@
 {
   "version": 1,
   "updated": "2026-09-07",
-  "_comment": "Curated starter list for myNews. Fetched by the app on first start and cached locally -- nothing is bundled (project_description.md section 10). Compiled by hand from each publisher's own feed page; do not bulk-import a third party's feed directory. Every entry states its language, because section 7 assigns languages rather than detecting them. Removing a publisher on request is a commit to this file, not an app release.",
+  "_comment": "Curated starter list for myNews. Fetched by the app on first start and cached locally; nothing is bundled (project_description.md section 10). Compiled by hand from each publisher's own feed page -- do not bulk-import a third party's feed directory (section 87a UrhG). Every entry states its language, because section 7 assigns languages rather than detecting them. Removing a publisher on request is a commit to this file, not an app release. 'description' is English, the source language; 'description_<lang>' overrides it, same convention as the UI translations.",
   "categories": [
     {
       "id": "hamburg",
@@ -20,105 +20,189 @@
       "title": "NDR Hamburg",
       "lang": "de",
       "category": "hamburg",
-      "site_url": "https://www.ndr.de/nachrichten/hamburg/"
+      "site_url": "https://www.ndr.de/nachrichten/hamburg/",
+      "description": "Regional news from the public broadcaster for Hamburg.",
+      "description_de": "Regionalnachrichten des öffentlich-rechtlichen Senders für Hamburg."
+    },
+    {
+      "url": "https://www.ndr.de/903/index-rss.xml",
+      "title": "NDR 90,3",
+      "lang": "de",
+      "category": "hamburg",
+      "site_url": "https://www.ndr.de/903/",
+      "description": "Hamburg's public radio station.",
+      "description_de": "Der öffentlich-rechtliche Hörfunksender für Hamburg."
     },
     {
       "url": "https://www.abendblatt.de/hamburg/rss",
-      "title": "Abendblatt HH",
+      "title": "Hamburger Abendblatt – Hamburg",
       "lang": "de",
       "category": "hamburg",
-      "site_url": "https://www.abendblatt.de/hamburg/"
+      "site_url": "https://www.abendblatt.de/hamburg/",
+      "description": "Hamburg desk of the city's daily newspaper.",
+      "description_de": "Hamburg-Ressort der Hamburger Tageszeitung."
     },
     {
       "url": "https://www.mopo.de/feed/",
-      "title": "MOPO",
+      "title": "Hamburger Morgenpost",
       "lang": "de",
       "category": "hamburg",
-      "site_url": "https://www.mopo.de/"
+      "site_url": "https://www.mopo.de/",
+      "description": "Hamburg tabloid daily, city and regional coverage.",
+      "description_de": "Hamburger Boulevardzeitung mit Stadt- und Regionalberichterstattung."
     },
     {
-      "url": "https://www.ndr.de/home/index-rss.xml",
-      "title": "NDR",
+      "url": "https://taz.de/Hamburg/!p4622;rss/",
+      "title": "taz Hamburg",
       "lang": "de",
-      "category": "national",
-      "site_url": "https://www.ndr.de/"
+      "category": "hamburg",
+      "site_url": "https://taz.de/Hamburg/",
+      "description": "Hamburg edition of the left-leaning national daily.",
+      "description_de": "Hamburg-Ausgabe der linken überregionalen Tageszeitung."
     },
     {
-      "url": "https://www.abendblatt.de/rss",
-      "title": "Abendblatt",
+      "url": "https://www.hinzundkunzt.de/feed/",
+      "title": "Hinz&Kunzt",
       "lang": "de",
-      "category": "national",
-      "site_url": "https://www.abendblatt.de/"
+      "category": "hamburg",
+      "site_url": "https://www.hinzundkunzt.de/",
+      "description": "Hamburg street magazine, reporting on the city's social issues.",
+      "description_de": "Hamburger Straßenmagazin mit Berichten zu sozialen Themen der Stadt."
+    },
+    {
+      "url": "https://szene-hamburg.com/feed/",
+      "title": "SZENE HAMBURG",
+      "lang": "de",
+      "category": "hamburg",
+      "site_url": "https://szene-hamburg.com/",
+      "description": "Hamburg city magazine: culture, food and going out.",
+      "description_de": "Hamburger Stadtmagazin: Kultur, Essen und Ausgehen."
     },
     {
       "url": "https://www.tagesschau.de/index~rss2.xml",
       "title": "tagesschau",
       "lang": "de",
       "category": "national",
-      "site_url": "https://www.tagesschau.de/"
+      "site_url": "https://www.tagesschau.de/",
+      "description": "News from Germany's public broadcaster ARD.",
+      "description_de": "Nachrichten der ARD."
+    },
+    {
+      "url": "https://www.deutschlandfunk.de/nachrichten-100.rss",
+      "title": "Deutschlandfunk",
+      "lang": "de",
+      "category": "national",
+      "site_url": "https://www.deutschlandfunk.de/",
+      "description": "Rolling news from the national public radio network.",
+      "description_de": "Fortlaufende Nachrichten des nationalen öffentlich-rechtlichen Hörfunks."
+    },
+    {
+      "url": "https://www.ndr.de/home/index-rss.xml",
+      "title": "NDR",
+      "lang": "de",
+      "category": "national",
+      "site_url": "https://www.ndr.de/",
+      "description": "Public broadcaster for northern Germany.",
+      "description_de": "Öffentlich-rechtlicher Sender für Norddeutschland."
+    },
+    {
+      "url": "https://www.abendblatt.de/rss",
+      "title": "Hamburger Abendblatt",
+      "lang": "de",
+      "category": "national",
+      "site_url": "https://www.abendblatt.de/",
+      "description": "Main feed of the Hamburg daily, including national coverage.",
+      "description_de": "Hauptfeed der Hamburger Tageszeitung, inklusive überregionaler Themen."
     },
     {
       "url": "https://www.spiegel.de/schlagzeilen/tops/index.rss",
-      "title": "SPIEGEL",
+      "title": "DER SPIEGEL",
       "lang": "de",
       "category": "national",
-      "site_url": "https://www.spiegel.de/"
+      "site_url": "https://www.spiegel.de/",
+      "description": "Top headlines from the weekly news magazine.",
+      "description_de": "Schlagzeilen des Nachrichtenmagazins."
     },
     {
       "url": "https://newsfeed.zeit.de/index",
-      "title": "ZEIT",
+      "title": "DIE ZEIT",
       "lang": "de",
       "category": "national",
-      "site_url": "https://www.zeit.de/"
-    },
-    {
-      "url": "https://www.welt.de/feeds/latest.rss",
-      "title": "WELT",
-      "lang": "de",
-      "category": "national",
-      "site_url": "https://www.welt.de/"
-    },
-    {
-      "url": "https://www.n-tv.de/rss",
-      "title": "n-tv",
-      "lang": "de",
-      "category": "national",
-      "site_url": "https://www.n-tv.de/"
+      "site_url": "https://www.zeit.de/",
+      "description": "News and analysis from the weekly newspaper.",
+      "description_de": "Nachrichten und Analysen der Wochenzeitung."
     },
     {
       "url": "https://www.faz.net/rss/aktuell/",
       "title": "FAZ",
       "lang": "de",
       "category": "national",
-      "site_url": "https://www.faz.net/"
+      "site_url": "https://www.faz.net/",
+      "description": "Frankfurter Allgemeine Zeitung, current news.",
+      "description_de": "Frankfurter Allgemeine Zeitung, aktuelle Nachrichten."
     },
     {
       "url": "https://rss.sueddeutsche.de/rss/Topthemen",
-      "title": "SZ",
+      "title": "Süddeutsche Zeitung",
       "lang": "de",
       "category": "national",
-      "site_url": "https://www.sueddeutsche.de/"
+      "site_url": "https://www.sueddeutsche.de/",
+      "description": "Lead stories from the Munich-based national daily.",
+      "description_de": "Topthemen der überregionalen Münchner Tageszeitung."
+    },
+    {
+      "url": "https://www.welt.de/feeds/latest.rss",
+      "title": "WELT",
+      "lang": "de",
+      "category": "national",
+      "site_url": "https://www.welt.de/",
+      "description": "Latest news from the national daily.",
+      "description_de": "Aktuelle Nachrichten der überregionalen Tageszeitung."
+    },
+    {
+      "url": "https://www.n-tv.de/rss",
+      "title": "n-tv",
+      "lang": "de",
+      "category": "national",
+      "site_url": "https://www.n-tv.de/",
+      "description": "Rolling news from the commercial news channel.",
+      "description_de": "Fortlaufende Nachrichten des privaten Nachrichtensenders."
     },
     {
       "url": "https://www.stern.de/feed/standard/all/",
       "title": "stern",
       "lang": "de",
       "category": "national",
-      "site_url": "https://www.stern.de/"
+      "site_url": "https://www.stern.de/",
+      "description": "News and features from the weekly magazine.",
+      "description_de": "Nachrichten und Reportagen des Wochenmagazins."
     },
     {
       "url": "https://taz.de/!p4608;rss/",
       "title": "taz",
       "lang": "de",
       "category": "national",
-      "site_url": "https://taz.de/"
+      "site_url": "https://taz.de/",
+      "description": "Left-leaning national daily newspaper.",
+      "description_de": "Linke überregionale Tageszeitung."
     },
     {
       "url": "https://www.tagesspiegel.de/contentexport/feed/home",
-      "title": "Tagesspiegel",
+      "title": "Der Tagesspiegel",
       "lang": "de",
       "category": "national",
-      "site_url": "https://www.tagesspiegel.de/"
+      "site_url": "https://www.tagesspiegel.de/",
+      "description": "Berlin daily with national coverage.",
+      "description_de": "Berliner Tageszeitung mit überregionaler Berichterstattung."
+    },
+    {
+      "url": "https://www.heise.de/rss/heise-atom.xml",
+      "title": "heise online",
+      "lang": "de",
+      "category": "national",
+      "site_url": "https://www.heise.de/",
+      "description": "Technology and digital policy news.",
+      "description_de": "Nachrichten zu Technik und Digitalpolitik."
     }
   ]
 }

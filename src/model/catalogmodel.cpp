@@ -46,7 +46,7 @@ QVariant CatalogModel::data(const QModelIndex &index, int role) const
     case SiteUrlRole:
         return entry.siteUrl;
     case DescriptionRole:
-        return entry.description;
+        return entry.displayDescription(m_uiLanguage);
     case SubscribedRole:
         return m_subscribed.contains(entry.url);
     default:
@@ -93,8 +93,10 @@ void CatalogModel::setUiLanguage(const QString &lang)
     if (lang == m_uiLanguage)
         return;
     m_uiLanguage = lang;
-    if (!m_visible.isEmpty())
-        emit dataChanged(index(0), index(m_visible.size() - 1), {CategoryNameRole});
+    if (!m_visible.isEmpty()) {
+        emit dataChanged(index(0), index(m_visible.size() - 1),
+                         {CategoryNameRole, DescriptionRole});
+    }
     emit uiLanguageChanged();
 }
 

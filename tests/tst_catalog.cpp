@@ -14,6 +14,7 @@ class TestCatalog : public QObject
 private slots:
     void parsesAWellFormedCatalogue();
     void localisedCategoryNamesFallBack();
+    void localisedDescriptionsFallBack();
     void skipsEntriesMissingRequiredFields();
     void rejectsNewerFormatVersion();
     void rejectsGarbage();
@@ -72,6 +73,26 @@ void TestCatalog::localisedCategoryNamesFallBack()
     QCOMPARE(category.displayName(QString()), QStringLiteral("Germany"));
 }
 
+void TestCatalog::localisedDescriptionsFallBack()
+{
+    const QByteArray json = R"({
+      "version": 1,
+      "feeds": [
+        { "url": "https://example.invalid/a", "title": "A", "lang": "de",
+          "description": "A newspaper.", "description_de": "Eine Zeitung." }
+      ]
+    })";
+
+    const catalog::Catalog parsed = catalog::parseCatalog(json);
+    QVERIFY2(parsed.isValid(), qPrintable(parsed.error));
+
+    const catalog::Entry &entry = parsed.entries.first();
+    QCOMPARE(entry.displayDescription(QStringLiteral("de")), QStringLiteral("Eine Zeitung."));
+    QCOMPARE(entry.displayDescription(QStringLiteral("de-AT")), QStringLiteral("Eine Zeitung."));
+    QCOMPARE(entry.displayDescription(QStringLiteral("fr")), QStringLiteral("A newspaper."));
+    QCOMPARE(entry.displayDescription(QString()), QStringLiteral("A newspaper."));
+}
+
 void TestCatalog::skipsEntriesMissingRequiredFields()
 {
     // One malformed row in a remotely hosted file must not cost every user their list.
@@ -118,16 +139,38 @@ void TestCatalog::shippedCatalogueFileIsValid()
 
     const catalog::Catalog parsed = catalog::parseCatalog(file.readAll());
     QVERIFY2(parsed.isValid(), qPrintable(parsed.error));
-    QVERIFY(parsed.entries.size() >= 10);
+    QVERIFY(parsed.entries.size() >= 15);
 
+    QSet<QString> urls;
+    QSet<QString> usedCategories;
     for (const catalog::Entry &entry : parsed.entries) {
-        QVERIFY2(entry.url.startsWith(QStringLiteral("https://")),
-                 qPrintable(entry.title + QStringLiteral(": ") + entry.url));
-        QVERIFY2(!entry.lang.isEmpty(), qPrintable(entry.title));
+        const QByteArray who = entry.title.toUtf8();
+        // Publishers' feeds, over TLS, and no duplicates -- a duplicate would show as two
+        // identical rows the user could subscribe to twice.
+        QVERIFY2(entry.url.startsWith(QStringLiteral("https://")), who.constData());
+        QVERIFY2(!urls.contains(entry.url), who.constData());
+        urls.insert(entry.url);
+
+        // A tag with a region would put this feed in a partition of its own (section 7).
+        QVERIFY2(!entry.lang.isEmpty(), who.constData());
+        QVERIFY2(entry.lang == entry.lang.toLower() && !entry.lang.contains(QLatin1Char('-')),
+                 who.constData());
+
         // Every feed must point at a category that exists, or it is unreachable in the UI.
-        QVERIFY2(parsed.category(entry.category) != nullptr,
-                 qPrintable(entry.title + QStringLiteral(" -> ") + entry.category));
+        QVERIFY2(parsed.category(entry.category) != nullptr, who.constData());
+        usedCategories.insert(entry.category);
+
+        // The description is what a user picks by, so an entry without one is not ready
+        // to be offered.
+        QVERIFY2(!entry.description.isEmpty(), who.constData());
+        QVERIFY2(!entry.displayDescription(QStringLiteral("de")).isEmpty(), who.constData());
+        QVERIFY2(entry.displayDescription(QStringLiteral("de")) != entry.description,
+                 qPrintable(entry.title + QStringLiteral(" has no German description")));
     }
+
+    // A category nobody uses would appear in the filter and always show an empty list.
+    for (const catalog::Category &category : parsed.categories)
+        QVERIFY2(usedCategories.contains(category.id), qPrintable(category.id));
 }
 
 void TestCatalog::settingsDefaults()

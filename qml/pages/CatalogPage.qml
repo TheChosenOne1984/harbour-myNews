@@ -167,9 +167,20 @@ Page {
                 }
                 Label {
                     width: parent.width
-                    truncationMode: TruncationMode.Fade
+                    wrapMode: Text.Wrap
+                    maximumLineCount: 2
+                    elide: Text.ElideRight
+                    visible: model.description !== ""
                     font.pixelSize: Theme.fontSizeExtraSmall
                     color: Theme.secondaryColor
+                    text: model.description
+                }
+                Label {
+                    width: parent.width
+                    truncationMode: TruncationMode.Fade
+                    font.pixelSize: Theme.fontSizeExtraSmall
+                    color: model.subscribed ? Theme.secondaryHighlightColor
+                                            : Theme.secondaryColor
                     text: model.subscribed
                         //: shown on a catalogue entry the user already subscribes to
                         ? qsTr("Added · %1").arg(model.categoryName)

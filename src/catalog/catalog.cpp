@@ -10,25 +10,40 @@
 namespace catalog {
 namespace {
 
-const QString LocalisedPrefix = QStringLiteral("name_");
+const QString LocalisedNamePrefix = QStringLiteral("name_");
+const QString LocalisedDescriptionPrefix = QStringLiteral("description_");
 
-} // namespace
-
-QString Category::displayName(const QString &lang) const
+/*!
+ * Picks the value for a UI language: exact match, then the base language of a regional
+ * variant, then the English source.
+ */
+QString localised(const QHash<QString, QString> &values, const QString &lang,
+                  const QString &fallback)
 {
     if (!lang.isEmpty()) {
-        auto it = localisedNames.constFind(lang);
-        if (it != localisedNames.constEnd())
+        auto it = values.constFind(lang);
+        if (it != values.constEnd())
             return it.value();
-        // "de-AT" falls back to "de" before falling back to English.
         const int dash = lang.indexOf(QLatin1Char('-'));
         if (dash > 0) {
-            it = localisedNames.constFind(lang.left(dash));
-            if (it != localisedNames.constEnd())
+            it = values.constFind(lang.left(dash));
+            if (it != values.constEnd())
                 return it.value();
         }
     }
-    return name;
+    return fallback;
+}
+
+} // namespace
+
+QString Entry::displayDescription(const QString &lang) const
+{
+    return localised(localisedDescriptions, lang, description);
+}
+
+QString Category::displayName(const QString &lang) const
+{
+    return localised(localisedNames, lang, name);
 }
 
 const Category *Catalog::category(const QString &id) const
@@ -80,8 +95,8 @@ Catalog parseCatalog(const QByteArray &json)
         // Localised names follow the same convention as the UI translations: English is
         // the source, "name_<lang>" overrides it.
         for (auto it = object.constBegin(); it != object.constEnd(); ++it) {
-            if (it.key().startsWith(LocalisedPrefix) && it.value().isString()) {
-                category.localisedNames.insert(it.key().mid(LocalisedPrefix.size()),
+            if (it.key().startsWith(LocalisedNamePrefix) && it.value().isString()) {
+                category.localisedNames.insert(it.key().mid(LocalisedNamePrefix.size()),
                                                it.value().toString());
             }
         }
@@ -99,6 +114,14 @@ Catalog parseCatalog(const QByteArray &json)
         entry.category = object.value(QStringLiteral("category")).toString();
         entry.siteUrl = object.value(QStringLiteral("site_url")).toString();
         entry.description = object.value(QStringLiteral("description")).toString();
+        // Same convention as the category names and the UI translations: English is the
+        // source, "description_<lang>" overrides it.
+        for (auto it = object.constBegin(); it != object.constEnd(); ++it) {
+            if (it.key().startsWith(LocalisedDescriptionPrefix) && it.value().isString()) {
+                entry.localisedDescriptions.insert(
+                    it.key().mid(LocalisedDescriptionPrefix.size()), it.value().toString());
+            }
+        }
         // One malformed row must not cost every user their starter list.
         if (entry.isValid())
             result.entries.append(entry);
