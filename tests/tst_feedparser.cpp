@@ -22,6 +22,8 @@ private slots:
     void guidFallsBackToLink();
     void skipsItemsWithoutTitle();
     void truncatesTeaser();
+    void dropsPlaceholderTeasers_data();
+    void dropsPlaceholderTeasers();
     void stripsHtmlFromTitleAndTeaser();
     void resolvesEntities();
     void extractsImages_data();
@@ -177,6 +179,39 @@ void TestFeedParser::truncatesTeaser()
              qPrintable(QStringLiteral("teaser is %1 chars").arg(teaser.size())));
     QVERIFY(teaser.size() > MaxTeaserLength - 40);
     QVERIFY2(!teaser.endsWith(QLatin1Char(' ')), "truncation should not leave a trailing space");
+}
+
+void TestFeedParser::dropsPlaceholderTeasers_data()
+{
+    QTest::addColumn<QByteArray>("description");
+    QTest::addColumn<bool>("expectEmpty");
+
+    // Seen in a real feed: the word "None" rendered under a headline as if it were the
+    // summary.
+    QTest::newRow("None") << QByteArray("None") << true;
+    QTest::newRow("null") << QByteArray("null") << true;
+    QTest::newRow("dash") << QByteArray("-") << true;
+    QTest::newRow("n/a") << QByteArray("N/A") << true;
+    QTest::newRow("real teaser") << QByteArray("Die Feuerwehr war im Einsatz.") << false;
+    // A headline that legitimately begins with the word must survive.
+    QTest::newRow("none in a sentence")
+        << QByteArray("None of the parties reached a majority.") << false;
+}
+
+void TestFeedParser::dropsPlaceholderTeasers()
+{
+    QFETCH(QByteArray, description);
+    QFETCH(bool, expectEmpty);
+
+    const QByteArray xml =
+        "<rss version=\"2.0\"><channel><title>T</title><item>"
+        "<title>Eine Schlagzeile</title><link>https://example.invalid/1</link>"
+        "<description>" + description + "</description>"
+        "</item></channel></rss>";
+
+    const ParsedFeed feed = parseFeed(xml);
+    QCOMPARE(feed.articles.size(), 1);
+    QCOMPARE(feed.articles.first().teaser.isEmpty(), expectEmpty);
 }
 
 void TestFeedParser::stripsHtmlFromTitleAndTeaser()

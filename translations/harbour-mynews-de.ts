@@ -312,11 +312,6 @@
         <translation>Auf Vorgaben zurücksetzen</translation>
     </message>
     <message>
-        <source>The suggested sources are downloaded from a server that does not belong to any publisher. It is the only such connection the app makes.</source>
-        <extracomment>the catalogue is the only request the app makes to a non-publisher</extracomment>
-        <translation>Die vorgeschlagenen Quellen werden von einem Server geladen, der keinem Verlag gehört. Es ist die einzige Verbindung dieser Art, die die App aufbaut.</translation>
-    </message>
-    <message>
         <source>Download the catalogue from %1</source>
         <extracomment>label of the switch that permits contacting the catalogue host</extracomment>
         <translation>Katalog von %1 herunterladen</translation>
@@ -360,6 +355,11 @@
     <message>
         <source>Space for images</source>
         <translation>Speicher für Bilder</translation>
+    </message>
+    <message>
+        <source>The default catalogue is served from the Cloudflare CDN. You can point this at a source of your own instead.</source>
+        <extracomment>says where the default catalogue is hosted and that it can be changed</extracomment>
+        <translation>Der Standard-Katalog wird im Cloudflare CDN bereit gestellt. Es kann eine eigene Quelle angegeben werden.</translation>
     </message>
 </context>
 <context>

@@ -57,10 +57,9 @@ Page {
                 wrapMode: Text.Wrap
                 font.pixelSize: Theme.fontSizeExtraSmall
                 color: Theme.secondaryColor
-                //: the catalogue is the only request the app makes to a non-publisher
-                text: qsTr("The suggested sources are downloaded from a server that does "
-                           + "not belong to any publisher. It is the only such connection "
-                           + "the app makes.")
+                //: says where the default catalogue is hosted and that it can be changed
+                text: qsTr("The default catalogue is served from the Cloudflare CDN. You "
+                           + "can point this at a source of your own instead.")
             }
 
             TextSwitch {

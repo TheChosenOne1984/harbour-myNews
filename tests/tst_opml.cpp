@@ -19,6 +19,7 @@ private slots:
     void exportCarriesLanguage();
 
     void languageNamesAreEndonyms();
+    void sourceLanguageIsSelectable();
     void languageTagsLoseTheirRegion_data();
     void languageTagsLoseTheirRegion();
 };
@@ -140,6 +141,15 @@ void TestOpml::languageNamesAreEndonyms()
     // An explicit region is what the caller asked for, so it stays.
     QVERIFY(i18n::languageDisplayName(QStringLiteral("en_US")).contains(QStringLiteral("English")));
     QVERIFY(i18n::languageDisplayName(QString()).isEmpty());
+}
+
+void TestOpml::sourceLanguageIsSelectable()
+{
+    // English ships as the source strings and therefore has no .qm file. Discovering
+    // languages by scanning the translations directory alone left it unreachable, so a
+    // reader on a German device could not choose English at all.
+    QCOMPARE(i18n::sourceLanguage(), QStringLiteral("en"));
+    QCOMPARE(i18n::languageDisplayName(i18n::sourceLanguage()), QStringLiteral("English"));
 }
 
 void TestOpml::languageTagsLoseTheirRegion_data()

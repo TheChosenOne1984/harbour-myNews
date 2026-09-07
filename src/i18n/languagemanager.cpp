@@ -27,7 +27,8 @@ QString translationsDir()
 LanguageManager::LanguageManager(QObject *parent)
     : QObject(parent)
 {
-    m_available << QString(); // "System" is always offered and always first.
+    m_available << QString();          // "System" is always offered and always first.
+    m_available << i18n::sourceLanguage();   // and English, which ships as the source
 
     const QDir dir(translationsDir());
     const QStringList files = dir.entryList(
@@ -35,7 +36,7 @@ LanguageManager::LanguageManager(QObject *parent)
     for (const QString &fileName : files) {
         QString code = fileName.mid(CatalogName.size() + 1); // drop "harbour-mynews-"
         code.chop(3);                                        // drop ".qm"
-        if (!code.isEmpty())
+        if (!code.isEmpty() && !m_available.contains(code))
             m_available << code;
     }
 
@@ -66,6 +67,8 @@ void LanguageManager::install(const QString &code)
 
     // Failing to load is the correct outcome for English and for any locale we do not
     // ship: the source strings are already English.
+    // Choosing the source language means installing no translator at all: the strings in
+    // the code already are that language. Loading simply fails, which is the same thing.
     const bool loaded = code.isEmpty()
         ? translator->load(QLocale(), CatalogName, QStringLiteral("-"), dir)
         : translator->load(CatalogName + QLatin1Char('-') + code, dir);

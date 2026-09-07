@@ -32,6 +32,15 @@ QString normalizeLanguageTag(const QString &code);
  */
 QString languageDisplayName(const QString &code);
 
+/*!
+ * \brief The language the source strings are written in.
+ *
+ * It has no .qm file -- there is nothing to translate English into English -- so a picker
+ * that lists installed translations alone leaves it unreachable, and a reader on a German
+ * device cannot choose English at all. It has to be offered explicitly.
+ */
+inline QString sourceLanguage() { return QStringLiteral("en"); }
+
 } // namespace i18n
 
 #endif // I18N_LANGUAGENAMES_H

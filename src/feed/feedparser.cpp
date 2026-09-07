@@ -136,8 +136,26 @@ QString extractImage(const Node &entry, const QString &bodyHtml)
     return firstImageInHtml(bodyHtml);
 }
 
+/*!
+ * Some feeds put a placeholder where the summary should be -- literally "None", "null" or
+ * a dash. Shown under a headline that is a word of noise, so it is dropped: an empty
+ * teaser leaves the row's reserved space blank, which reads better than "None".
+ */
+bool isPlaceholderTeaser(const QString &text)
+{
+    static const QStringList placeholders{
+        QStringLiteral("none"), QStringLiteral("null"), QStringLiteral("nil"),
+        QStringLiteral("-"),    QStringLiteral("--"),   QStringLiteral("n/a"),
+        QStringLiteral("keine beschreibung"), QStringLiteral("no description"),
+    };
+    return placeholders.contains(text.trimmed().toLower());
+}
+
 QString truncateTeaser(const QString &text)
 {
+    if (isPlaceholderTeaser(text))
+        return QString();
+
     if (text.size() <= MaxTeaserLength)
         return text;
     // Cut on a word boundary when one is close, so the teaser does not end mid-word.

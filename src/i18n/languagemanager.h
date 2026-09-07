@@ -40,7 +40,7 @@ public:
     /*! Empty string when following the device locale. */
     QString currentLanguage() const { return m_current; }
 
-    /*! Language codes, always starting with the empty string for "System". */
+    /*! Language codes: "" for System, then the source language, then what is installed. */
     QStringList availableLanguages() const { return m_available; }
 
     /*! Endonym for a code ("Deutsch"), or the translated word for "System". */
