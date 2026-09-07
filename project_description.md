@@ -353,8 +353,21 @@ Users get a curated starter list, extensible with arbitrary feed URLs and OPML i
   subscriptions with other readers. Do not compile
   it into the binary. Rationale: if a publisher asks to be removed, that must be a commit, not an
   app store release cycle.
-- Ship a bundled copy as offline fallback for first run; refresh from remote on a slow cadence
-  (weekly) with `If-Modified-Since`.
+- **Nothing is bundled.** The catalogue is fetched on first start and cached locally; later
+  refreshes are on a slow cadence (weekly) with `If-Modified-Since`. This replaces the
+  bundled offline fallback the section originally called for: an app with no feeds and no
+  network has nothing to show anyway, and a bundled copy is a second list to keep in step
+  with the hosted one — including when a publisher asks to be removed, which is the very
+  thing hosting it remotely was meant to solve.
+- Consequences of not bundling, which have to be handled rather than assumed away:
+  - **The hosting URL is load-bearing at first run.** If it is unreachable, a fresh install
+    has no starter list. The cached copy limits this to first run only, and adding a feed by
+    URL never depends on the catalogue — but the first-run empty state must say *why* it is
+    empty and offer both a retry and a manual add, not merely appear broken.
+  - **It is the only request the app makes to anything other than a publisher.** Say so in
+    the settings, and let it be switched off.
+- **The user picks from the catalogue**; subscribing to everything in it is not the default.
+  Feeds added by hand ask for a language alongside the URL (§7).
 - **Compile the list yourself** from publishers' own feed pages. Do not bulk-import a third
   party's curated feed directory — such directories can be protected as database works
   (§ 87a UrhG).
