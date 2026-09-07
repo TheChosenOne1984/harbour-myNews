@@ -25,16 +25,54 @@ QMAKE_CXXFLAGS += -std=c++17
 
 SOURCES += \
     src/main.cpp \
-    src/i18n/languagemanager.cpp
+    src/app/appcontroller.cpp \
+    src/app/backend.cpp \
+    src/app/settings.cpp \
+    src/catalog/catalog.cpp \
+    src/catalog/catalogservice.cpp \
+    src/cluster/clusterer.cpp \
+    src/cluster/normalize.cpp \
+    src/cluster/simhash.cpp \
+    src/feed/feedfetcher.cpp \
+    src/feed/feedparser.cpp \
+    src/feed/feedrefresher.cpp \
+    src/feed/feedstore.cpp \
+    src/feed/opml.cpp \
+    src/i18n/languagemanager.cpp \
+    src/i18n/languagenames.cpp \
+    src/model/catalogmodel.cpp \
+    src/model/subscriptionmodel.cpp
 
 HEADERS += \
-    src/i18n/languagemanager.h
+    src/app/appcontroller.h \
+    src/app/backend.h \
+    src/app/settings.h \
+    src/catalog/catalog.h \
+    src/catalog/catalogservice.h \
+    src/cluster/clusterer.h \
+    src/cluster/normalize.h \
+    src/cluster/simhash.h \
+    src/feed/feedfetcher.h \
+    src/feed/feedparser.h \
+    src/feed/feedrefresher.h \
+    src/feed/feedstore.h \
+    src/feed/opml.h \
+    src/i18n/languagemanager.h \
+    src/i18n/languagenames.h \
+    src/model/catalogmodel.h \
+    src/model/subscriptionmodel.h
+
+INCLUDEPATH += $$PWD/src
 
 DISTFILES += \
     qml/harbour-mynews.qml \
     qml/cover/CoverPage.qml \
+    qml/pages/AddFeedPage.qml \
+    qml/pages/CatalogPage.qml \
     qml/pages/FeedPage.qml \
+    qml/pages/LanguagePickerPage.qml \
     qml/pages/SettingsPage.qml \
+    qml/pages/SubscriptionsPage.qml \
     rpm/harbour-mynews.spec \
     translations/*.ts
 

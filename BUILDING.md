@@ -134,6 +134,40 @@ Neither is packaged for Harbour. Both build the same way as the tests.
 
 Remember to clean between targets here too; these build in-source as well.
 
+## Running the app against a local catalogue
+
+Nothing is bundled, so a fresh install fetches the catalogue from the address in the
+settings. During development that address can point at your own machine:
+
+```sh
+cd catalog && python3 -m http.server 8899 &
+```
+
+The emulator reaches the host at **10.0.2.2** (the NAT gateway), not at the host-only
+address. Point the app at it before the first start:
+
+```sh
+ssh $SSHOPT -p 2223 defaultuser@127.0.0.1 \
+  "mkdir -p ~/.config/harbour-mynews && \
+   printf '[catalog]\nurl=http://10.0.2.2:8899/catalog.json\n' \
+     > ~/.config/harbour-mynews/harbour-mynews.conf"
+```
+
+Where the app keeps its files inside the emulator, all within the Sailjail whitelist:
+
+| What | Path |
+| --- | --- |
+| Database | `~/.local/share/harbour-mynews/harbour-mynews/mynews.db` |
+| Catalogue cache | `~/.cache/harbour-mynews/harbour-mynews/catalog.json` |
+| Settings | `~/.config/harbour-mynews/harbour-mynews.conf` |
+
+Delete all three to reproduce a first start.
+
+**Verifying QML.** QML errors only surface at runtime, and the pulley menus cannot be
+driven from `VBoxManage`, which sends keystrokes but not taps. To check that every page
+renders, temporarily add timers to `qml/harbour-mynews.qml` that push each page in turn,
+screenshot between them, and revert the file afterwards.
+
 ## Translations
 
 `CONFIG += sailfishapp_i18n` runs `lupdate` over `src/` and `qml/` and `lrelease` on

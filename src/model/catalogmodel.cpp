@@ -125,6 +125,16 @@ QString CatalogModel::categoryName(const QString &categoryId) const
     return categoryId;
 }
 
+QStringList CatalogModel::languages() const
+{
+    QStringList codes;
+    for (const catalog::Entry &entry : m_catalog.entries) {
+        if (!entry.lang.isEmpty() && !codes.contains(entry.lang))
+            codes.append(entry.lang);
+    }
+    return codes;
+}
+
 QVariantMap CatalogModel::entryAt(int row) const
 {
     QVariantMap map;

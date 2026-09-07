@@ -11,6 +11,7 @@ int main(int argc, char *argv[])
     failures += runFeedFetcherTests(argc, argv);
     failures += runCatalogTests(argc, argv);
     failures += runModelTests(argc, argv);
+    failures += runOpmlTests(argc, argv);
     failures += runClusterTests(argc, argv);
     return failures;
 }

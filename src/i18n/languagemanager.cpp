@@ -10,6 +10,8 @@
 
 #include <sailfishapp.h>
 
+#include "i18n/languagenames.h"
+
 namespace {
 
 /*! Basename of the .qm files, which is also the installed application name. */
@@ -47,11 +49,8 @@ QString LanguageManager::displayName(const QString &code) const
     if (code.isEmpty())
         return tr("System");
 
-    QString name = QLocale(code).nativeLanguageName();
-    if (name.isEmpty())
-        return code;
-    name[0] = name.at(0).toUpper();
-    return name;
+    const QString name = i18n::languageDisplayName(code);
+    return name.isEmpty() ? code : name;
 }
 
 void LanguageManager::install(const QString &code)

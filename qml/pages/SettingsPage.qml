@@ -33,7 +33,7 @@ Page {
                 text: qsTr("Changing the language returns you to the article list.")
             }
 
-            Item { width: 1; height: Theme.paddingLarge }
+            Item { width: 1; height: Theme.paddingMedium }
 
             Repeater {
                 model: Languages.availableLanguages
@@ -42,8 +42,101 @@ Page {
                     text: Languages.displayName(modelData)
                     automaticCheck: false
                     checked: Languages.currentLanguage === modelData
-                    onClicked: Languages.setLanguage(modelData)
+                    onClicked: {
+                        Settings.uiLanguage = modelData
+                        Languages.setLanguage(modelData)
+                    }
                 }
+            }
+
+            SectionHeader { text: qsTr("Feed catalogue") }
+
+            TextSwitch {
+                checked: Settings.catalogEnabled
+                text: qsTr("Use the feed catalogue")
+                //: the catalogue is the only request the app makes to a non-publisher
+                description: qsTr("This is the only address the app contacts that does not "
+                                  + "belong to a publisher. Switching it off means adding "
+                                  + "feeds by URL only.")
+                onClicked: Settings.catalogEnabled = !Settings.catalogEnabled
+            }
+
+            TextField {
+                width: parent.width
+                enabled: Settings.catalogEnabled
+                label: qsTr("Catalogue address")
+                text: Settings.catalogUrl
+                inputMethodHints: Qt.ImhUrlCharactersOnly | Qt.ImhNoAutoUppercase
+                //: hint under the catalogue address field
+                placeholderText: qsTr("Leave empty for the default")
+                EnterKey.iconSource: "image://theme/icon-m-enter-accept"
+                EnterKey.onClicked: {
+                    Settings.catalogUrl = text
+                    focus = false
+                    App.refreshCatalog(true)
+                }
+            }
+
+            Button {
+                anchors.horizontalCenter: parent.horizontalCenter
+                enabled: Settings.catalogEnabled && !App.busy
+                text: qsTr("Reload catalogue now")
+                onClicked: App.refreshCatalog(true)
+            }
+
+            SectionHeader { text: qsTr("Storage") }
+
+            Slider {
+                width: parent.width
+                minimumValue: 1
+                maximumValue: 90
+                stepSize: 1
+                value: Settings.retentionDays
+                valueText: qsTr("%n day(s)", "", value)
+                label: qsTr("Keep articles for")
+                onReleased: Settings.retentionDays = value
+            }
+
+            SectionHeader { text: qsTr("Grouping") }
+
+            Label {
+                x: Theme.horizontalPageMargin
+                width: parent.width - 2 * Theme.horizontalPageMargin
+                wrapMode: Text.Wrap
+                font.pixelSize: Theme.fontSizeExtraSmall
+                color: Theme.secondaryColor
+                //: warns that the grouping defaults were measured and are easy to spoil
+                text: qsTr("The defaults were measured against real feeds. Raising the "
+                           + "similarity much above the default starts merging different "
+                           + "stories.")
+            }
+
+            Slider {
+                width: parent.width
+                minimumValue: 4
+                maximumValue: 24
+                stepSize: 1
+                value: Settings.clusterThreshold
+                valueText: value
+                label: qsTr("Similarity threshold")
+                onReleased: Settings.clusterThreshold = value
+            }
+
+            Slider {
+                width: parent.width
+                minimumValue: 6
+                maximumValue: 168
+                stepSize: 6
+                value: Settings.clusterWindowHours
+                valueText: qsTr("%n hour(s)", "", value)
+                label: qsTr("Group articles published within")
+                onReleased: Settings.clusterWindowHours = value
+            }
+
+            Button {
+                anchors.horizontalCenter: parent.horizontalCenter
+                text: qsTr("Reset to defaults")
+                onClicked: Settings.resetToDefaults()
             }
         }
 

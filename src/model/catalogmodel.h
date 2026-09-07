@@ -65,8 +65,12 @@ public:
     Q_INVOKABLE QStringList categoryIds() const;
     Q_INVOKABLE QString categoryName(const QString &categoryId) const;
 
-    /*! Everything needed to subscribe to a row, for the controller. */
+    /*! Everything needed to subscribe to a row, for the controller.
+     *  \a row indexes the *filtered* list, like every other model accessor. */
     Q_INVOKABLE QVariantMap entryAt(int row) const;
+
+    /*! Distinct languages across the whole catalogue, ignoring the category filter. */
+    QStringList languages() const;
 
 signals:
     void countChanged();
