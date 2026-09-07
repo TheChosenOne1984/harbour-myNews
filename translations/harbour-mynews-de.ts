@@ -230,6 +230,98 @@
         <extracomment>more contributing sources than fit on the row</extracomment>
         <translation>+%1</translation>
     </message>
+    <message>
+        <source>Filter: %1</source>
+        <extracomment>opens the page that narrows the article list</extracomment>
+        <translation>Filter: %1</translation>
+    </message>
+    <message>
+        <source>Filter</source>
+        <translation>Filter</translation>
+    </message>
+    <message>
+        <source>Filtered: %1</source>
+        <translation>Gefiltert: %1</translation>
+    </message>
+    <message>
+        <source>Mark as unread</source>
+        <translation>Als ungelesen markieren</translation>
+    </message>
+    <message>
+        <source>Nothing matches the filter</source>
+        <translation>Nichts entspricht dem Filter</translation>
+    </message>
+    <message>
+        <source>Pull down to change or clear the filter.</source>
+        <translation>Nach unten ziehen, um den Filter zu ändern oder aufzuheben.</translation>
+    </message>
+</context>
+<context>
+    <name>FilterPage</name>
+    <message>
+        <source>Any age</source>
+        <translation>Beliebiges Alter</translation>
+    </message>
+    <message>
+        <source>Last 6 hours</source>
+        <translation>Letzte 6 Stunden</translation>
+    </message>
+    <message>
+        <source>Last day</source>
+        <translation>Letzter Tag</translation>
+    </message>
+    <message>
+        <source>Last 3 days</source>
+        <translation>Letzte 3 Tage</translation>
+    </message>
+    <message>
+        <source>Last week</source>
+        <translation>Letzte Woche</translation>
+    </message>
+    <message>
+        <source>Clear filter</source>
+        <translation>Filter aufheben</translation>
+    </message>
+    <message>
+        <source>Filter</source>
+        <translation>Filter</translation>
+    </message>
+    <message numerus="yes">
+        <source>%n article group(s) shown</source>
+        <translation>
+            <numerusform>%n Meldung wird angezeigt</numerusform>
+            <numerusform>%n Meldungen werden angezeigt</numerusform>
+        </translation>
+    </message>
+    <message>
+        <source>Unread only</source>
+        <translation>Nur ungelesene</translation>
+    </message>
+    <message>
+        <source>Region</source>
+        <translation>Region</translation>
+    </message>
+    <message>
+        <source>All regions</source>
+        <extracomment>shown when no region filter is set</extracomment>
+        <translation>Alle Regionen</translation>
+    </message>
+    <message>
+        <source>Source</source>
+        <translation>Quelle</translation>
+    </message>
+    <message>
+        <source>All sources</source>
+        <translation>Alle Quellen</translation>
+    </message>
+    <message>
+        <source>Age</source>
+        <translation>Alter</translation>
+    </message>
+    <message>
+        <source>Show everything again</source>
+        <translation>Wieder alles anzeigen</translation>
+    </message>
 </context>
 <context>
     <name>LanguageManager</name>
@@ -266,16 +358,13 @@
     </message>
     <message>
         <source>Catalogue address</source>
+        <extracomment>label of the field holding the catalogue address</extracomment>
         <translation>Katalog-Adresse</translation>
     </message>
     <message>
         <source>Leave empty for the default</source>
         <extracomment>hint under the catalogue address field</extracomment>
         <translation>Leer lassen für die Voreinstellung</translation>
-    </message>
-    <message>
-        <source>Reload catalogue now</source>
-        <translation>Katalog jetzt neu laden</translation>
     </message>
     <message>
         <source>Storage</source>
@@ -361,6 +450,24 @@
         <extracomment>says where the default catalogue is hosted and that it can be changed</extracomment>
         <translation>Der Standard-Katalog wird im Cloudflare CDN bereit gestellt. Es kann eine eigene Quelle angegeben werden.</translation>
     </message>
+    <message>
+        <source>Any address serving a catalogue in the same JSON format works — your own list, or someone else&apos;s.</source>
+        <extracomment>explains that a self-hosted catalogue is expected to work</extracomment>
+        <translation>Jede Adresse, die einen Katalog im selben JSON-Format ausliefert, funktioniert — eine eigene Liste oder die von jemand anderem.</translation>
+    </message>
+    <message>
+        <source>Reload now</source>
+        <translation>Jetzt neu laden</translation>
+    </message>
+    <message>
+        <source>Use default</source>
+        <extracomment>puts the catalogue address back to the one that ships with the app</extracomment>
+        <translation>Standard verwenden</translation>
+    </message>
+    <message>
+        <source>Loading…</source>
+        <translation>Wird geladen …</translation>
+    </message>
 </context>
 <context>
     <name>SubscriptionsPage</name>
@@ -443,10 +550,6 @@
 <context>
     <name>app::AppController</name>
     <message>
-        <source>Could not update the catalogue: %1</source>
-        <translation>Katalog konnte nicht aktualisiert werden: %1</translation>
-    </message>
-    <message>
         <source>Import failed: %1</source>
         <translation>Import fehlgeschlagen: %1</translation>
     </message>
@@ -468,6 +571,46 @@
     <message>
         <source>Cannot read %1</source>
         <translation>%1 kann nicht gelesen werden</translation>
+    </message>
+    <message>
+        <source>Could not reload: %1. The stored catalogue is still in use.</source>
+        <translation>Neu laden fehlgeschlagen: %1. Der gespeicherte Katalog wird weiter verwendet.</translation>
+    </message>
+    <message>
+        <source>Could not load the catalogue: %1</source>
+        <translation>Katalog konnte nicht geladen werden: %1</translation>
+    </message>
+    <message numerus="yes">
+        <source>Loaded %n source(s).</source>
+        <translation>
+            <numerusform>%n Quelle geladen.</numerusform>
+            <numerusform>%n Quellen geladen.</numerusform>
+        </translation>
+    </message>
+    <message numerus="yes">
+        <source>Already up to date: %n source(s).</source>
+        <translation>
+            <numerusform>Bereits aktuell: %n Quelle.</numerusform>
+            <numerusform>Bereits aktuell: %n Quellen.</numerusform>
+        </translation>
+    </message>
+    <message>
+        <source>unread</source>
+        <translation>ungelesen</translation>
+    </message>
+    <message numerus="yes">
+        <source>%n hour(s)</source>
+        <translation>
+            <numerusform>%n Stunde</numerusform>
+            <numerusform>%n Stunden</numerusform>
+        </translation>
+    </message>
+    <message numerus="yes">
+        <source>%n day(s)</source>
+        <translation>
+            <numerusform>%n Tag</numerusform>
+            <numerusform>%n Tage</numerusform>
+        </translation>
     </message>
 </context>
 <context>

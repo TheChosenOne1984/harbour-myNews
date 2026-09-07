@@ -46,17 +46,21 @@ public slots:
 
     void reloadFeeds();
 
-    /*! Re-reads the article list. */
+    /*! Re-reads the article list under the current filter. */
     void reloadClusters(int limit);
 
-    void markClusterRead(qint64 clusterId);
+    /*! Replaces the filter and re-reads. */
+    void setClusterFilter(bool unreadOnly, const QString &category, qint64 feedId,
+                          qint64 maxAgeSeconds);
+
+    void markClusterRead(qint64 clusterId, bool read);
     void markAllRead();
 
     void refreshFeeds(int hammingThreshold, int windowHours);
     void refreshCatalog(const QString &url, bool force);
 
     void subscribe(const QString &url, const QString &title, const QString &lang,
-                   const QString &langSource);
+                   const QString &langSource, const QString &category);
     void unsubscribe(qint64 feedId);
     void setFeedEnabled(qint64 feedId, bool enabled);
     void setFeedLanguage(qint64 feedId, const QString &lang);
@@ -85,6 +89,7 @@ signals:
     void initialised(bool ok, const QString &error);
     void feedsChanged(const QVector<feed::FeedRecord> &feeds);
     void clustersChanged(const QVector<feed::ClusterSummary> &clusters);
+    void subscribedCategoriesChanged(const QStringList &categories);
     void unreadCountChanged(int count);
 
     /*! The members of one cluster, for the "other sources" list. */
@@ -113,6 +118,7 @@ private:
     void emitClusters();
 
     int m_clusterLimit = 200;
+    feed::ClusterFilter m_filter;
 
     feed::FeedStore *m_store = nullptr;
     feed::FeedFetcher *m_fetcher = nullptr;

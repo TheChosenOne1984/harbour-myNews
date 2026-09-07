@@ -61,6 +61,24 @@ class AppController : public QObject
     /*! Headline of the newest cluster, for the cover page. */
     Q_PROPERTY(QString leadHeadline READ leadHeadline NOTIFY leadHeadlineChanged)
 
+    // --- Filter. A day of twenty feeds is over a thousand articles; without these the
+    // list is a wall rather than something to read.
+    Q_PROPERTY(bool filterUnreadOnly READ filterUnreadOnly WRITE setFilterUnreadOnly
+                   NOTIFY filterChanged)
+    Q_PROPERTY(QString filterCategory READ filterCategory WRITE setFilterCategory
+                   NOTIFY filterChanged)
+    Q_PROPERTY(qint64 filterFeedId READ filterFeedId WRITE setFilterFeedId NOTIFY filterChanged)
+    Q_PROPERTY(int filterMaxAgeHours READ filterMaxAgeHours WRITE setFilterMaxAgeHours
+                   NOTIFY filterChanged)
+    Q_PROPERTY(bool filterActive READ filterActive NOTIFY filterChanged)
+    /*! One line naming what is filtered, for the list header. */
+    Q_PROPERTY(QString filterSummary READ filterSummary NOTIFY filterChanged)
+    Q_PROPERTY(QStringList subscribedCategories READ subscribedCategories
+                   NOTIFY subscribedCategoriesChanged)
+
+    /*! Result of the last catalogue fetch, so a manual reload says what happened. */
+    Q_PROPERTY(QString catalogStatus READ catalogStatus NOTIFY catalogStatusChanged)
+
     /*! True while the user has not yet decided about contacting the catalogue host. */
     Q_PROPERTY(bool needsCatalogConsent READ needsCatalogConsent NOTIFY catalogConsentChanged)
     Q_PROPERTY(bool catalogDeclined READ catalogDeclined NOTIFY catalogConsentChanged)
@@ -91,6 +109,21 @@ public:
     int clusterWindowMinimum() const { return cluster::Params::MinWindowHours; }
     int clusterWindowMaximum() const { return cluster::Params::MaxWindowHours; }
     QString leadHeadline() const { return m_leadHeadline; }
+
+    bool filterUnreadOnly() const { return m_filterUnreadOnly; }
+    void setFilterUnreadOnly(bool unreadOnly);
+    QString filterCategory() const { return m_filterCategory; }
+    void setFilterCategory(const QString &category);
+    qint64 filterFeedId() const { return m_filterFeedId; }
+    void setFilterFeedId(qint64 feedId);
+    int filterMaxAgeHours() const { return m_filterMaxAgeHours; }
+    void setFilterMaxAgeHours(int hours);
+    bool filterActive() const;
+    QString filterSummary() const;
+    QStringList subscribedCategories() const { return m_subscribedCategories; }
+    Q_INVOKABLE void clearFilter();
+
+    QString catalogStatus() const { return m_catalogStatus; }
     bool needsCatalogConsent() const;
     bool catalogDeclined() const;
 
@@ -121,7 +154,10 @@ public:
      */
     Q_INVOKABLE void requestThumbnail(qint64 articleId);
 
-    Q_INVOKABLE void markClusterRead(qint64 clusterId);
+    Q_INVOKABLE void markClusterRead(qint64 clusterId, bool read = true);
+
+    /*! Reads a cluster's own read state, for the thumbnail toggle. */
+    Q_INVOKABLE bool isClusterUnread(qint64 clusterId) const;
     Q_INVOKABLE void markAllRead();
 
     /*! Asks for the members of a cluster; answered by clusterMembersLoaded(). */
@@ -152,6 +188,9 @@ signals:
     void subscriptionCountChanged();
     void catalogConsentChanged();
     void unreadCountChanged();
+    void filterChanged();
+    void subscribedCategoriesChanged();
+    void catalogStatusChanged();
     void leadHeadlineChanged();
 
     /*! Members of the cluster asked for by loadClusterMembers(). */
@@ -177,6 +216,15 @@ private:
     model::ClusterModel m_clusters;
     int m_unreadCount = 0;
     QString m_leadHeadline;
+
+    bool m_filterUnreadOnly = false;
+    QString m_filterCategory;
+    qint64 m_filterFeedId = -1;
+    int m_filterMaxAgeHours = 0;
+    QStringList m_subscribedCategories;
+    QString m_catalogStatus;
+
+    void pushFilter();
 
     bool m_ready = false;
     bool m_busy = false;

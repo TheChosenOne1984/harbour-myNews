@@ -20,6 +20,13 @@ struct FeedRecord
     QString title;
     QString siteUrl;
     QString lang;
+
+    /*!
+     * Catalogue category this feed came from, e.g. "hamburg". Empty for a feed the user
+     * added by URL -- carried so the article list can be filtered by region.
+     */
+    QString category;
+
     /*!
      * Where feed.lang came from: "catalogue" | "declared" | "manual".
      *
@@ -66,6 +73,28 @@ struct ClusterRecord
     QString lang;
     qint64 published = 0;    //!< newest member, which is what the list sorts on
     int memberCount = 0;
+};
+
+/*!
+ * \brief What the article list is currently showing.
+ *
+ * A subscription list of twenty feeds produces well over a thousand articles a day, which
+ * is more than anyone reads top to bottom. Filtering is therefore not a convenience but
+ * the difference between a usable list and a wall.
+ *
+ * An empty or zero field means "no restriction on this".
+ */
+struct ClusterFilter
+{
+    bool unreadOnly = false;
+    QString category;          //!< catalogue category id, e.g. "hamburg"
+    qint64 feedId = -1;        //!< only stories this feed contributed to
+    qint64 maxAgeSeconds = 0;  //!< only articles newer than this
+
+    bool isActive() const
+    {
+        return unreadOnly || !category.isEmpty() || feedId >= 0 || maxAgeSeconds > 0;
+    }
 };
 
 /*!
@@ -144,7 +173,8 @@ public:
      */
     qint64 addFeed(const QString &url, const QString &title = QString(),
                    const QString &lang = QString(),
-                   const QString &langSource = QStringLiteral("declared"));
+                   const QString &langSource = QStringLiteral("declared"),
+                   const QString &category = QString());
     bool removeFeed(qint64 feedId);
     QVector<FeedRecord> feeds(bool enabledOnly = false) const;
     bool feedById(qint64 feedId, FeedRecord *out) const;
@@ -186,6 +216,13 @@ public:
 
     /*! The same, with the lead article and contributing sources joined in. */
     QVector<ClusterSummary> clusterSummaries(int limit = 100, int offset = 0) const;
+
+    /*! Filtered, and told how many rows the filter is hiding. */
+    QVector<ClusterSummary> clusterSummaries(const ClusterFilter &filter, qint64 now,
+                                             int limit = 200, int offset = 0) const;
+
+    /*! Categories the user is actually subscribed to, so the filter offers no empty ones. */
+    QStringList subscribedCategories() const;
     bool clusterById(qint64 clusterId, ClusterRecord *out) const;
 
     QVector<ArticleRecord> articlesInCluster(qint64 clusterId) const;

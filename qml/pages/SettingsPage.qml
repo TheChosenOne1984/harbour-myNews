@@ -74,13 +74,18 @@ Page {
             }
 
             TextField {
+                id: catalogField
                 width: parent.width
                 enabled: Settings.catalogEnabled
+                //: label of the field holding the catalogue address
                 label: qsTr("Catalogue address")
                 text: Settings.catalogUrl
                 inputMethodHints: Qt.ImhUrlCharactersOnly | Qt.ImhNoAutoUppercase
                 //: hint under the catalogue address field
                 placeholderText: qsTr("Leave empty for the default")
+                //: explains that a self-hosted catalogue is expected to work
+                description: qsTr("Any address serving a catalogue in the same JSON format "
+                                  + "works — your own list, or someone else's.")
                 EnterKey.iconSource: "image://theme/icon-m-enter-accept"
                 EnterKey.onClicked: {
                     Settings.catalogUrl = text
@@ -89,11 +94,53 @@ Page {
                 }
             }
 
-            Button {
+            Row {
                 anchors.horizontalCenter: parent.horizontalCenter
-                enabled: Settings.catalogEnabled && !App.busy
-                text: qsTr("Reload catalogue now")
-                onClicked: App.refreshCatalog(true)
+                spacing: Theme.paddingMedium
+
+                Button {
+                    enabled: Settings.catalogEnabled && !App.busy
+                    text: qsTr("Reload now")
+                    onClicked: {
+                        if (catalogField.text !== Settings.catalogUrl)
+                            Settings.catalogUrl = catalogField.text
+                        App.refreshCatalog(true)
+                    }
+                }
+
+                Button {
+                    //: puts the catalogue address back to the one that ships with the app
+                    text: qsTr("Use default")
+                    enabled: Settings.catalogUrl !== Settings.defaultCatalogUrl
+                    onClicked: {
+                        Settings.catalogUrl = ""
+                        catalogField.text = Settings.catalogUrl
+                        App.refreshCatalog(true)
+                    }
+                }
+            }
+
+            // A button that does something has to say what it did: without this, a manual
+            // reload looked the same whether it succeeded, was already current, or failed.
+            Label {
+                x: Theme.horizontalPageMargin
+                width: parent.width - 2 * Theme.horizontalPageMargin
+                wrapMode: Text.Wrap
+                horizontalAlignment: Text.AlignHCenter
+                font.pixelSize: Theme.fontSizeExtraSmall
+                color: App.catalogError !== "" ? Theme.errorColor : Theme.highlightColor
+                visible: !App.busy && App.catalogStatus !== ""
+                text: App.catalogStatus
+            }
+
+            Label {
+                x: Theme.horizontalPageMargin
+                width: parent.width - 2 * Theme.horizontalPageMargin
+                horizontalAlignment: Text.AlignHCenter
+                font.pixelSize: Theme.fontSizeExtraSmall
+                color: Theme.secondaryColor
+                visible: App.busy
+                text: qsTr("Loading…")
             }
 
             SectionHeader { text: qsTr("Storage") }

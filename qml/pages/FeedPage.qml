@@ -49,6 +49,12 @@ Page {
                 onClicked: pageStack.push(Qt.resolvedUrl("SubscriptionsPage.qml"))
             }
             MenuItem {
+                //: opens the page that narrows the article list
+                text: App.filterActive ? qsTr("Filter: %1").arg(App.filterSummary)
+                                       : qsTr("Filter")
+                onClicked: pageStack.push(Qt.resolvedUrl("FilterPage.qml"))
+            }
+            MenuItem {
                 text: qsTr("Mark all as read")
                 enabled: App.unreadCount > 0
                 onClicked: App.markAllRead()
@@ -63,8 +69,12 @@ Page {
         header: PageHeader {
             //: application title shown above the article list
             title: qsTr("myNews")
-            description: App.unreadCount > 0 ? qsTr("%n unread", "", App.unreadCount)
-                                             : App.statusMessage
+            // A filtered list that does not say so looks like a list with articles
+            // missing, so the header always names the filter when one is set.
+            description: App.filterActive
+                ? qsTr("Filtered: %1").arg(App.filterSummary)
+                : (App.unreadCount > 0 ? qsTr("%n unread", "", App.unreadCount)
+                                       : App.statusMessage)
         }
 
         delegate: ListItem {
@@ -91,9 +101,8 @@ Page {
                     onClicked: Qt.openUrlExternally(model.link)
                 }
                 MenuItem {
-                    visible: item.isUnread
-                    text: qsTr("Mark as read")
-                    onClicked: App.markClusterRead(model.clusterId)
+                    text: item.isUnread ? qsTr("Mark as read") : qsTr("Mark as unread")
+                    onClicked: App.markClusterRead(model.clusterId, item.isUnread)
                 }
             }
 
@@ -103,6 +112,14 @@ Page {
                 anchors.verticalCenter: parent.verticalCenter
                 width: page.thumbnailSize
                 height: page.thumbnailSize
+
+                // Tapping the picture marks the story read or unread without opening it.
+                // Sailfish reserves horizontal swipes for the page stack, so a swipe here
+                // would fight the back gesture; a tap on a target this size does not.
+                MouseArea {
+                    anchors.fill: parent
+                    onClicked: App.markClusterRead(model.clusterId, item.isUnread)
+                }
                 source: model.sources.length > 0 ? model.sources[0] : ""
                 articleId: model.leadArticleId
                 // The local file, never the publisher's URL: the list must not make a
@@ -186,10 +203,13 @@ Page {
             enabled: listView.count === 0
             text: App.subscriptionCount === 0
                 ? qsTr("No sources yet")
-                : qsTr("No articles yet")
+                : (App.filterActive ? qsTr("Nothing matches the filter")
+                                    : qsTr("No articles yet"))
+            // An empty list under a filter needs a way out, or it looks like data loss.
             hintText: App.subscriptionCount === 0
                 ? qsTr("Pull down to open subscriptions and add some sources.")
-                : qsTr("Pull down to refresh.")
+                : (App.filterActive ? qsTr("Pull down to change or clear the filter.")
+                                    : qsTr("Pull down to refresh."))
         }
 
         VerticalScrollDecorator { }

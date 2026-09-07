@@ -17,7 +17,7 @@ namespace feed {
 namespace {
 
 /*! Bump this and add a migrate() branch whenever the schema changes. */
-constexpr int SchemaVersion = 2;
+constexpr int SchemaVersion = 3;
 
 /*! Backoff: 15 min, then doubling, capped at a day (section 5). */
 qint64 backoffSeconds(int failureCount)
@@ -38,6 +38,7 @@ FeedRecord feedFromRecord(const QSqlQuery &query)
     feed.title = query.value(QStringLiteral("title")).toString();
     feed.siteUrl = query.value(QStringLiteral("site_url")).toString();
     feed.lang = query.value(QStringLiteral("lang")).toString();
+    feed.category = query.value(QStringLiteral("category")).toString();
     feed.langSource = query.value(QStringLiteral("lang_source")).toString();
     feed.etag = query.value(QStringLiteral("etag")).toString();
     feed.lastModified = query.value(QStringLiteral("last_modified")).toString();
@@ -181,6 +182,7 @@ bool FeedStore::createSchema()
             "  title TEXT,"
             "  site_url TEXT,"
             "  lang TEXT,"
+            "  category TEXT,"
             "  lang_source TEXT,"
             "  etag TEXT,"
             "  last_modified TEXT,"
@@ -286,6 +288,16 @@ bool FeedStore::migrate(int fromVersion)
         version = 2;
     }
 
+    // 2 -> 3: feeds gained the catalogue category they came from, so the article list can
+    // be filtered by region. Existing rows get none, which reads as "no region".
+    if (version == 2) {
+        if (!exec(QStringLiteral("ALTER TABLE feed ADD COLUMN category TEXT"))) {
+            m_db.rollback();
+            return false;
+        }
+        version = 3;
+    }
+
     if (version != SchemaVersion) {
         setError(QStringLiteral("no migration path"),
                  QStringLiteral("from schema version %1").arg(fromVersion));
@@ -361,7 +373,7 @@ bool FeedStore::detectFullTextSearch()
 // --- Feeds ---------------------------------------------------------------------------
 
 qint64 FeedStore::addFeed(const QString &url, const QString &title, const QString &lang,
-                          const QString &langSource)
+                          const QString &langSource, const QString &category)
 {
     QSqlQuery existing(m_db);
     existing.prepare(QStringLiteral("SELECT id FROM feed WHERE url = ?"));
@@ -375,11 +387,12 @@ qint64 FeedStore::addFeed(const QString &url, const QString &title, const QStrin
 
     QSqlQuery insert(m_db);
     insert.prepare(QStringLiteral(
-        "INSERT INTO feed (url, title, lang, lang_source) VALUES (?, ?, ?, ?)"));
+        "INSERT INTO feed (url, title, lang, lang_source, category) VALUES (?, ?, ?, ?, ?)"));
     insert.addBindValue(url);
     insert.addBindValue(title);
     insert.addBindValue(normalised.isEmpty() ? QVariant() : QVariant(normalised));
     insert.addBindValue(normalised.isEmpty() ? QVariant() : QVariant(langSource));
+    insert.addBindValue(category.isEmpty() ? QVariant() : QVariant(category));
     if (!insert.exec()) {
         setError(QStringLiteral("cannot add feed"), insert.lastError().text());
         return -1;
@@ -797,17 +810,57 @@ QVector<ClusterRecord> FeedStore::clusters(int limit, int offset) const
 
 QVector<ClusterSummary> FeedStore::clusterSummaries(int limit, int offset) const
 {
+    return clusterSummaries(ClusterFilter(), 0, limit, offset);
+}
+
+QVector<ClusterSummary> FeedStore::clusterSummaries(const ClusterFilter &filter, qint64 now,
+                                                    int limit, int offset) const
+{
     QVector<ClusterSummary> result;
+
+    // The filter restricts on properties of a cluster's *members* -- a story counts as
+    // Hamburg news if any Hamburg feed carried it -- so it is an EXISTS over the member
+    // rows rather than a condition on the lead article. Filtering on the lead alone would
+    // drop a story from the region filter merely because a national paper happened to
+    // supply the picture.
+    QStringList conditions;
+    QVariantList bindings;
+
+    if (filter.unreadOnly)
+        conditions << QStringLiteral("m.read = 0");
+    if (!filter.category.isEmpty()) {
+        conditions << QStringLiteral("mf.category = ?");
+        bindings << filter.category;
+    }
+    if (filter.feedId >= 0) {
+        conditions << QStringLiteral("m.feed_id = ?");
+        bindings << filter.feedId;
+    }
+
+    QString where = QStringLiteral("c.member_count > 0");
+    if (!conditions.isEmpty()) {
+        where += QStringLiteral(
+            " AND EXISTS (SELECT 1 FROM article m JOIN feed mf ON mf.id = m.feed_id"
+            "              WHERE m.cluster_id = c.id AND %1)").arg(conditions.join(
+            QStringLiteral(" AND ")));
+    }
+    if (filter.maxAgeSeconds > 0)
+        where += QStringLiteral(" AND c.published >= ?");
 
     QSqlQuery query(m_db);
     query.prepare(QStringLiteral(
         "SELECT c.id, c.member_count, c.published, a.id, a.title, a.teaser, a.link,"
         "       a.image_url, a.image_state"
         "  FROM cluster c JOIN article a ON a.id = c.lead_article_id"
-        " WHERE c.member_count > 0"
-        " ORDER BY c.published DESC LIMIT ? OFFSET ?"));
+        " WHERE %1"
+        " ORDER BY c.published DESC LIMIT ? OFFSET ?").arg(where));
+    for (const QVariant &value : bindings)
+        query.addBindValue(value);
+    if (filter.maxAgeSeconds > 0)
+        query.addBindValue(now - filter.maxAgeSeconds);
     query.addBindValue(limit);
     query.addBindValue(offset);
+
     if (!query.exec()) {
         setError(QStringLiteral("cannot list clusters"), query.lastError().text());
         return result;
@@ -871,6 +924,21 @@ QVector<ClusterSummary> FeedStore::clusterSummaries(int limit, int offset) const
             summary.sources.append(source);
     }
     return result;
+}
+
+QStringList FeedStore::subscribedCategories() const
+{
+    QStringList categories;
+    QSqlQuery query(m_db);
+    if (!query.exec(QStringLiteral(
+            "SELECT DISTINCT category FROM feed"
+            " WHERE enabled = 1 AND category IS NOT NULL AND category <> ''"
+            " ORDER BY category"))) {
+        return categories;
+    }
+    while (query.next())
+        categories << query.value(0).toString();
+    return categories;
 }
 
 bool FeedStore::clusterById(qint64 clusterId, ClusterRecord *out) const

@@ -50,7 +50,10 @@ int addFeedsFromFile(feed::FeedStore &store, const QString &path)
             title = obj.value(QStringLiteral("source")).toString();
         store.addFeed(obj.value(QStringLiteral("url")).toString(), title,
                       obj.value(QStringLiteral("lang")).toString(),
-                      QStringLiteral("catalogue"));
+                      QStringLiteral("catalogue"),
+                      // Carried through, or a database built here cannot exercise the
+                      // article list's region filter.
+                      obj.value(QStringLiteral("category")).toString());
         if (store.feeds().size() > before)
             ++added;
     }

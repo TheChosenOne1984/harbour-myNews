@@ -24,6 +24,13 @@ private slots:
     void modelTrimsTheSourceRow_data();
     void modelTrimsTheSourceRow();
     void modelMarksRowsReadWithoutResetting();
+
+    void filtersByUnread();
+    void filtersByRegion();
+    void filtersBySource();
+    void filtersByAge();
+    void combinesFilters();
+    void offersOnlySubscribedRegions();
 };
 
 void TestClusterView::relativeTime_data()
@@ -79,6 +86,12 @@ struct Fixture
         feedB = store->addFeed(QStringLiteral("https://b.invalid/feed"),
                                QStringLiteral("Beta"), QStringLiteral("de"));
         return feedA > 0 && feedB > 0;
+    }
+
+    qint64 addFeed(const QString &url, const QString &title, const QString &category)
+    {
+        return store->addFeed(url, title, QStringLiteral("de"),
+                              QStringLiteral("catalogue"), category);
     }
 
     feed::ParsedArticle article(const QString &guid, const QString &title, qint64 published,
@@ -271,6 +284,144 @@ void TestClusterView::modelMarksRowsReadWithoutResetting()
     model.setRowRead(1, true);
     QCOMPARE(changed.size(), 1);
     QCOMPARE(model.indexOfCluster(99), -1);
+}
+
+namespace {
+
+/*! Two Hamburg feeds and one national one, each with a story of its own. */
+struct FilterFixture
+{
+    Fixture f;
+    qint64 hamburgA = -1;
+    qint64 hamburgB = -1;
+    qint64 national = -1;
+
+    bool build()
+    {
+        if (!f.build())
+            return false;
+        hamburgA = f.addFeed(QStringLiteral("https://hh1.invalid/f"),
+                             QStringLiteral("NDR Hamburg"), QStringLiteral("hamburg"));
+        hamburgB = f.addFeed(QStringLiteral("https://hh2.invalid/f"),
+                             QStringLiteral("MOPO"), QStringLiteral("hamburg"));
+        national = f.addFeed(QStringLiteral("https://de.invalid/f"),
+                             QStringLiteral("tagesschau"), QStringLiteral("national"));
+
+        // One story both Hamburg feeds carried, one only the national feed, one old.
+        f.store->ingest(hamburgA, {f.article(QStringLiteral("1"), SharedStory, f.now)}, f.now);
+        f.store->ingest(hamburgB, {f.article(QStringLiteral("1"), SharedStory, f.now + 60)},
+                        f.now + 60);
+        f.store->ingest(national, {f.article(QStringLiteral("2"), OtherStory, f.now + 120)},
+                        f.now + 120);
+        f.store->ingest(national, {f.article(QStringLiteral("3"),
+            QStringLiteral("Eine deutlich ältere unabhängige Meldung"), f.now - 5 * 24 * 3600)},
+            f.now - 5 * 24 * 3600);
+        return true;
+    }
+
+    int count(const feed::ClusterFilter &filter) const
+    {
+        return f.store->clusterSummaries(filter, f.now + 200).size();
+    }
+};
+
+} // namespace
+
+void TestClusterView::filtersByUnread()
+{
+    FilterFixture x;
+    QVERIFY(x.build());
+
+    feed::ClusterFilter filter;
+    QCOMPARE(x.count(filter), 3);
+
+    filter.unreadOnly = true;
+    QCOMPARE(x.count(filter), 3);
+
+    // Reading one member is not enough: a cluster is unread while any member is, so the
+    // row must keep matching until the whole story has been read.
+    const QVector<feed::ArticleRecord> members = x.f.store->articlesInCluster(1);
+    QCOMPARE(members.size(), 2);
+    x.f.store->markRead(members.first().id, true);
+    QCOMPARE(x.count(filter), 3);
+
+    x.f.store->markRead(members.last().id, true);
+    QCOMPARE(x.count(filter), 2);
+}
+
+void TestClusterView::filtersByRegion()
+{
+    FilterFixture x;
+    QVERIFY(x.build());
+
+    feed::ClusterFilter filter;
+    filter.category = QStringLiteral("hamburg");
+    QCOMPARE(x.count(filter), 1);
+
+    filter.category = QStringLiteral("national");
+    QCOMPARE(x.count(filter), 2);
+
+    filter.category = QStringLiteral("nowhere");
+    QCOMPARE(x.count(filter), 0);
+}
+
+void TestClusterView::filtersBySource()
+{
+    FilterFixture x;
+    QVERIFY(x.build());
+
+    feed::ClusterFilter filter;
+    filter.feedId = x.hamburgB;
+    // MOPO contributed to one story -- the shared one. A story counts as MOPO's because
+    // MOPO carried it, not because MOPO's article happens to be the one on display.
+    QCOMPARE(x.count(filter), 1);
+
+    filter.feedId = x.national;
+    QCOMPARE(x.count(filter), 2);
+}
+
+void TestClusterView::filtersByAge()
+{
+    FilterFixture x;
+    QVERIFY(x.build());
+
+    feed::ClusterFilter filter;
+    filter.maxAgeSeconds = 24 * 3600;
+    QCOMPARE(x.count(filter), 2);   // the five-day-old story drops out
+
+    filter.maxAgeSeconds = 7 * 24 * 3600;
+    QCOMPARE(x.count(filter), 3);
+}
+
+void TestClusterView::combinesFilters()
+{
+    FilterFixture x;
+    QVERIFY(x.build());
+
+    feed::ClusterFilter filter;
+    filter.category = QStringLiteral("national");
+    filter.maxAgeSeconds = 24 * 3600;
+    // National *and* recent: the old national story is excluded by the age.
+    QCOMPARE(x.count(filter), 1);
+
+    QVERIFY(!feed::ClusterFilter().isActive());
+    QVERIFY(filter.isActive());
+}
+
+void TestClusterView::offersOnlySubscribedRegions()
+{
+    FilterFixture x;
+    QVERIFY(x.build());
+
+    // A filter must not offer a region that would select nothing.
+    const QStringList categories = x.f.store->subscribedCategories();
+    QCOMPARE(categories.size(), 2);
+    QVERIFY(categories.contains(QStringLiteral("hamburg")));
+    QVERIFY(categories.contains(QStringLiteral("national")));
+
+    QVERIFY(x.f.store->setFeedEnabled(x.hamburgA, false));
+    QVERIFY(x.f.store->setFeedEnabled(x.hamburgB, false));
+    QCOMPARE(x.f.store->subscribedCategories(), QStringList{QStringLiteral("national")});
 }
 
 int runClusterViewTests(int argc, char **argv)

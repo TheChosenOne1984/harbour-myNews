@@ -68,6 +68,20 @@ AppController::AppController(QObject *parent)
         }
     });
 
+    connect(m_backend, &Backend::subscribedCategoriesChanged, this,
+            [this](const QStringList &categories) {
+        if (categories == m_subscribedCategories)
+            return;
+        m_subscribedCategories = categories;
+        // A category the user is no longer subscribed to would filter to an empty list
+        // with no way back except guessing, so the filter drops it.
+        if (!m_filterCategory.isEmpty() && !categories.contains(m_filterCategory)) {
+            m_filterCategory.clear();
+            pushFilter();
+        }
+        emit subscribedCategoriesChanged();
+    });
+
     connect(m_backend, &Backend::unreadCountChanged, this, [this](int count) {
         if (count == m_unreadCount)
             return;
@@ -106,12 +120,26 @@ AppController::AppController(QObject *parent)
 
     connect(m_backend, &Backend::catalogRefreshFinished, this,
             [this](bool changed, const QString &error) {
-        Q_UNUSED(changed)
         setCatalogError(error);
-        if (!error.isEmpty() && hasCatalog()) {
-            // We still have the cached copy, so this is a notice rather than a failure.
-            setStatusMessage(tr("Could not update the catalogue: %1").arg(error));
+
+        // A button that does something has to say what it did. Without this a manual
+        // reload looked identical whether it succeeded, was already current, or failed.
+        QString status;
+        if (!error.isEmpty()) {
+            status = hasCatalog()
+                ? tr("Could not reload: %1. The stored catalogue is still in use.").arg(error)
+                : tr("Could not load the catalogue: %1").arg(error);
+        } else if (changed) {
+            status = tr("Loaded %n source(s).", "", m_catalog.totalCount());
+        } else {
+            status = tr("Already up to date: %n source(s).", "", m_catalog.totalCount());
         }
+        if (status != m_catalogStatus) {
+            m_catalogStatus = status;
+            emit catalogStatusChanged();
+        }
+        if (!error.isEmpty() && hasCatalog())
+            setStatusMessage(status);
     });
 
     connect(m_backend, &Backend::feedProbed, this, &AppController::feedProbed);
@@ -259,7 +287,9 @@ void AppController::subscribeFromCatalog(int row)
                               Q_ARG(QString, entry.value(QStringLiteral("url")).toString()),
                               Q_ARG(QString, entry.value(QStringLiteral("title")).toString()),
                               Q_ARG(QString, entry.value(QStringLiteral("lang")).toString()),
-                              Q_ARG(QString, QStringLiteral("catalogue")));
+                              Q_ARG(QString, QStringLiteral("catalogue")),
+                              // Carried through so the article list can filter by region.
+                              Q_ARG(QString, entry.value(QStringLiteral("category")).toString()));
 }
 
 void AppController::unsubscribeUrl(const QString &url)
@@ -303,16 +333,108 @@ void AppController::addFeed(const QString &url, const QString &lang, const QStri
     // The user picked the language, so it is manual and survives every later refresh.
     QMetaObject::invokeMethod(m_backend, "subscribe", Qt::QueuedConnection,
                               Q_ARG(QString, url), Q_ARG(QString, title),
-                              Q_ARG(QString, lang), Q_ARG(QString, QStringLiteral("manual")));
+                              Q_ARG(QString, lang), Q_ARG(QString, QStringLiteral("manual")),
+                              Q_ARG(QString, QString()));   // no region for a hand-added feed
 }
 
-void AppController::markClusterRead(qint64 clusterId)
+void AppController::markClusterRead(qint64 clusterId, bool read)
 {
     // The row updates straight away; the database catches up on the worker thread. A
     // reader tapping an article should not wait for a write to come back.
-    m_clusters.setRowRead(clusterId, true);
+    m_clusters.setRowRead(clusterId, read);
     QMetaObject::invokeMethod(m_backend, "markClusterRead", Qt::QueuedConnection,
-                              Q_ARG(qint64, clusterId));
+                              Q_ARG(qint64, clusterId), Q_ARG(bool, read));
+}
+
+bool AppController::isClusterUnread(qint64 clusterId) const
+{
+    const int row = m_clusters.indexOfCluster(clusterId);
+    if (row < 0)
+        return false;
+    return m_clusters.data(m_clusters.index(row), model::ClusterModel::UnreadRole).toBool();
+}
+
+// --- Filter --------------------------------------------------------------------------
+
+void AppController::pushFilter()
+{
+    QMetaObject::invokeMethod(m_backend, "setClusterFilter", Qt::QueuedConnection,
+                              Q_ARG(bool, m_filterUnreadOnly),
+                              Q_ARG(QString, m_filterCategory),
+                              Q_ARG(qint64, m_filterFeedId),
+                              Q_ARG(qint64, qint64(m_filterMaxAgeHours) * 3600));
+    emit filterChanged();
+}
+
+void AppController::setFilterUnreadOnly(bool unreadOnly)
+{
+    if (unreadOnly == m_filterUnreadOnly)
+        return;
+    m_filterUnreadOnly = unreadOnly;
+    pushFilter();
+}
+
+void AppController::setFilterCategory(const QString &category)
+{
+    if (category == m_filterCategory)
+        return;
+    m_filterCategory = category;
+    pushFilter();
+}
+
+void AppController::setFilterFeedId(qint64 feedId)
+{
+    if (feedId == m_filterFeedId)
+        return;
+    m_filterFeedId = feedId;
+    pushFilter();
+}
+
+void AppController::setFilterMaxAgeHours(int hours)
+{
+    if (hours == m_filterMaxAgeHours)
+        return;
+    m_filterMaxAgeHours = hours;
+    pushFilter();
+}
+
+bool AppController::filterActive() const
+{
+    return m_filterUnreadOnly || !m_filterCategory.isEmpty() || m_filterFeedId >= 0
+        || m_filterMaxAgeHours > 0;
+}
+
+QString AppController::filterSummary() const
+{
+    QStringList parts;
+    if (m_filterUnreadOnly)
+        parts << tr("unread");
+    if (!m_filterCategory.isEmpty())
+        parts << m_catalog.categoryName(m_filterCategory);
+    if (m_filterFeedId >= 0) {
+        const int row = m_subscriptions.indexOfFeed(m_filterFeedId);
+        if (row >= 0) {
+            parts << m_subscriptions.data(m_subscriptions.index(row),
+                                          model::SubscriptionModel::TitleRole).toString();
+        }
+    }
+    if (m_filterMaxAgeHours > 0) {
+        parts << (m_filterMaxAgeHours < 48
+                      ? tr("%n hour(s)", "", m_filterMaxAgeHours)
+                      : tr("%n day(s)", "", m_filterMaxAgeHours / 24));
+    }
+    return parts.join(QStringLiteral(" · "));
+}
+
+void AppController::clearFilter()
+{
+    if (!filterActive())
+        return;
+    m_filterUnreadOnly = false;
+    m_filterCategory.clear();
+    m_filterFeedId = -1;
+    m_filterMaxAgeHours = 0;
+    pushFilter();
 }
 
 void AppController::markAllRead()

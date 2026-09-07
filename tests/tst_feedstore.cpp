@@ -85,7 +85,7 @@ void TestFeedStore::cleanup()
 void TestFeedStore::createsSchemaAndReportsVersion()
 {
     QVERIFY(m_store->isOpen());
-    QCOMPARE(m_store->schemaVersion(), 2);
+    QCOMPARE(m_store->schemaVersion(), 3);
     QVERIFY(m_store->feeds().isEmpty());
 }
 
@@ -128,7 +128,7 @@ void TestFeedStore::migratesRegionalLanguageTags()
 
     feed::FeedStore store(path);
     QVERIFY2(store.open(), qPrintable(store.lastError()));
-    QCOMPARE(store.schemaVersion(), 2);
+    QCOMPARE(store.schemaVersion(), 3);
 
     // Both English feeds must now share a clustering partition instead of being unable to
     // ever match each other.
@@ -142,6 +142,9 @@ void TestFeedStore::migratesRegionalLanguageTags()
     feed::ArticleRecord article;
     QVERIFY(store.articleById(1, &article));
     QCOMPARE(article.lang, QStringLiteral("en"));
+
+    // 2 -> 3 added the category column; rows that predate it simply have none.
+    QVERIFY(feeds.at(0).category.isEmpty());
 }
 
 void TestFeedStore::hasFullTextSearch()

@@ -113,8 +113,19 @@ void Backend::emitClusters()
 {
     if (!m_store)
         return;
-    emit clustersChanged(m_store->clusterSummaries(m_clusterLimit));
+    emit clustersChanged(m_store->clusterSummaries(m_filter, nowSeconds(), m_clusterLimit));
     emit unreadCountChanged(m_store->unreadCount());
+    emit subscribedCategoriesChanged(m_store->subscribedCategories());
+}
+
+void Backend::setClusterFilter(bool unreadOnly, const QString &category, qint64 feedId,
+                               qint64 maxAgeSeconds)
+{
+    m_filter.unreadOnly = unreadOnly;
+    m_filter.category = category;
+    m_filter.feedId = feedId;
+    m_filter.maxAgeSeconds = maxAgeSeconds;
+    emitClusters();
 }
 
 void Backend::reloadClusters(int limit)
@@ -124,16 +135,22 @@ void Backend::reloadClusters(int limit)
     emitClusters();
 }
 
-void Backend::markClusterRead(qint64 clusterId)
+void Backend::markClusterRead(qint64 clusterId, bool read)
 {
     if (!m_store)
         return;
-    // Every member, not only the lead: the cluster is one story to the reader, and
-    // leaving the others unread would make the same headline reappear.
+    // Every member, not only the lead: the cluster is one story to the reader, and a
+    // cluster counts as unread while any member is, so marking the lead alone would leave
+    // the row looking untouched.
     const QVector<feed::ArticleRecord> members = m_store->articlesInCluster(clusterId);
     for (const feed::ArticleRecord &article : members)
-        m_store->markRead(article.id, true);
+        m_store->markRead(article.id, read);
     emit unreadCountChanged(m_store->unreadCount());
+
+    // With an unread-only filter active the row has just stopped matching, so the list
+    // has to be re-read or it would keep showing something the filter excludes.
+    if (m_filter.unreadOnly)
+        emitClusters();
 }
 
 void Backend::markAllRead()
@@ -142,6 +159,8 @@ void Backend::markAllRead()
         return;
     m_store->markAllRead();
     emit unreadCountChanged(m_store->unreadCount());
+    if (m_filter.unreadOnly)
+        emitClusters();
 }
 
 void Backend::loadClusterMembers(qint64 clusterId)
@@ -189,11 +208,11 @@ void Backend::refreshCatalog(const QString &url, bool force)
 }
 
 void Backend::subscribe(const QString &url, const QString &title, const QString &lang,
-                        const QString &langSource)
+                        const QString &langSource, const QString &category)
 {
     if (!m_store)
         return;
-    if (m_store->addFeed(url, title, lang, langSource) < 0) {
+    if (m_store->addFeed(url, title, lang, langSource, category) < 0) {
         emit message(m_store->lastError());
         return;
     }
