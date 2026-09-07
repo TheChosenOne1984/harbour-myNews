@@ -49,7 +49,7 @@ void FeedFetcher::enqueue(const Request &request)
 {
     if (!request.url.isValid() || request.url.host().isEmpty()) {
         Result result;
-        result.feedId = request.feedId;
+        result.id = request.id;
         result.url = request.url;
         result.error = QStringLiteral("invalid URL");
         emit finished(result);
@@ -163,7 +163,7 @@ void FeedFetcher::onReplyFinished()
     const InFlight entry = m_inFlight.value(reply);
 
     Result result;
-    result.feedId = entry.request.feedId;
+    result.id = entry.request.id;
     result.url = entry.request.url;
     result.httpStatus =
         reply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt();

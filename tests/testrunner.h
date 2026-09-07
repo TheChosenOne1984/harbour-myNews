@@ -8,6 +8,7 @@
 int runFeedParserTests(int argc, char **argv);
 int runFeedStoreTests(int argc, char **argv);
 int runFeedFetcherTests(int argc, char **argv);
+int runCatalogTests(int argc, char **argv);
 int runClusterTests(int argc, char **argv);
 
 #endif // TESTS_TESTRUNNER_H

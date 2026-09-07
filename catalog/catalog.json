@@ -1,0 +1,124 @@
+{
+  "version": 1,
+  "updated": "2026-09-07",
+  "_comment": "Curated starter list for myNews. Fetched by the app on first start and cached locally -- nothing is bundled (project_description.md section 10). Compiled by hand from each publisher's own feed page; do not bulk-import a third party's feed directory. Every entry states its language, because section 7 assigns languages rather than detecting them. Removing a publisher on request is a commit to this file, not an app release.",
+  "categories": [
+    {
+      "id": "hamburg",
+      "name": "Hamburg",
+      "name_de": "Hamburg"
+    },
+    {
+      "id": "national",
+      "name": "Germany",
+      "name_de": "Deutschland"
+    }
+  ],
+  "feeds": [
+    {
+      "url": "https://www.ndr.de/nachrichten/hamburg/index-rss.xml",
+      "title": "NDR Hamburg",
+      "lang": "de",
+      "category": "hamburg",
+      "site_url": "https://www.ndr.de/nachrichten/hamburg/"
+    },
+    {
+      "url": "https://www.abendblatt.de/hamburg/rss",
+      "title": "Abendblatt HH",
+      "lang": "de",
+      "category": "hamburg",
+      "site_url": "https://www.abendblatt.de/hamburg/"
+    },
+    {
+      "url": "https://www.mopo.de/feed/",
+      "title": "MOPO",
+      "lang": "de",
+      "category": "hamburg",
+      "site_url": "https://www.mopo.de/"
+    },
+    {
+      "url": "https://www.ndr.de/home/index-rss.xml",
+      "title": "NDR",
+      "lang": "de",
+      "category": "national",
+      "site_url": "https://www.ndr.de/"
+    },
+    {
+      "url": "https://www.abendblatt.de/rss",
+      "title": "Abendblatt",
+      "lang": "de",
+      "category": "national",
+      "site_url": "https://www.abendblatt.de/"
+    },
+    {
+      "url": "https://www.tagesschau.de/index~rss2.xml",
+      "title": "tagesschau",
+      "lang": "de",
+      "category": "national",
+      "site_url": "https://www.tagesschau.de/"
+    },
+    {
+      "url": "https://www.spiegel.de/schlagzeilen/tops/index.rss",
+      "title": "SPIEGEL",
+      "lang": "de",
+      "category": "national",
+      "site_url": "https://www.spiegel.de/"
+    },
+    {
+      "url": "https://newsfeed.zeit.de/index",
+      "title": "ZEIT",
+      "lang": "de",
+      "category": "national",
+      "site_url": "https://www.zeit.de/"
+    },
+    {
+      "url": "https://www.welt.de/feeds/latest.rss",
+      "title": "WELT",
+      "lang": "de",
+      "category": "national",
+      "site_url": "https://www.welt.de/"
+    },
+    {
+      "url": "https://www.n-tv.de/rss",
+      "title": "n-tv",
+      "lang": "de",
+      "category": "national",
+      "site_url": "https://www.n-tv.de/"
+    },
+    {
+      "url": "https://www.faz.net/rss/aktuell/",
+      "title": "FAZ",
+      "lang": "de",
+      "category": "national",
+      "site_url": "https://www.faz.net/"
+    },
+    {
+      "url": "https://rss.sueddeutsche.de/rss/Topthemen",
+      "title": "SZ",
+      "lang": "de",
+      "category": "national",
+      "site_url": "https://www.sueddeutsche.de/"
+    },
+    {
+      "url": "https://www.stern.de/feed/standard/all/",
+      "title": "stern",
+      "lang": "de",
+      "category": "national",
+      "site_url": "https://www.stern.de/"
+    },
+    {
+      "url": "https://taz.de/!p4608;rss/",
+      "title": "taz",
+      "lang": "de",
+      "category": "national",
+      "site_url": "https://taz.de/"
+    },
+    {
+      "url": "https://www.tagesspiegel.de/contentexport/feed/home",
+      "title": "Tagesspiegel",
+      "lang": "de",
+      "category": "national",
+      "site_url": "https://www.tagesspiegel.de/"
+    }
+  ]
+}

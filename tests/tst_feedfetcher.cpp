@@ -161,7 +161,7 @@ void TestFeedFetcher::userAgentIsHonestAndIdentifiable()
         QVERIFY2(!agent.contains(QLatin1String(forbidden)), forbidden);
 
     FeedFetcher::Request request;
-    request.feedId = 1;
+    request.id = 1;
     request.url = m_server->url();
     fetch(request);
     QCOMPARE(m_server->requests.size(), 1);
@@ -172,7 +172,7 @@ void TestFeedFetcher::userAgentIsHonestAndIdentifiable()
 void TestFeedFetcher::sendsConditionalGetHeaders()
 {
     FeedFetcher::Request request;
-    request.feedId = 1;
+    request.id = 1;
     request.url = m_server->url();
     request.etag = QStringLiteral("\"v1\"");
     request.lastModified = QStringLiteral("Mon, 07 Sep 2026 06:30:00 GMT");
@@ -187,7 +187,7 @@ void TestFeedFetcher::sendsConditionalGetHeaders()
 void TestFeedFetcher::omitsConditionalHeadersWhenUnknown()
 {
     FeedFetcher::Request request;
-    request.feedId = 1;
+    request.id = 1;
     request.url = m_server->url();
     fetch(request);
 
@@ -201,14 +201,14 @@ void TestFeedFetcher::treatsNotModifiedAsSuccess()
     m_server->status = 304;
 
     FeedFetcher::Request request;
-    request.feedId = 7;
+    request.id = 7;
     request.url = m_server->url();
     request.etag = QStringLiteral("\"v1\"");
     const FeedFetcher::Result result = fetch(request);
 
     // 304 is success-with-no-changes, not a failure -- treating it as one would trip the
     // backoff on exactly the feeds that are behaving best.
-    QCOMPARE(result.feedId, Q_INT64_C(7));
+    QCOMPARE(result.id, Q_INT64_C(7));
     QCOMPARE(result.httpStatus, 304);
     QVERIFY(result.notModified);
     QVERIFY2(result.isSuccess(), qPrintable(result.error));
@@ -218,7 +218,7 @@ void TestFeedFetcher::treatsNotModifiedAsSuccess()
 void TestFeedFetcher::deliversBodyAndValidators()
 {
     FeedFetcher::Request request;
-    request.feedId = 3;
+    request.id = 3;
     request.url = m_server->url();
     const FeedFetcher::Result result = fetch(request);
 
@@ -236,7 +236,7 @@ void TestFeedFetcher::reportsHttpErrors()
     m_server->body = "not found";
 
     FeedFetcher::Request request;
-    request.feedId = 4;
+    request.id = 4;
     request.url = m_server->url();
     const FeedFetcher::Result result = fetch(request);
 
@@ -251,7 +251,7 @@ void TestFeedFetcher::rejectsOversizedResponse()
     m_server->announceHugeLength = true;
 
     FeedFetcher::Request request;
-    request.feedId = 5;
+    request.id = 5;
     request.url = m_server->url();
     const FeedFetcher::Result result = fetch(request);
 
@@ -262,12 +262,12 @@ void TestFeedFetcher::rejectsOversizedResponse()
 void TestFeedFetcher::rejectsInvalidUrl()
 {
     FeedFetcher::Request request;
-    request.feedId = 6;
+    request.id = 6;
     request.url = QUrl(QStringLiteral("not a url"));
     const FeedFetcher::Result result = fetch(request);
 
     QVERIFY(!result.isSuccess());
-    QCOMPARE(result.feedId, Q_INT64_C(6));
+    QCOMPARE(result.id, Q_INT64_C(6));
     QVERIFY(m_server->requests.isEmpty());
 }
 
@@ -278,7 +278,7 @@ void TestFeedFetcher::serialisesRequestsToOneHost()
     QVector<FeedFetcher::Request> batch;
     for (int i = 0; i < 3; ++i) {
         FeedFetcher::Request request;
-        request.feedId = i;
+        request.id = i;
         request.url = m_server->url(QStringLiteral("/feed%1").arg(i));
         batch.append(request);
     }
@@ -327,7 +327,7 @@ void TestFeedFetcher::decompressesGzippedResponse()
     m_server->contentEncoding = "gzip";
 
     FeedFetcher::Request request;
-    request.feedId = 8;
+    request.id = 8;
     request.url = m_server->url();
     const FeedFetcher::Result result = fetch(request);
 

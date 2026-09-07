@@ -43,7 +43,7 @@ void FeedRefresher::startRequests(const QVector<FeedRecord> &feeds, qint64 now)
     for (const FeedRecord &feed : feeds) {
         m_outstanding.insert(feed.id);
         FeedFetcher::Request request;
-        request.feedId = feed.id;
+        request.id = feed.id;
         request.url = QUrl(feed.url);
         // Conditional GET: send back whatever the publisher gave us last time.
         request.etag = feed.etag;
@@ -55,7 +55,7 @@ void FeedRefresher::startRequests(const QVector<FeedRecord> &feeds, qint64 now)
 
 void FeedRefresher::onFetchFinished(const FeedFetcher::Result &result)
 {
-    if (!m_outstanding.remove(result.feedId))
+    if (!m_outstanding.remove(result.id))
         return;   // not ours; another refresher shares the fetcher
 
     IngestResult ingested;
@@ -65,12 +65,12 @@ void FeedRefresher::onFetchFinished(const FeedFetcher::Result &result)
         // Nothing changed. Still a success, so the backoff is cleared.
         ++m_summary.feedsUnchanged;
         ++m_summary.feedsSucceeded;
-        m_store->recordFetchSuccess(result.feedId, result.httpStatus, result.etag,
+        m_store->recordFetchSuccess(result.id, result.httpStatus, result.etag,
                                     result.lastModified, m_now);
     } else if (!result.isSuccess()) {
         error = result.error;
         ++m_summary.feedsFailed;
-        m_store->recordFetchFailure(result.feedId, result.httpStatus, m_now);
+        m_store->recordFetchFailure(result.id, result.httpStatus, m_now);
     } else {
         const ParsedFeed parsed = parseFeed(result.body);
         if (parsed.articles.isEmpty() && !parsed.isValid()) {
@@ -78,10 +78,10 @@ void FeedRefresher::onFetchFinished(const FeedFetcher::Result &result)
             // it backs off like any other error rather than being retried every time.
             error = parsed.error;
             ++m_summary.feedsFailed;
-            m_store->recordFetchFailure(result.feedId, result.httpStatus, m_now);
+            m_store->recordFetchFailure(result.id, result.httpStatus, m_now);
         } else {
-            m_store->updateFeedMetadata(result.feedId, parsed);
-            ingested = m_store->ingest(result.feedId, parsed.articles, m_now, m_params);
+            m_store->updateFeedMetadata(result.id, parsed);
+            ingested = m_store->ingest(result.id, parsed.articles, m_now, m_params);
 
             m_summary.articlesInserted += ingested.inserted;
             m_summary.articlesUpdated += ingested.updated;
@@ -89,7 +89,7 @@ void FeedRefresher::onFetchFinished(const FeedFetcher::Result &result)
             m_summary.clustersJoined += ingested.clustersJoined;
             ++m_summary.feedsSucceeded;
 
-            m_store->recordFetchSuccess(result.feedId, result.httpStatus, result.etag,
+            m_store->recordFetchSuccess(result.id, result.httpStatus, result.etag,
                                         result.lastModified, m_now);
             // A partially readable document still counts as a success, but the reason it
             // was partial is worth surfacing.
@@ -98,7 +98,7 @@ void FeedRefresher::onFetchFinished(const FeedFetcher::Result &result)
         }
     }
 
-    emit feedFinished(result.feedId, ingested, error);
+    emit feedFinished(result.id, ingested, error);
 
     if (m_outstanding.isEmpty())
         emit finished(m_summary);

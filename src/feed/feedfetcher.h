@@ -34,7 +34,9 @@ class FeedFetcher : public QObject
 public:
     struct Request
     {
-        qint64 feedId = -1;
+        //! Opaque caller-chosen handle, echoed back in the Result. Not a feed id: this
+        //! class is also what fetches the catalogue.
+        qint64 id = -1;
         QUrl url;
         QString etag;          //!< sent as If-None-Match when present
         QString lastModified;  //!< sent as If-Modified-Since when present
@@ -42,7 +44,7 @@ public:
 
     struct Result
     {
-        qint64 feedId = -1;
+        qint64 id = -1;
         QUrl url;
         int httpStatus = 0;
         bool notModified = false;   //!< 304: success, nothing to parse

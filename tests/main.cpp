@@ -9,6 +9,7 @@ int main(int argc, char *argv[])
     failures += runFeedParserTests(argc, argv);
     failures += runFeedStoreTests(argc, argv);
     failures += runFeedFetcherTests(argc, argv);
+    failures += runCatalogTests(argc, argv);
     failures += runClusterTests(argc, argv);
     return failures;
 }

@@ -366,6 +366,10 @@ Users get a curated starter list, extensible with arbitrary feed URLs and OPML i
     empty and offer both a retry and a manual add, not merely appear broken.
   - **It is the only request the app makes to anything other than a publisher.** Say so in
     the settings, and let it be switched off.
+  - **The catalogue URL is a setting**, not a constant. That is what keeps the load-bearing
+    URL from being a single point of failure: if the default host disappears, or a user
+    would rather curate their own list, they change the address instead of waiting for a
+    release. It also makes the app's one non-publisher request inspectable.
 - **The user picks from the catalogue**; subscribing to everything in it is not the default.
   Feeds added by hand ask for a language alongside the URL (§7).
 - **Compile the list yourself** from publishers' own feed pages. Do not bulk-import a third
