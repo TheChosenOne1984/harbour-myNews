@@ -110,6 +110,30 @@ From the host, without touching the guest:
 VBoxManage controlvm "SailfishOS-5.1.0.11" screenshotpng out.png
 ```
 
+## Tests
+
+Headless, and they run on the real target through scratchbox2's qemu — same Qt, same
+libraries as the device, no device required:
+
+```sh
+cd tests
+sfdk -c target=SailfishOS-5.1.0.11-aarch64 build
+sfdk tools exec SailfishOS-5.1.0.11-aarch64 $PWD/tst_mynews
+```
+
+The fetcher tests start a stub HTTP server on localhost, so nothing reaches the network.
+
+## Development tools
+
+Neither is packaged for Harbour. Both build the same way as the tests.
+
+- `tools/cluster-harness` — tunes the clustering parameters against a corpus. See
+  [CLUSTERING.md](CLUSTERING.md).
+- `tools/ingest-cli` — drives fetch, parse, store and cluster against real feeds. See
+  [INGESTION.md](INGESTION.md).
+
+Remember to clean between targets here too; these build in-source as well.
+
 ## Translations
 
 `CONFIG += sailfishapp_i18n` runs `lupdate` over `src/` and `qml/` and `lrelease` on
