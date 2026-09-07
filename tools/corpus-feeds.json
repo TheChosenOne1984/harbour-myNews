@@ -1,0 +1,20 @@
+{
+  "_comment": "Feed list for building the clustering corpus. Compiled by hand from each publisher's own feed page (see project_description.md section 10 -- do not bulk-import third-party feed directories). This is a development corpus, not the shipped catalogue.",
+  "feeds": [
+    { "source": "NDR Hamburg",   "lang": "de", "region": "hamburg",  "url": "https://www.ndr.de/nachrichten/hamburg/index-rss.xml" },
+    { "source": "Abendblatt HH", "lang": "de", "region": "hamburg",  "url": "https://www.abendblatt.de/hamburg/rss" },
+    { "source": "MOPO",          "lang": "de", "region": "hamburg",  "url": "https://www.mopo.de/feed/" },
+    { "source": "NDR",           "lang": "de", "region": "national", "url": "https://www.ndr.de/home/index-rss.xml" },
+    { "source": "Abendblatt",    "lang": "de", "region": "national", "url": "https://www.abendblatt.de/rss" },
+    { "source": "tagesschau",    "lang": "de", "region": "national", "url": "https://www.tagesschau.de/index~rss2.xml" },
+    { "source": "SPIEGEL",       "lang": "de", "region": "national", "url": "https://www.spiegel.de/schlagzeilen/tops/index.rss" },
+    { "source": "ZEIT",          "lang": "de", "region": "national", "url": "https://newsfeed.zeit.de/index" },
+    { "source": "WELT",          "lang": "de", "region": "national", "url": "https://www.welt.de/feeds/latest.rss" },
+    { "source": "n-tv",          "lang": "de", "region": "national", "url": "https://www.n-tv.de/rss" },
+    { "source": "FAZ",           "lang": "de", "region": "national", "url": "https://www.faz.net/rss/aktuell/" },
+    { "source": "SZ",            "lang": "de", "region": "national", "url": "https://rss.sueddeutsche.de/rss/Topthemen" },
+    { "source": "stern",         "lang": "de", "region": "national", "url": "https://www.stern.de/feed/standard/all/" },
+    { "source": "taz",           "lang": "de", "region": "national", "url": "https://taz.de/!p4608;rss/" },
+    { "source": "Tagesspiegel",  "lang": "de", "region": "national", "url": "https://www.tagesspiegel.de/contentexport/feed/home" }
+  ]
+}

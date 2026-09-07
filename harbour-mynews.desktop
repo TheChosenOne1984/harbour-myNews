@@ -1,0 +1,12 @@
+[Desktop Entry]
+Type=Application
+X-Nemo-Application-Type=silica-qt5
+Icon=harbour-mynews
+Exec=harbour-mynews
+Name=myNews
+Name[de]=myNews
+
+[X-Sailjail]
+Permissions=Internet
+OrganizationName=harbour-mynews
+ApplicationName=harbour-mynews

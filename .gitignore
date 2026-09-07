@@ -1,0 +1,33 @@
+# qmake / sfdk build output
+Makefile
+.qmake.stash
+*.o
+moc_*.cpp
+moc_*.h
+qrc_*.cpp
+ui_*.h
+/harbour-mynews
+/RPMS/
+tools/cluster-harness/RPMS/
+tools/cluster-harness/cluster-harness
+/installroot/
+/build/
+
+# lrelease output, and the lupdate extraction template -- both regenerated on every
+# build. The per-language .ts files are the tracked sources.
+translations/*.qm
+translations/harbour-mynews.ts
+
+# editors
+*.autosave
+*~
+.kdev4/
+*.user
+
+# sfdk build artefact
+documentation.list
+
+# Fetched publisher content -- development corpus for the clustering harness.
+# Never commit this: section 11 of the plan rules out redistributing article content,
+# and a JSON of titles and teasers in a public repo would be exactly that.
+/corpus*.json
