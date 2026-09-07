@@ -92,6 +92,10 @@ void AppController::setSettings(Settings *settings)
 {
     m_settings = settings;
     if (m_settings) {
+        connect(m_settings, &Settings::catalogConsentChanged,
+                this, &AppController::catalogConsentChanged);
+    }
+    if (m_settings) {
         m_catalog.setUiLanguage(m_settings->uiLanguage().isEmpty()
                                     ? QLocale().name().left(2)
                                     : m_settings->uiLanguage());
@@ -139,14 +143,35 @@ void AppController::refresh()
                               Q_ARG(int, m_settings->clusterWindowHours()));
 }
 
+bool AppController::needsCatalogConsent() const
+{
+    return m_settings && m_settings->catalogConsent() == Settings::Unasked;
+}
+
+bool AppController::catalogDeclined() const
+{
+    return m_settings && m_settings->catalogConsent() == Settings::Denied;
+}
+
+void AppController::setCatalogConsent(bool granted)
+{
+    if (!m_settings)
+        return;
+    m_settings->setCatalogConsent(granted ? Settings::Granted : Settings::Denied);
+    emit catalogConsentChanged();
+    if (granted)
+        refreshCatalog(true);
+    else
+        setCatalogError(QString());
+}
+
 void AppController::refreshCatalog(bool force)
 {
     if (!m_settings)
         return;
-    if (!m_settings->catalogEnabled()) {
-        // The catalogue is the only request not aimed at a publisher, so refusing it is
-        // a supported choice, not a failure (§10).
-        setCatalogError(tr("The feed catalogue is switched off in the settings."));
+    if (m_settings->catalogConsent() != Settings::Granted) {
+        // Nothing is contacted before the user has agreed. Not an error: declining is a
+        // supported choice, and adding feeds by URL never needs the catalogue (§10).
         return;
     }
     QMetaObject::invokeMethod(m_backend, "refreshCatalog", Qt::QueuedConnection,

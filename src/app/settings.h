@@ -27,8 +27,10 @@ class Settings : public QObject
 
     Q_PROPERTY(QString uiLanguage READ uiLanguage WRITE setUiLanguage NOTIFY uiLanguageChanged)
     Q_PROPERTY(QString catalogUrl READ catalogUrl WRITE setCatalogUrl NOTIFY catalogUrlChanged)
-    Q_PROPERTY(bool catalogEnabled READ catalogEnabled WRITE setCatalogEnabled
-                   NOTIFY catalogEnabledChanged)
+    Q_PROPERTY(int catalogConsent READ catalogConsentInt WRITE setCatalogConsentInt
+                   NOTIFY catalogConsentChanged)
+    Q_PROPERTY(bool catalogEnabled READ catalogEnabled NOTIFY catalogConsentChanged)
+    Q_PROPERTY(QString catalogHost READ catalogHost NOTIFY catalogUrlChanged)
     Q_PROPERTY(QString defaultCatalogUrl READ defaultCatalogUrl CONSTANT)
     Q_PROPERTY(int retentionDays READ retentionDays WRITE setRetentionDays
                    NOTIFY retentionDaysChanged)
@@ -59,9 +61,31 @@ public:
     void setCatalogUrl(const QString &url);
     static QString defaultCatalogUrl();
 
-    /*! The catalogue is the only request not aimed at a publisher, so it can be refused. */
-    bool catalogEnabled() const;
-    void setCatalogEnabled(bool enabled);
+    /*!
+     * Whether the user has agreed to the catalogue being downloaded.
+     *
+     * The catalogue is the only request the app makes to anything other than a publisher,
+     * and it goes to a host the user has no relationship with. So it is not a switch that
+     * defaults to on: nothing is fetched until the user has been told which address will
+     * be contacted and has agreed. Asked when the catalogue is first needed, never at
+     * startup — someone who only ever adds feeds by URL is never asked at all.
+     */
+    enum Consent
+    {
+        Unasked = 0,   //!< never fetch; the UI must ask first
+        Granted = 1,
+        Denied = 2,
+    };
+    Q_ENUM(Consent)
+
+    Consent catalogConsent() const;
+    void setCatalogConsent(Consent consent);
+
+    /*! True only once consent has actually been given. */
+    bool catalogEnabled() const { return catalogConsent() == Granted; }
+
+    /*! Host of the current catalogue URL, so the consent prompt can name it. */
+    QString catalogHost() const;
 
     /*! Articles older than this are purged, with their orphaned thumbnails. */
     int retentionDays() const;
@@ -84,12 +108,15 @@ public:
 signals:
     void uiLanguageChanged();
     void catalogUrlChanged();
-    void catalogEnabledChanged();
+    void catalogConsentChanged();
     void retentionDaysChanged();
     void clusterThresholdChanged();
     void clusterWindowHoursChanged();
 
 private:
+    int catalogConsentInt() const { return static_cast<int>(catalogConsent()); }
+    void setCatalogConsentInt(int consent) { setCatalogConsent(static_cast<Consent>(consent)); }
+
     QSettings *m_settings;
 };
 

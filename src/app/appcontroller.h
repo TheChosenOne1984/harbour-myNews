@@ -48,6 +48,10 @@ class AppController : public QObject
 
     Q_PROPERTY(int subscriptionCount READ subscriptionCount NOTIFY subscriptionCountChanged)
 
+    /*! True while the user has not yet decided about contacting the catalogue host. */
+    Q_PROPERTY(bool needsCatalogConsent READ needsCatalogConsent NOTIFY catalogConsentChanged)
+    Q_PROPERTY(bool catalogDeclined READ catalogDeclined NOTIFY catalogConsentChanged)
+
 public:
     explicit AppController(QObject *parent = nullptr);
     ~AppController() override;
@@ -66,11 +70,19 @@ public:
     bool hasCatalog() const { return m_catalog.totalCount() > 0; }
     QString catalogError() const { return m_catalogError; }
     int subscriptionCount() const { return m_subscriptions.rowCount(); }
+    bool needsCatalogConsent() const;
+    bool catalogDeclined() const;
 
     // --- Actions, all asynchronous -------------------------------------------------
 
     Q_INVOKABLE void refresh();
     Q_INVOKABLE void refreshCatalog(bool force = true);
+
+    /*!
+     * Records the user's decision about contacting the catalogue host, and fetches
+     * immediately when it is yes. Called from the consent prompt, nowhere else.
+     */
+    Q_INVOKABLE void setCatalogConsent(bool granted);
 
     Q_INVOKABLE void subscribeFromCatalog(int row);
     Q_INVOKABLE void unsubscribeUrl(const QString &url);
@@ -98,6 +110,7 @@ signals:
     void hasCatalogChanged();
     void catalogErrorChanged();
     void subscriptionCountChanged();
+    void catalogConsentChanged();
 
     /*! Result of probeFeed(), for the add-feed page. */
     void feedProbed(const QString &url, const QString &title, const QString &lang,

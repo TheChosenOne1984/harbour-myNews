@@ -19,6 +19,8 @@ private slots:
     void exportCarriesLanguage();
 
     void languageNamesAreEndonyms();
+    void languageTagsLoseTheirRegion_data();
+    void languageTagsLoseTheirRegion();
 };
 
 void TestOpml::readsAFlatList()
@@ -138,6 +140,33 @@ void TestOpml::languageNamesAreEndonyms()
     // An explicit region is what the caller asked for, so it stays.
     QVERIFY(i18n::languageDisplayName(QStringLiteral("en_US")).contains(QStringLiteral("English")));
     QVERIFY(i18n::languageDisplayName(QString()).isEmpty());
+}
+
+void TestOpml::languageTagsLoseTheirRegion_data()
+{
+    QTest::addColumn<QString>("input");
+    QTest::addColumn<QString>("expected");
+
+    QTest::newRow("already bare") << QStringLiteral("de") << QStringLiteral("de");
+    QTest::newRow("hyphen region") << QStringLiteral("en-GB") << QStringLiteral("en");
+    QTest::newRow("underscore region") << QStringLiteral("en_US") << QStringLiteral("en");
+    QTest::newRow("uppercase") << QStringLiteral("DE") << QStringLiteral("de");
+    QTest::newRow("script subtag") << QStringLiteral("zh-Hans") << QStringLiteral("zh");
+    QTest::newRow("three letters") << QStringLiteral("nds") << QStringLiteral("nds");
+    QTest::newRow("locale with encoding") << QStringLiteral("de_DE.UTF-8")
+                                          << QStringLiteral("de");
+    QTest::newRow("empty") << QString() << QString();
+    QTest::newRow("garbage") << QStringLiteral("123") << QString();
+    QTest::newRow("too long") << QStringLiteral("klingon") << QString();
+}
+
+void TestOpml::languageTagsLoseTheirRegion()
+{
+    QFETCH(QString, input);
+    QFETCH(QString, expected);
+    // Two reports of the same story must share a clustering partition whether their
+    // feeds say en-GB or en-US (section 7).
+    QCOMPARE(i18n::normalizeLanguageTag(input), expected);
 }
 
 int runOpmlTests(int argc, char **argv)

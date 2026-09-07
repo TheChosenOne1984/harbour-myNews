@@ -1,5 +1,7 @@
 #include <QtTest>
 
+#include <QSqlDatabase>
+#include <QSqlQuery>
 #include <QTemporaryDir>
 
 #include "feed/feedstore.h"
@@ -20,6 +22,7 @@ private slots:
     void cleanup();
 
     void createsSchemaAndReportsVersion();
+    void migratesRegionalLanguageTags();
     void hasFullTextSearch();
     void addFeedIsIdempotent();
     void removingFeedCascadesToArticles();
@@ -27,6 +30,7 @@ private slots:
     void catalogueLanguageSurvivesRefresh();
     void declaredLanguageIsUpdatedByRefresh();
     void languageOverrideReachesArticles();
+    void storesLanguagesWithoutRegion();
     void ingestDeduplicatesByGuid();
     void ingestUpdatesChangedTitleAndRehashes();
     void ingestFallsBackToFirstSeen();
@@ -80,8 +84,63 @@ void TestFeedStore::cleanup()
 void TestFeedStore::createsSchemaAndReportsVersion()
 {
     QVERIFY(m_store->isOpen());
-    QCOMPARE(m_store->schemaVersion(), 1);
+    QCOMPARE(m_store->schemaVersion(), 2);
     QVERIFY(m_store->feeds().isEmpty());
+}
+
+void TestFeedStore::migratesRegionalLanguageTags()
+{
+    // Build a version 1 database by hand, with the regional tags that version allowed.
+    QTemporaryDir dir;
+    const QString path = dir.path() + QStringLiteral("/old.db");
+    {
+        QSqlDatabase old = QSqlDatabase::addDatabase(QStringLiteral("QSQLITE"),
+                                                     QStringLiteral("v1"));
+        old.setDatabaseName(path);
+        QVERIFY(old.open());
+        QSqlQuery q(old);
+        QVERIFY(q.exec("CREATE TABLE feed (id INTEGER PRIMARY KEY, url TEXT NOT NULL UNIQUE,"
+                       " title TEXT, site_url TEXT, lang TEXT, lang_source TEXT, etag TEXT,"
+                       " last_modified TEXT, last_fetch INTEGER DEFAULT 0,"
+                       " last_status INTEGER DEFAULT 0, enabled INTEGER NOT NULL DEFAULT 1,"
+                       " failure_count INTEGER NOT NULL DEFAULT 0,"
+                       " next_attempt INTEGER NOT NULL DEFAULT 0)"));
+        QVERIFY(q.exec("CREATE TABLE cluster (id INTEGER PRIMARY KEY, lead_article_id INTEGER,"
+                       " lang TEXT, published INTEGER, member_count INTEGER NOT NULL DEFAULT 0)"));
+        QVERIFY(q.exec("CREATE TABLE article (id INTEGER PRIMARY KEY, feed_id INTEGER NOT NULL"
+                       " REFERENCES feed(id) ON DELETE CASCADE, guid TEXT NOT NULL,"
+                       " link TEXT NOT NULL, title TEXT NOT NULL, teaser TEXT,"
+                       " published INTEGER, first_seen INTEGER NOT NULL, image_url TEXT,"
+                       " image_state TEXT NOT NULL DEFAULT 'none', lang TEXT, simhash INTEGER,"
+                       " cluster_id INTEGER REFERENCES cluster(id) ON DELETE SET NULL,"
+                       " read INTEGER NOT NULL DEFAULT 0, UNIQUE(feed_id, guid))"));
+        QVERIFY(q.exec("INSERT INTO feed (url, lang, lang_source) VALUES"
+                       " ('https://example.invalid/gb', 'en-GB', 'declared'),"
+                       " ('https://example.invalid/us', 'en_US', 'declared'),"
+                       " ('https://example.invalid/de', 'de', 'manual')"));
+        QVERIFY(q.exec("INSERT INTO article (feed_id, guid, link, title, first_seen, lang)"
+                       " VALUES (1, 'a', 'https://example.invalid/a', 'A', 1, 'en-GB')"));
+        QVERIFY(q.exec("PRAGMA user_version = 1"));
+        old.close();
+    }
+    QSqlDatabase::removeDatabase(QStringLiteral("v1"));
+
+    feed::FeedStore store(path);
+    QVERIFY2(store.open(), qPrintable(store.lastError()));
+    QCOMPARE(store.schemaVersion(), 2);
+
+    // Both English feeds must now share a clustering partition instead of being unable to
+    // ever match each other.
+    const QVector<feed::FeedRecord> feeds = store.feeds();
+    QCOMPARE(feeds.size(), 3);
+    QCOMPARE(feeds.at(0).lang, QStringLiteral("en"));
+    QCOMPARE(feeds.at(1).lang, QStringLiteral("en"));
+    QCOMPARE(feeds.at(2).lang, QStringLiteral("de"));
+    QCOMPARE(store.articlesInCluster(-1).size(), 0);
+
+    feed::ArticleRecord article;
+    QVERIFY(store.articleById(1, &article));
+    QCOMPARE(article.lang, QStringLiteral("en"));
 }
 
 void TestFeedStore::hasFullTextSearch()
@@ -182,6 +241,21 @@ void TestFeedStore::languageOverrideReachesArticles()
     const QVector<ArticleRecord> members = m_store->articlesInCluster(1);
     QCOMPARE(members.size(), 1);
     QCOMPARE(members.first().lang, QStringLiteral("en"));
+}
+
+void TestFeedStore::storesLanguagesWithoutRegion()
+{
+    const qint64 feedId = m_store->addFeed(QStringLiteral("https://example.invalid/c2"),
+                                           QString(), QStringLiteral("en-GB"),
+                                           QStringLiteral("catalogue"));
+    feed::FeedRecord record;
+    QVERIFY(m_store->feedById(feedId, &record));
+    QCOMPARE(record.lang, QStringLiteral("en"));
+
+    QVERIFY(m_store->setFeedLanguage(feedId, QStringLiteral("pt_BR"),
+                                     QStringLiteral("manual")));
+    QVERIFY(m_store->feedById(feedId, &record));
+    QCOMPARE(record.lang, QStringLiteral("pt"));
 }
 
 void TestFeedStore::ingestDeduplicatesByGuid()

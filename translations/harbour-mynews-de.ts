@@ -89,6 +89,36 @@
         <source>Pull down to retry, or add a feed by URL.</source>
         <translation>Zum erneuten Versuch nach unten ziehen, oder einen Feed per Adresse hinzufügen.</translation>
     </message>
+    <message>
+        <source>The feed catalogue is not being downloaded.</source>
+        <translation>Der Feed-Katalog wird nicht heruntergeladen.</translation>
+    </message>
+    <message>
+        <source>The list of suggested sources is not part of the app. It is downloaded from:</source>
+        <translation>Die Liste der vorgeschlagenen Quellen ist nicht Teil der App. Sie wird heruntergeladen von:</translation>
+    </message>
+    <message>
+        <source>This is the only address the app contacts that does not belong to a publisher. Only the list of feeds is requested — nothing about you or your subscriptions is sent. Your IP address is visible to that server, as with any download.</source>
+        <extracomment>consent prompt: what is and is not sent when the catalogue is fetched</extracomment>
+        <translation>Dies ist die einzige Adresse, die die App kontaktiert und die keinem Verlag gehört. Abgefragt wird ausschließlich die Feed-Liste — nichts über dich oder deine Abonnements wird übermittelt. Deine IP-Adresse ist für diesen Server sichtbar, wie bei jedem Download.</translation>
+    </message>
+    <message>
+        <source>You can decline and still add feeds by entering their address yourself. You can change this later in the settings.</source>
+        <extracomment>consent prompt: reassures the user that declining is workable</extracomment>
+        <translation>Du kannst ablehnen und Feeds trotzdem hinzufügen, indem du ihre Adresse selbst eingibst. Das lässt sich später in den Einstellungen ändern.</translation>
+    </message>
+    <message>
+        <source>Download the catalogue</source>
+        <translation>Katalog herunterladen</translation>
+    </message>
+    <message>
+        <source>Download it</source>
+        <translation>Herunterladen</translation>
+    </message>
+    <message>
+        <source>No, thank you</source>
+        <translation>Nein, danke</translation>
+    </message>
 </context>
 <context>
     <name>CoverPage</name>
@@ -175,15 +205,6 @@
         <translation>Feed-Katalog</translation>
     </message>
     <message>
-        <source>Use the feed catalogue</source>
-        <translation>Feed-Katalog verwenden</translation>
-    </message>
-    <message>
-        <source>This is the only address the app contacts that does not belong to a publisher. Switching it off means adding feeds by URL only.</source>
-        <extracomment>the catalogue is the only request the app makes to a non-publisher</extracomment>
-        <translation>Dies ist die einzige Adresse, die die App kontaktiert und die keinem Verlag gehört. Abgeschaltet lassen sich Feeds nur noch per Adresse hinzufügen.</translation>
-    </message>
-    <message>
         <source>Catalogue address</source>
         <translation>Katalog-Adresse</translation>
     </message>
@@ -238,6 +259,28 @@
     <message>
         <source>Reset to defaults</source>
         <translation>Auf Vorgaben zurücksetzen</translation>
+    </message>
+    <message>
+        <source>The suggested sources are downloaded from a server that does not belong to any publisher. It is the only such connection the app makes.</source>
+        <extracomment>the catalogue is the only request the app makes to a non-publisher</extracomment>
+        <translation>Die vorgeschlagenen Quellen werden von einem Server geladen, der keinem Verlag gehört. Es ist die einzige Verbindung dieser Art, die die App aufbaut.</translation>
+    </message>
+    <message>
+        <source>Download the catalogue from %1</source>
+        <extracomment>label of the switch that permits contacting the catalogue host</extracomment>
+        <translation>Katalog von %1 herunterladen</translation>
+    </message>
+    <message>
+        <source>Not decided yet. Nothing has been downloaded.</source>
+        <translation>Noch nicht entschieden. Es wurde nichts heruntergeladen.</translation>
+    </message>
+    <message>
+        <source>Allowed.</source>
+        <translation>Erlaubt.</translation>
+    </message>
+    <message>
+        <source>Declined. Add feeds by URL instead.</source>
+        <translation>Abgelehnt. Feeds stattdessen per Adresse hinzufügen.</translation>
     </message>
 </context>
 <context>
@@ -342,10 +385,6 @@
     <message>
         <source>Export failed: %1</source>
         <translation>Export fehlgeschlagen: %1</translation>
-    </message>
-    <message>
-        <source>The feed catalogue is switched off in the settings.</source>
-        <translation>Der Feed-Katalog ist in den Einstellungen abgeschaltet.</translation>
     </message>
     <message>
         <source>Cannot read %1</source>

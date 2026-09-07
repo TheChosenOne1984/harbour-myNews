@@ -58,18 +58,7 @@ Page {
         VerticalScrollDecorator { }
     }
 
-    // First start: nothing is bundled, so the catalogue has to be fetched before there is
-    // anything to choose from (plan section 10).
-    Component.onCompleted: {
-        if (App.ready)
-            App.refreshCatalog(false)
-    }
-
-    Connections {
-        target: App
-        onReadyChanged: {
-            if (App.ready)
-                App.refreshCatalog(false)
-        }
-    }
+    // Deliberately no catalogue fetch here. Nothing is contacted until the user opens the
+    // catalogue page and agrees to it (plan section 10); refreshCatalog() would be a no-op
+    // before then anyway, but starting one from the first screen would be the wrong shape.
 }

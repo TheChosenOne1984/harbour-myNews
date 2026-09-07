@@ -255,6 +255,13 @@ preserves it.
 
 Article `lang` inherits from its feed. Per-article detection is not needed.
 
+**Regional subtags are dropped.** `en-GB`, `en_US` and `en` are all stored as `en`.
+Language is a partition predicate and candidates must match exactly, so keeping the region
+would put a British and an American report of the same story in partitions that can never
+meet — a silent loss with nothing gained, since regional variants produce the same
+character n-grams. Script variants (`zh-Hans`/`zh-Hant`) are pooled too; they simply never
+resemble each other, so no false grouping can result.
+
 ### Why detection was dropped
 
 Language is a **partition predicate** for clustering (§6), not information shown to the
@@ -364,8 +371,16 @@ Users get a curated starter list, extensible with arbitrary feed URLs and OPML i
     has no starter list. The cached copy limits this to first run only, and adding a feed by
     URL never depends on the catalogue — but the first-run empty state must say *why* it is
     empty and offer both a retry and a manual add, not merely appear broken.
-  - **It is the only request the app makes to anything other than a publisher.** Say so in
-    the settings, and let it be switched off.
+  - **It is the only request the app makes to anything other than a publisher**, and it
+    goes to a host the user has no relationship with. So it is not a switch that defaults
+    to on: **nothing is downloaded until the user has been told which address will be
+    contacted and has explicitly agreed.** The prompt names the host, states that only the
+    feed list is requested and nothing about the user is sent, admits that the user's IP
+    address is visible to that server, and makes clear that declining still leaves feeds
+    addable by URL.
+  - **Consent is asked when the catalogue is first needed, never at startup.** Someone who
+    only ever adds feeds by URL is never asked at all — the cheapest way to honour a
+    request is not to make it.
   - **The catalogue URL is a setting**, not a constant. That is what keeps the load-bearing
     URL from being a single point of failure: if the default host disappears, or a user
     would rather curate their own list, they change the address instead of waiting for a

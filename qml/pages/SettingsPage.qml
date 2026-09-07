@@ -51,14 +51,27 @@ Page {
 
             SectionHeader { text: qsTr("Feed catalogue") }
 
+            Label {
+                x: Theme.horizontalPageMargin
+                width: parent.width - 2 * Theme.horizontalPageMargin
+                wrapMode: Text.Wrap
+                font.pixelSize: Theme.fontSizeExtraSmall
+                color: Theme.secondaryColor
+                //: the catalogue is the only request the app makes to a non-publisher
+                text: qsTr("The suggested sources are downloaded from a server that does "
+                           + "not belong to any publisher. It is the only such connection "
+                           + "the app makes.")
+            }
+
             TextSwitch {
                 checked: Settings.catalogEnabled
-                text: qsTr("Use the feed catalogue")
-                //: the catalogue is the only request the app makes to a non-publisher
-                description: qsTr("This is the only address the app contacts that does not "
-                                  + "belong to a publisher. Switching it off means adding "
-                                  + "feeds by URL only.")
-                onClicked: Settings.catalogEnabled = !Settings.catalogEnabled
+                //: label of the switch that permits contacting the catalogue host
+                text: qsTr("Download the catalogue from %1").arg(Settings.catalogHost)
+                description: Settings.catalogConsent === 0
+                    ? qsTr("Not decided yet. Nothing has been downloaded.")
+                    : (Settings.catalogEnabled ? qsTr("Allowed.")
+                                               : qsTr("Declined. Add feeds by URL instead."))
+                onClicked: App.setCatalogConsent(!Settings.catalogEnabled)
             }
 
             TextField {

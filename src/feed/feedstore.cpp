@@ -1,6 +1,7 @@
 #include "feedstore.h"
 
 #include "cluster/normalize.h"
+#include "i18n/languagenames.h"
 #include "cluster/simhash.h"
 
 #include <QDateTime>
@@ -16,7 +17,7 @@ namespace feed {
 namespace {
 
 /*! Bump this and add a migrate() branch whenever the schema changes. */
-constexpr int SchemaVersion = 1;
+constexpr int SchemaVersion = 2;
 
 /*! Backoff: 15 min, then doubling, capped at a day (section 5). */
 qint64 backoffSeconds(int failureCount)
@@ -241,11 +242,66 @@ bool FeedStore::createSchema()
 
 bool FeedStore::migrate(int fromVersion)
 {
-    // Nothing to migrate yet -- version 1 is the first schema. Each future step is one
-    // branch here, applied in order.
-    setError(QStringLiteral("no migration path"),
-             QStringLiteral("from schema version %1").arg(fromVersion));
-    return false;
+    if (!m_db.transaction()) {
+        setError(QStringLiteral("cannot start migration"), m_db.lastError().text());
+        return false;
+    }
+
+    int version = fromVersion;
+
+    // 1 -> 2: language tags lost their regional subtag, so that a feed stored as "en-GB"
+    // shares a clustering partition with one stored as "en-US" instead of being unable to
+    // ever match it.
+    if (version == 1) {
+        for (const QString &table : {QStringLiteral("feed"), QStringLiteral("article")}) {
+            QSqlQuery read(m_db);
+            if (!read.exec(QStringLiteral(
+                    "SELECT DISTINCT lang FROM %1 WHERE lang IS NOT NULL AND lang <> ''")
+                               .arg(table))) {
+                setError(QStringLiteral("migration 1->2 failed"), read.lastError().text());
+                m_db.rollback();
+                return false;
+            }
+            QStringList originals;
+            while (read.next())
+                originals.append(read.value(0).toString());
+
+            for (const QString &original : originals) {
+                const QString normalised = i18n::normalizeLanguageTag(original);
+                if (normalised == original)
+                    continue;
+                QSqlQuery update(m_db);
+                update.prepare(QStringLiteral("UPDATE %1 SET lang = ? WHERE lang = ?")
+                                   .arg(table));
+                update.addBindValue(normalised.isEmpty() ? QVariant() : QVariant(normalised));
+                update.addBindValue(original);
+                if (!update.exec()) {
+                    setError(QStringLiteral("migration 1->2 failed"),
+                             update.lastError().text());
+                    m_db.rollback();
+                    return false;
+                }
+            }
+        }
+        version = 2;
+    }
+
+    if (version != SchemaVersion) {
+        setError(QStringLiteral("no migration path"),
+                 QStringLiteral("from schema version %1").arg(fromVersion));
+        m_db.rollback();
+        return false;
+    }
+
+    if (!exec(QStringLiteral("PRAGMA user_version = %1").arg(SchemaVersion))) {
+        m_db.rollback();
+        return false;
+    }
+    if (!m_db.commit()) {
+        setError(QStringLiteral("cannot commit migration"), m_db.lastError().text());
+        return false;
+    }
+    return true;
 }
 
 bool FeedStore::detectFullTextSearch()
@@ -313,13 +369,17 @@ qint64 FeedStore::addFeed(const QString &url, const QString &title, const QStrin
     if (existing.exec() && existing.next())
         return existing.value(0).toLongLong();
 
+    // Regional subtags are dropped here rather than at every call site: the language is
+    // a partition predicate, and "en-GB" must not be a different partition from "en-US".
+    const QString normalised = i18n::normalizeLanguageTag(lang);
+
     QSqlQuery insert(m_db);
     insert.prepare(QStringLiteral(
         "INSERT INTO feed (url, title, lang, lang_source) VALUES (?, ?, ?, ?)"));
     insert.addBindValue(url);
     insert.addBindValue(title);
-    insert.addBindValue(lang.isEmpty() ? QVariant() : QVariant(lang));
-    insert.addBindValue(lang.isEmpty() ? QVariant() : QVariant(langSource));
+    insert.addBindValue(normalised.isEmpty() ? QVariant() : QVariant(normalised));
+    insert.addBindValue(normalised.isEmpty() ? QVariant() : QVariant(langSource));
     if (!insert.exec()) {
         setError(QStringLiteral("cannot add feed"), insert.lastError().text());
         return -1;
@@ -392,7 +452,7 @@ bool FeedStore::updateFeedMetadata(qint64 feedId, const ParsedFeed &parsed)
         query.addBindValue(current.langSource.isEmpty() ? QVariant()
                                                         : QVariant(current.langSource));
     } else {
-        query.addBindValue(parsed.lang);
+        query.addBindValue(i18n::normalizeLanguageTag(parsed.lang));
         query.addBindValue(QStringLiteral("declared"));
     }
     query.addBindValue(feedId);
@@ -464,9 +524,11 @@ QVector<FeedRecord> FeedStore::feedsDueForFetch(qint64 now) const
 
 bool FeedStore::setFeedLanguage(qint64 feedId, const QString &lang, const QString &source)
 {
+    const QString normalised = i18n::normalizeLanguageTag(lang);
+
     QSqlQuery query(m_db);
     query.prepare(QStringLiteral("UPDATE feed SET lang = ?, lang_source = ? WHERE id = ?"));
-    query.addBindValue(lang);
+    query.addBindValue(normalised);
     query.addBindValue(source);
     query.addBindValue(feedId);
     if (!query.exec()) {
@@ -477,7 +539,7 @@ bool FeedStore::setFeedLanguage(qint64 feedId, const QString &lang, const QStrin
     // or clustering keeps using the old value.
     QSqlQuery articles(m_db);
     articles.prepare(QStringLiteral("UPDATE article SET lang = ? WHERE feed_id = ?"));
-    articles.addBindValue(lang);
+    articles.addBindValue(normalised);
     articles.addBindValue(feedId);
     articles.exec();
     return true;

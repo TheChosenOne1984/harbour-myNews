@@ -11,9 +11,97 @@ Page {
 
     allowedOrientations: defaultAllowedOrientations
 
+    // Consent gate. The catalogue is the only address the app contacts that does not
+    // belong to a publisher, so nothing is fetched before the user has been told which
+    // host that is and has agreed. Shown here rather than at startup: someone who only
+    // adds feeds by URL is never asked at all.
+    SilicaFlickable {
+        anchors.fill: parent
+        visible: App.needsCatalogConsent || App.catalogDeclined
+        contentHeight: consentColumn.height + Theme.paddingLarge
+
+        Column {
+            id: consentColumn
+            width: parent.width
+            spacing: Theme.paddingMedium
+
+            PageHeader { title: qsTr("Add sources") }
+
+            Label {
+                x: Theme.horizontalPageMargin
+                width: parent.width - 2 * Theme.horizontalPageMargin
+                wrapMode: Text.Wrap
+                color: Theme.primaryColor
+                text: App.catalogDeclined
+                    ? qsTr("The feed catalogue is not being downloaded.")
+                    : qsTr("The list of suggested sources is not part of the app. It is "
+                           + "downloaded from:")
+            }
+
+            Label {
+                x: Theme.horizontalPageMargin
+                width: parent.width - 2 * Theme.horizontalPageMargin
+                wrapMode: Text.Wrap
+                visible: !App.catalogDeclined
+                color: Theme.highlightColor
+                font.family: Theme.fontFamilyHeading
+                text: Settings.catalogHost
+            }
+
+            Label {
+                x: Theme.horizontalPageMargin
+                width: parent.width - 2 * Theme.horizontalPageMargin
+                wrapMode: Text.Wrap
+                font.pixelSize: Theme.fontSizeSmall
+                color: Theme.secondaryColor
+                //: consent prompt: what is and is not sent when the catalogue is fetched
+                text: qsTr("This is the only address the app contacts that does not belong "
+                           + "to a publisher. Only the list of feeds is requested — nothing "
+                           + "about you or your subscriptions is sent. Your IP address is "
+                           + "visible to that server, as with any download.")
+            }
+
+            Label {
+                x: Theme.horizontalPageMargin
+                width: parent.width - 2 * Theme.horizontalPageMargin
+                wrapMode: Text.Wrap
+                font.pixelSize: Theme.fontSizeSmall
+                color: Theme.secondaryColor
+                //: consent prompt: reassures the user that declining is workable
+                text: qsTr("You can decline and still add feeds by entering their address "
+                           + "yourself. You can change this later in the settings.")
+            }
+
+            Item { width: 1; height: Theme.paddingLarge }
+
+            Button {
+                anchors.horizontalCenter: parent.horizontalCenter
+                text: App.catalogDeclined ? qsTr("Download the catalogue")
+                                          : qsTr("Download it")
+                onClicked: App.setCatalogConsent(true)
+            }
+
+            Button {
+                anchors.horizontalCenter: parent.horizontalCenter
+                visible: !App.catalogDeclined
+                text: qsTr("No, thank you")
+                onClicked: App.setCatalogConsent(false)
+            }
+
+            Button {
+                anchors.horizontalCenter: parent.horizontalCenter
+                text: qsTr("Add feed by URL")
+                onClicked: pageStack.push(Qt.resolvedUrl("AddFeedPage.qml"))
+            }
+        }
+
+        VerticalScrollDecorator { }
+    }
+
     SilicaListView {
         id: listView
         anchors.fill: parent
+        visible: !App.needsCatalogConsent && !App.catalogDeclined
         model: App.catalog
 
         PullDownMenu {

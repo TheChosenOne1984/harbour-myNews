@@ -1,13 +1,14 @@
 #include "settings.h"
 
 #include <QSettings>
+#include <QUrl>
 
 namespace app {
 namespace {
 
 const QString KeyUiLanguage = QStringLiteral("ui/language");
 const QString KeyCatalogUrl = QStringLiteral("catalog/url");
-const QString KeyCatalogEnabled = QStringLiteral("catalog/enabled");
+const QString KeyCatalogConsent = QStringLiteral("catalog/consent");
 const QString KeyRetentionDays = QStringLiteral("storage/retentionDays");
 const QString KeyClusterThreshold = QStringLiteral("cluster/hammingThreshold");
 const QString KeyClusterWindow = QStringLiteral("cluster/windowHours");
@@ -74,17 +75,27 @@ void Settings::setCatalogUrl(const QString &url)
     emit catalogUrlChanged();
 }
 
-bool Settings::catalogEnabled() const
+Settings::Consent Settings::catalogConsent() const
 {
-    return m_settings->value(KeyCatalogEnabled, true).toBool();
+    // Defaults to Unasked, never to Granted: an app that contacts a third party before
+    // the user has agreed has already done the thing consent was supposed to gate.
+    const int stored = m_settings->value(KeyCatalogConsent, int(Unasked)).toInt();
+    if (stored == int(Granted) || stored == int(Denied))
+        return static_cast<Consent>(stored);
+    return Unasked;
 }
 
-void Settings::setCatalogEnabled(bool enabled)
+void Settings::setCatalogConsent(Consent consent)
 {
-    if (enabled == catalogEnabled())
+    if (consent == catalogConsent())
         return;
-    m_settings->setValue(KeyCatalogEnabled, enabled);
-    emit catalogEnabledChanged();
+    m_settings->setValue(KeyCatalogConsent, int(consent));
+    emit catalogConsentChanged();
+}
+
+QString Settings::catalogHost() const
+{
+    return QUrl(catalogUrl()).host();
 }
 
 int Settings::retentionDays() const
@@ -145,14 +156,14 @@ void Settings::resetToDefaults()
 {
     m_settings->remove(KeyUiLanguage);
     m_settings->remove(KeyCatalogUrl);
-    m_settings->remove(KeyCatalogEnabled);
+    // Consent is deliberately NOT reset: withdrawing a decision the user made about
+    // contacting a third party is not something "restore defaults" should do silently.
     m_settings->remove(KeyRetentionDays);
     m_settings->remove(KeyClusterThreshold);
     m_settings->remove(KeyClusterWindow);
 
     emit uiLanguageChanged();
     emit catalogUrlChanged();
-    emit catalogEnabledChanged();
     emit retentionDaysChanged();
     emit clusterThresholdChanged();
     emit clusterWindowHoursChanged();

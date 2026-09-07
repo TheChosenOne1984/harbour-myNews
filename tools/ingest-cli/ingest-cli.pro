@@ -16,6 +16,7 @@ SOURCES += \
     $$PWD/../../src/feed/feedfetcher.cpp \
     $$PWD/../../src/feed/feedrefresher.cpp \
     $$PWD/../../src/cluster/normalize.cpp \
+    $$PWD/../../src/i18n/languagenames.cpp \
     $$PWD/../../src/cluster/simhash.cpp \
     $$PWD/../../src/cluster/clusterer.cpp
 
@@ -25,6 +26,7 @@ HEADERS += \
     $$PWD/../../src/feed/feedfetcher.h \
     $$PWD/../../src/feed/feedrefresher.h \
     $$PWD/../../src/cluster/normalize.h \
+    $$PWD/../../src/i18n/languagenames.h \
     $$PWD/../../src/cluster/simhash.h \
     $$PWD/../../src/cluster/clusterer.h
 

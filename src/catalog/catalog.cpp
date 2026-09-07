@@ -5,6 +5,8 @@
 #include <QJsonObject>
 #include <QJsonParseError>
 
+#include "i18n/languagenames.h"
+
 namespace catalog {
 namespace {
 
@@ -91,7 +93,9 @@ Catalog parseCatalog(const QByteArray &json)
         Entry entry;
         entry.url = object.value(QStringLiteral("url")).toString().trimmed();
         entry.title = object.value(QStringLiteral("title")).toString().trimmed();
-        entry.lang = object.value(QStringLiteral("lang")).toString().trimmed();
+        // A catalogue is hand-written, so it may well say "en-GB"; the app partitions on
+        // the primary subtag only.
+        entry.lang = i18n::normalizeLanguageTag(object.value(QStringLiteral("lang")).toString());
         entry.category = object.value(QStringLiteral("category")).toString();
         entry.siteUrl = object.value(QStringLiteral("site_url")).toString();
         entry.description = object.value(QStringLiteral("description")).toString();

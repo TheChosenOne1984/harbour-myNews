@@ -20,6 +20,8 @@ private slots:
     void shippedCatalogueFileIsValid();
 
     void settingsDefaults();
+    void settingsCatalogueIsNotContactedBeforeConsent();
+    void settingsResetKeepsConsentDecision();
     void settingsClampOutOfRangeValues();
     void settingsCatalogUrlFallsBackToDefault();
     void settingsClusterParamsFollowSettings();
@@ -40,7 +42,7 @@ void TestCatalog::parsesAWellFormedCatalogue()
       "feeds": [
         { "url": "https://example.invalid/a", "title": "A", "lang": "de",
           "category": "hamburg", "site_url": "https://example.invalid/" },
-        { "url": "https://example.invalid/b", "title": "B", "lang": "en",
+        { "url": "https://example.invalid/b", "title": "B", "lang": "en-GB",
           "category": "national" }
       ]
     })";
@@ -51,6 +53,8 @@ void TestCatalog::parsesAWellFormedCatalogue()
     QCOMPARE(parsed.entries.size(), 2);
     QCOMPARE(parsed.categories.size(), 2);
     QCOMPARE(parsed.entries.first().lang, QStringLiteral("de"));
+    // A hand-written catalogue may well say "en-GB"; the app partitions on "en".
+    QCOMPARE(parsed.entries.at(1).lang, QStringLiteral("en"));
     QVERIFY(parsed.category(QStringLiteral("hamburg")) != nullptr);
     QVERIFY(parsed.category(QStringLiteral("nowhere")) == nullptr);
 }
@@ -132,12 +136,48 @@ void TestCatalog::settingsDefaults()
     app::Settings settings(dir.path() + QStringLiteral("/s.ini"), nullptr);
 
     QVERIFY(settings.uiLanguage().isEmpty());          // follow the device
-    QVERIFY(settings.catalogEnabled());
+    QVERIFY(!settings.catalogEnabled());   // nothing is fetched before consent
     QCOMPARE(settings.catalogUrl(), app::Settings::defaultCatalogUrl());
     QCOMPARE(settings.retentionDays(), 14);
     // The measured clustering defaults, see CLUSTERING.md.
     QCOMPARE(settings.clusterThreshold(), 14);
     QCOMPARE(settings.clusterWindowHours(), 48);
+}
+
+void TestCatalog::settingsCatalogueIsNotContactedBeforeConsent()
+{
+    QTemporaryDir dir;
+    app::Settings settings(dir.path() + QStringLiteral("/s.ini"), nullptr);
+
+    // An app that contacts a third party before the user agreed has already done the
+    // thing consent was meant to gate (section 10).
+    QCOMPARE(settings.catalogConsent(), app::Settings::Unasked);
+    QVERIFY(!settings.catalogEnabled());
+
+    settings.setCatalogConsent(app::Settings::Denied);
+    QVERIFY(!settings.catalogEnabled());
+
+    settings.setCatalogConsent(app::Settings::Granted);
+    QVERIFY(settings.catalogEnabled());
+
+    // The prompt has to name the host it is about.
+    settings.setCatalogUrl(QStringLiteral("https://catalog.example.invalid/list.json"));
+    QCOMPARE(settings.catalogHost(), QStringLiteral("catalog.example.invalid"));
+}
+
+void TestCatalog::settingsResetKeepsConsentDecision()
+{
+    QTemporaryDir dir;
+    app::Settings settings(dir.path() + QStringLiteral("/s.ini"), nullptr);
+
+    settings.setCatalogConsent(app::Settings::Denied);
+    settings.setRetentionDays(90);
+    settings.resetToDefaults();
+
+    QCOMPARE(settings.retentionDays(), 14);
+    // Silently re-enabling a third-party connection the user refused is not something
+    // "restore defaults" may do.
+    QCOMPARE(settings.catalogConsent(), app::Settings::Denied);
 }
 
 void TestCatalog::settingsClampOutOfRangeValues()
@@ -188,7 +228,6 @@ void TestCatalog::settingsResetRestoresDefaults()
     app::Settings settings(dir.path() + QStringLiteral("/s.ini"), nullptr);
 
     settings.setClusterThreshold(3);
-    settings.setCatalogEnabled(false);
     settings.setRetentionDays(90);
 
     QSignalSpy spy(&settings, &app::Settings::clusterThresholdChanged);
@@ -196,7 +235,6 @@ void TestCatalog::settingsResetRestoresDefaults()
 
     QCOMPARE(spy.size(), 1);
     QCOMPARE(settings.clusterThreshold(), 14);
-    QVERIFY(settings.catalogEnabled());
     QCOMPARE(settings.retentionDays(), 14);
 }
 
