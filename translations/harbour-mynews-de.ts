@@ -489,13 +489,14 @@
         <translation>Lesen</translation>
     </message>
     <message>
-        <source>Open articles in the system browser</source>
-        <translation>Artikel im System-Browser öffnen</translation>
+        <source>Always use the system browser</source>
+        <extracomment>a standing preference, not a one-off action</extracomment>
+        <translation>Immer den System-Browser verwenden</translation>
     </message>
     <message>
-        <source>The built-in view keeps you in the app, but it runs a full browser engine inside it. If a page makes the app close unexpectedly, switch this on.</source>
+        <source>Every article opens in the browser instead of inside myNews, and the setting is remembered. The built-in view keeps you in the app, but it runs a full browser engine inside it: switch this on if an article will not scroll, or if a page makes the app close unexpectedly.</source>
         <extracomment>explains the trade-off of the built-in article view</extracomment>
-        <translation>Die eingebaute Ansicht hält dich in der App, führt dafür aber eine vollständige Browser-Engine darin aus. Wenn sich die App bei einer Seite unerwartet schließt, schalte dies ein.</translation>
+        <translation>Jeder Artikel öffnet sich im Browser statt in myNews, und die Einstellung bleibt erhalten. Die eingebaute Ansicht hält dich in der App, führt dafür aber eine vollständige Browser-Engine darin aus: Schalte dies ein, wenn sich ein Artikel nicht scrollen lässt oder sich die App bei einer Seite unerwartet schließt.</translation>
     </message>
 </context>
 <context>

@@ -53,11 +53,15 @@ Page {
 
             TextSwitch {
                 checked: Settings.openArticlesExternally
-                text: qsTr("Open articles in the system browser")
+                //: a standing preference, not a one-off action
+                text: qsTr("Always use the system browser")
                 //: explains the trade-off of the built-in article view
-                description: qsTr("The built-in view keeps you in the app, but it runs a "
-                                  + "full browser engine inside it. If a page makes the app "
-                                  + "close unexpectedly, switch this on.")
+                description: qsTr("Every article opens in the browser instead of inside "
+                                  + "myNews, and the setting is remembered. The built-in "
+                                  + "view keeps you in the app, but it runs a full browser "
+                                  + "engine inside it: switch this on if an article will "
+                                  + "not scroll, or if a page makes the app close "
+                                  + "unexpectedly.")
                 onClicked: Settings.openArticlesExternally = !Settings.openArticlesExternally
             }
 
