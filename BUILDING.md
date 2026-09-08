@@ -128,6 +128,47 @@ This is the emulator's software-rendered Gecko, not the app: it reproduces on un
 commits. Reboot the emulator (`systemctl reboot` over SSH) for each article-view check,
 and do not read a dead process after a successful screenshot as an app bug.
 
+### The article view does not scroll in the emulator
+
+Reproducible, measured, and not yet explained. The engine scrolls correctly; the
+compositor does not follow.
+
+`QuickMozView.scrollableOffset.y` tracks a drag smoothly from 0 to the end of the
+gesture and stays there, and `scrollTo()`, `scrollBy()` and `window.scrollTo()` move it
+just as well. But the painted web layer is placed at the *document* origin rather than
+the viewport origin: content at document position d appears at screen position d, and
+only the band Gecko currently has painted is drawn at all. Measured against the
+ambience showing through the unpainted area, with the view filling the page:
+
+| `scrollableOffset.y` | first painted screen row |
+|---------------------:|-------------------------:|
+| 600                  | 597                      |
+| 1200                 | 1199                     |
+| 2000                 | off screen               |
+
+So the reader sees the article stand still while an empty strip grows from the top.
+
+Ruled out, each by experiment rather than argument:
+
+* the pulley menu and its `Flickable.DragOverBounds` (removed; unchanged),
+* `chromeGestureEnabled`, Gecko's dynamic toolbar (disabled; unchanged),
+* the view sitting below a `PageHeader` at non-zero y (filled the page; unchanged),
+* `layers.async-pan-zoom.enabled` and `apz.enabled` (set false; unchanged),
+* the gesture itself -- programmatic scrolling displaces the layer identically.
+
+Binding the view's `y` to `-scrollableOffset.y` cancels the displacement exactly, which
+confirms the mechanism, but it is not a fix: moving the item moves Qt's input mapping
+with it, trading the rendering error for an equal error in where touches land.
+
+sailfish-browser scrolls the same page on the same emulator, but that is not a
+counter-example: it renders through `QOpenGLWebPage` into its own window, not through
+`QuickMozView` and the scene graph. No other component on the image uses `QuickMozView`,
+so the emulator offers no second opinion.
+
+**Untested on hardware.** The device check is two minutes: open any article, drag, and
+see whether the text moves. Until then treat the built-in reader as unverified and use
+Settings → "open articles in the system browser", which bypasses the view entirely.
+
 ## Tests
 
 Headless, and they run on the real target through scratchbox2's qemu — same Qt, same
