@@ -102,6 +102,24 @@ systemctl stop sailjaild
 systemctl start sailjaild
 ```
 
+### Granting Sailjail permissions without tapping
+
+Changing `Permissions=` in the `.desktop` makes Sailjail show its "myNews needs following
+access permission(s)" dialog on the next start, and there is no way to press Accept from
+here. The decision lives in a plain INI file, so write it directly:
+
+```sh
+ssh $SSHOPT -p 2223 root@127.0.0.1 '
+  systemctl stop sailjaild
+  sed -i "/\[harbour-mynews\]/,/^$/{s/^Allowed=0/Allowed=1/;
+          s/^Granted=$/Granted=Internet;WebView;Documents;/}" \
+      /home/.system/var/lib/sailjail/settings/user-100000.settings
+  systemctl start sailjaild'
+```
+
+`Granted=` must list exactly what the `.desktop` asks for. The daemon rewrites the file,
+so stop it first.
+
 ### Screenshots
 
 From the host, without touching the guest:
