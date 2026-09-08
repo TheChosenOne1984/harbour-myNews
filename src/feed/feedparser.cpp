@@ -390,16 +390,6 @@ QString firstImageInHtml(const QString &html)
     return match.hasMatch() ? match.captured(1) : QString();
 }
 
-QString ParsedFeed::formatName(Format format)
-{
-    switch (format) {
-    case Rss2: return QStringLiteral("RSS 2.0");
-    case Atom: return QStringLiteral("Atom 1.0");
-    case Rdf:  return QStringLiteral("RSS 1.0 / RDF");
-    case Unknown: break;
-    }
-    return QStringLiteral("unknown");
-}
 
 ParsedFeed parseFeed(const QByteArray &data)
 {

@@ -47,10 +47,8 @@ public:
     void refreshDue(qint64 now);
 
     /*! Refreshes one feed regardless of its backoff -- for an explicit user action. */
-    void refreshOne(qint64 feedId, qint64 now);
 
     Summary summary() const { return m_summary; }
-    bool isRunning() const { return !m_outstanding.isEmpty(); }
 
 signals:
     /*! One feed done. \a error is empty on success, including on 304. */

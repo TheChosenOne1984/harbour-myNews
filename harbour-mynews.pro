@@ -20,7 +20,7 @@ PKGCONFIG += sailfishapp
 # for one -- and cost every UI test for the sake of a page that cannot render there
 # anyway. The package is a runtime Requires in the .spec instead.
 
-QT += sql network concurrent
+QT += sql network
 
 QMAKE_CXXFLAGS += -std=c++17
 

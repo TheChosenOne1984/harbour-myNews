@@ -27,8 +27,6 @@ class Settings : public QObject
 
     Q_PROPERTY(QString uiLanguage READ uiLanguage WRITE setUiLanguage NOTIFY uiLanguageChanged)
     Q_PROPERTY(QString catalogUrl READ catalogUrl WRITE setCatalogUrl NOTIFY catalogUrlChanged)
-    Q_PROPERTY(int catalogConsent READ catalogConsentInt WRITE setCatalogConsentInt
-                   NOTIFY catalogConsentChanged)
     Q_PROPERTY(bool catalogEnabled READ catalogEnabled NOTIFY catalogConsentChanged)
     Q_PROPERTY(QString catalogHost READ catalogHost NOTIFY catalogUrlChanged)
     Q_PROPERTY(QString defaultCatalogUrl READ defaultCatalogUrl CONSTANT)
@@ -135,9 +133,6 @@ signals:
     void clusterWindowHoursChanged();
 
 private:
-    int catalogConsentInt() const { return static_cast<int>(catalogConsent()); }
-    void setCatalogConsentInt(int consent) { setCatalogConsent(static_cast<Consent>(consent)); }
-
     QSettings *m_settings;
 };
 

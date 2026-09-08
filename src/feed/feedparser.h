@@ -44,7 +44,6 @@ struct ParsedFeed
     QString error;       //!< empty when parsing succeeded
 
     bool isValid() const { return format != Unknown && error.isEmpty(); }
-    static QString formatName(Format format);
 };
 
 /*! Teasers are truncated on the way in (section 5). */

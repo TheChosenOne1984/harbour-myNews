@@ -34,13 +34,6 @@ Page {
     readonly property real thumbnailSize: delegateHeight - 2 * Theme.paddingSmall
 
     /*
-     * A docked bar, because the pulley menu is only reachable at the top of the list.
-     * After scrolling past three hundred articles, wanting to filter meant flicking all
-     * the way back up first. This is always in reach: it names the active filter, opens
-     * the filter page, and gives a way back to the top -- which also puts the rest of the
-     * pulley within reach again.
-     */
-    /*
      * The pulley menu is only reachable at the top of the list, so after scrolling past
      * three hundred articles, filtering meant flicking all the way back up first.
      *

@@ -88,8 +88,14 @@ public:
         bool isSuccess() const { return error.isEmpty(); }
     };
 
-    /*! Timeouts and the size cap, from section 5. */
-    static constexpr int ConnectTimeoutMs = 10 * 1000;
+    /*!
+     * The total timeout and the size cap, from section 5.
+     *
+     * One timer, not two: a separate connect timeout would buy little on a mobile network
+     * where a slow connect and a slow transfer are the same problem, and Qt 5.6 offers
+     * nothing built in for either. The total bound is what keeps a slot from being held
+     * open, and it is the bound the code actually applies.
+     */
     static constexpr int TotalTimeoutMs = 30 * 1000;
     static constexpr qint64 MaxResponseBytes = 5 * 1024 * 1024;
 
@@ -112,8 +118,6 @@ public:
      * URL. Never a browser string -- masquerading to obtain different content is out.
      */
     static QString defaultUserAgent();
-    void setUserAgent(const QString &userAgent);
-    QString userAgent() const { return m_userAgent; }
 
     void enqueue(const Request &request);
     void enqueue(const QVector<Request> &requests);
@@ -147,7 +151,6 @@ private:
     void releaseHost(const QString &host);
 
     QNetworkAccessManager *m_network;
-    QString m_userAgent;
 
     //! One queue per host, so a publisher with many feeds is still served one at a time.
     QHash<QString, QQueue<Request>> m_queues;

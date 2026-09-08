@@ -658,8 +658,9 @@
 <context>
     <name>catalog::CatalogService</name>
     <message>
-        <source>The catalogue address is not a valid URL.</source>
-        <translation>Die Katalog-Adresse ist keine gültige URL.</translation>
+        <source>The catalogue address must be an http:// or https:// URL.</source>
+        <extracomment>shown when the catalogue address in settings cannot be fetched</extracomment>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 </TS>

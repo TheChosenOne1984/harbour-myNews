@@ -19,13 +19,6 @@ void FeedRefresher::refreshDue(qint64 now)
     startRequests(m_store->feedsDueForFetch(now), now);
 }
 
-void FeedRefresher::refreshOne(qint64 feedId, qint64 now)
-{
-    FeedRecord record;
-    if (!m_store->feedById(feedId, &record))
-        return;
-    startRequests({record}, now);
-}
 
 void FeedRefresher::startRequests(const QVector<FeedRecord> &feeds, qint64 now)
 {

@@ -6,7 +6,7 @@ import Sailfish.Silica 1.0
  *
  * Always occupies its space, image or not: section 9 requires a fixed delegate height,
  * and a box that appears only when an image exists would make rows change size as images
- * arrive. Until thumbnails land (milestone 5) it is always the placeholder.
+ * arrive. Until the picture is cached, the placeholder fills it.
  *
  * The placeholder is a source-coloured tile with the source's initial (section 8) --
  * deliberately not a broken-image icon and not a blank gap.

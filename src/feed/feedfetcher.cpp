@@ -37,7 +37,6 @@ bool isFetchableUrl(const QString &url)
 FeedFetcher::FeedFetcher(QObject *parent)
     : QObject(parent)
     , m_network(new QNetworkAccessManager(this))
-    , m_userAgent(defaultUserAgent())
 {
     qRegisterMetaType<feed::FeedFetcher::Result>("feed::FeedFetcher::Result");
 }
@@ -53,11 +52,6 @@ QString FeedFetcher::defaultUserAgent()
         .arg(QLatin1String(AppVersion), QLatin1String(ProjectUrl));
 }
 
-void FeedFetcher::setUserAgent(const QString &userAgent)
-{
-    if (!userAgent.isEmpty())
-        m_userAgent = userAgent;
-}
 
 void FeedFetcher::enqueue(const Request &request)
 {
@@ -136,7 +130,7 @@ void FeedFetcher::pumpQueues()
 void FeedFetcher::start(const Request &request)
 {
     QNetworkRequest networkRequest(request.url);
-    networkRequest.setHeader(QNetworkRequest::UserAgentHeader, m_userAgent);
+    networkRequest.setHeader(QNetworkRequest::UserAgentHeader, defaultUserAgent());
     networkRequest.setRawHeader("Accept",
                                 "application/rss+xml, application/atom+xml, "
                                 "application/xml;q=0.9, text/xml;q=0.9, */*;q=0.8");
