@@ -81,6 +81,25 @@ QVariant ClusterModel::data(const QModelIndex &index, int role) const
 
 void ClusterModel::setClusters(const QVector<feed::ClusterSummary> &clusters)
 {
+    // A reset scrolls the list back to the top, which throws away the reader's place. Most
+    // updates -- an article marked read, a refresh that found nothing new -- leave the
+    // rows themselves identical, so those are applied in place and the position survives.
+    if (clusters.size() == m_clusters.size()) {
+        bool sameRows = true;
+        for (int i = 0; i < clusters.size(); ++i) {
+            if (clusters.at(i).clusterId != m_clusters.at(i).clusterId) {
+                sameRows = false;
+                break;
+            }
+        }
+        if (sameRows) {
+            m_clusters = clusters;
+            if (!m_clusters.isEmpty())
+                emit dataChanged(index(0), index(m_clusters.size() - 1));
+            return;
+        }
+    }
+
     const bool sizeChanged = clusters.size() != m_clusters.size();
     beginResetModel();
     m_clusters = clusters;
@@ -89,6 +108,23 @@ void ClusterModel::setClusters(const QVector<feed::ClusterSummary> &clusters)
     endResetModel();
     if (sizeChanged)
         emit countChanged();
+}
+
+QVector<qint64> ClusterModel::leadArticleIds(int firstRow, int count) const
+{
+    QVector<qint64> ids;
+    if (count <= 0)
+        return ids;
+
+    const int from = qMax(0, firstRow);
+    const int to = qMin(m_clusters.size(), from + count);
+    ids.reserve(to - from);
+    for (int i = from; i < to; ++i) {
+        // Nothing to fetch for a row whose picture is already on disk.
+        if (!m_thumbnails.contains(m_clusters.at(i).leadArticleId))
+            ids.append(m_clusters.at(i).leadArticleId);
+    }
+    return ids;
 }
 
 int ClusterModel::rowOfArticle(qint64 articleId) const

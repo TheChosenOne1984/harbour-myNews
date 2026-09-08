@@ -337,6 +337,15 @@ void AppController::addFeed(const QString &url, const QString &lang, const QStri
                               Q_ARG(QString, QString()));   // no region for a hand-added feed
 }
 
+void AppController::prefetchThumbnails(int firstRow, int count)
+{
+    const QVector<qint64> ids = m_clusters.leadArticleIds(firstRow, count);
+    for (const qint64 id : ids) {
+        QMetaObject::invokeMethod(m_backend, "requestThumbnail", Qt::QueuedConnection,
+                                  Q_ARG(qint64, id));
+    }
+}
+
 void AppController::markClusterRead(qint64 clusterId, bool read)
 {
     // The row updates straight away; the database catches up on the worker thread. A

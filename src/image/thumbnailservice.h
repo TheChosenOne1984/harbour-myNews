@@ -42,8 +42,14 @@ public:
     static constexpr qint64 ImageRequestBase = -1000000;
     static constexpr qint64 PageRequestBase = -2000000;
 
-    /*! How many articles may be in flight at once. */
-    static constexpr int MaxInFlight = 3;
+    /*!
+     * How many articles may be in flight at once.
+     *
+     * Raised well above the polite figure used for feeds: these are images from CDNs,
+     * fetched with FeedFetcher's parallel policy, and a reader scrolling quickly is
+     * waiting for every one of them.
+     */
+    static constexpr int MaxInFlight = 12;
 
 public slots:
     /*! Called when a row becomes visible. Cheap and idempotent. */

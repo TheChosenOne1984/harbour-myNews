@@ -24,6 +24,8 @@ private slots:
     void modelTrimsTheSourceRow_data();
     void modelTrimsTheSourceRow();
     void modelMarksRowsReadWithoutResetting();
+    void modelKeepsPositionWhenRowsAreUnchanged();
+    void modelPrefetchSkipsPicturesAlreadyHeld();
 
     void filtersByUnread();
     void filtersByRegion();
@@ -326,6 +328,55 @@ struct FilterFixture
 };
 
 } // namespace
+
+void TestClusterView::modelKeepsPositionWhenRowsAreUnchanged()
+{
+    model::ClusterModel model;
+    feed::ClusterSummary a = summaryWith({QStringLiteral("Alpha")});
+    feed::ClusterSummary b = summaryWith({QStringLiteral("Beta")});
+    b.clusterId = 2;
+    b.leadArticleId = 2;
+    model.setClusters({a, b});
+
+    QSignalSpy reset(&model, &QAbstractItemModel::modelReset);
+    QSignalSpy changed(&model, &QAbstractItemModel::dataChanged);
+
+    // Same rows, one of them now read. A reset here would scroll the reader back to the
+    // top of the list -- which is exactly what happened after reading an article.
+    a.unread = false;
+    model.setClusters({a, b});
+    QCOMPARE(reset.size(), 0);
+    QCOMPARE(changed.size(), 1);
+    QVERIFY(!model.data(model.index(0), model::ClusterModel::UnreadRole).toBool());
+
+    // Different rows must still reset: the list really is a different list.
+    model.setClusters({b});
+    QCOMPARE(reset.size(), 1);
+}
+
+void TestClusterView::modelPrefetchSkipsPicturesAlreadyHeld()
+{
+    model::ClusterModel model;
+    QVector<feed::ClusterSummary> clusters;
+    for (int i = 0; i < 10; ++i) {
+        feed::ClusterSummary summary = summaryWith({QStringLiteral("Alpha")});
+        summary.clusterId = i + 1;
+        summary.leadArticleId = i + 1;
+        clusters.append(summary);
+    }
+    model.setClusters(clusters);
+
+    QCOMPARE(model.leadArticleIds(0, 4).size(), 4);
+    QCOMPARE(model.leadArticleIds(0, 4).first(), Q_INT64_C(1));
+    // A window reaching past the end is clamped rather than padded with nonsense.
+    QCOMPARE(model.leadArticleIds(8, 50).size(), 2);
+    QVERIFY(model.leadArticleIds(99, 10).isEmpty());
+
+    // Rows whose picture is already on disk are not asked for again.
+    model.setRowThumbnail(1, QStringLiteral("/tmp/1.jpg"));
+    model.setRowThumbnail(2, QStringLiteral("/tmp/2.jpg"));
+    QCOMPARE(model.leadArticleIds(0, 4).size(), 2);
+}
 
 void TestClusterView::filtersByUnread()
 {

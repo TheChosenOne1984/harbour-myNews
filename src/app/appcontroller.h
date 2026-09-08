@@ -154,6 +154,19 @@ public:
      */
     Q_INVOKABLE void requestThumbnail(qint64 articleId);
 
+    /*!
+     * Asks for the pictures of a range of rows ahead of the viewport.
+     *
+     * Requesting only what is on screen loses every image the moment a reader flicks
+     * quickly: the rows scroll past before their fetches come back. A window ahead of the
+     * viewport keeps up with a flick without becoming a request for the whole list.
+     */
+    Q_INVOKABLE void prefetchThumbnails(int firstRow, int count);
+
+    /*! How far ahead prefetching reaches. */
+    Q_PROPERTY(int thumbnailPrefetchRows READ thumbnailPrefetchRows CONSTANT)
+    int thumbnailPrefetchRows() const { return 50; }
+
     Q_INVOKABLE void markClusterRead(qint64 clusterId, bool read = true);
 
     /*! Reads a cluster's own read state, for the thumbnail toggle. */

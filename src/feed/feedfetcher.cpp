@@ -55,7 +55,10 @@ void FeedFetcher::enqueue(const Request &request)
         emit finished(result);
         return;
     }
-    m_queues[hostKey(request.url)].enqueue(request);
+    if (request.policy == Policy::Parallel)
+        m_parallelQueue.enqueue(request);
+    else
+        m_queues[hostKey(request.url)].enqueue(request);
     // Queue draining is deferred so that enqueueing a batch does not start the first
     // request before the caller has finished connecting to the signals.
     QTimer::singleShot(0, this, [this]() { pumpQueues(); });
@@ -69,7 +72,7 @@ void FeedFetcher::enqueue(const QVector<Request> &requests)
 
 int FeedFetcher::pending() const
 {
-    int count = m_inFlight.size();
+    int count = m_inFlight.size() + m_parallelQueue.size();
     for (auto it = m_queues.constBegin(); it != m_queues.constEnd(); ++it)
         count += it.value().size();
     return count;
@@ -82,6 +85,13 @@ bool FeedFetcher::isIdle() const
 
 void FeedFetcher::pumpQueues()
 {
+    // Parallel work first: it is what a reader is waiting for on screen, and it does not
+    // hold a host slot that a feed refresh might want.
+    while (!m_parallelQueue.isEmpty() && m_parallelInFlight < MaxParallel) {
+        ++m_parallelInFlight;
+        start(m_parallelQueue.dequeue());
+    }
+
     for (auto it = m_queues.begin(); it != m_queues.end(); ++it) {
         if (m_inFlight.size() >= MaxConcurrent)
             return;
@@ -196,11 +206,20 @@ void FeedFetcher::complete(QNetworkReply *reply, Result result)
     if (entry.timeout)
         entry.timeout->stop();
 
+    const bool parallel = entry.request.policy == Policy::Parallel;
     const QString host = hostKey(entry.request.url);
     reply->deleteLater();
 
     emit finished(result);
-    releaseHost(host);
+
+    if (parallel) {
+        // No cooldown: the point of this policy is that the next picture starts at once.
+        if (m_parallelInFlight > 0)
+            --m_parallelInFlight;
+        pumpQueues();
+    } else {
+        releaseHost(host);
+    }
 }
 
 void FeedFetcher::releaseHost(const QString &host)
@@ -231,6 +250,8 @@ void FeedFetcher::abortAll()
         reply->deleteLater();
     }
     m_queues.clear();
+    m_parallelQueue.clear();
+    m_parallelInFlight = 0;
     m_busyHosts.clear();
 }
 

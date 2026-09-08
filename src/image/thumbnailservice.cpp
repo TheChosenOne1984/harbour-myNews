@@ -73,6 +73,9 @@ void ThumbnailService::startImageFetch(const Job &job)
     feed::FeedFetcher::Request request;
     request.id = ImageRequestBase - job.articleId;
     request.url = job.imageUrl;
+    // A page of thumbnails comes from one CDN; serialising them with a gap would make a
+    // screenful take the better part of a minute.
+    request.policy = feed::FeedFetcher::Policy::Parallel;
     m_fetcher->enqueue(request);
 }
 
@@ -89,6 +92,8 @@ void ThumbnailService::startPageFetch(const Job &job)
     feed::FeedFetcher::Request request;
     request.id = PageRequestBase - job.articleId;
     request.url = job.articleUrl;
+    // The article page is a request to the publisher's own site, not to a CDN, so it
+    // keeps section 5's manners.
     m_fetcher->enqueue(request);
 }
 

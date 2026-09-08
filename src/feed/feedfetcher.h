@@ -32,11 +32,27 @@ class FeedFetcher : public QObject
     Q_OBJECT
 
 public:
+    /*!
+     * How hard the fetcher tries not to bother a host.
+     *
+     * Section 5's manners are about *feed documents*: one request per host at a time with
+     * a gap between them, so a subscription list does not arrive as a burst. Applied to
+     * images that rule is wrong -- a page's worth of thumbnails all come from one CDN, and
+     * serialising them with a gap makes fifty pictures take the better part of a minute.
+     * A browser opens several connections to a CDN without anyone considering it rude.
+     */
+    enum class Policy
+    {
+        Serialised,   //!< feeds, article pages, the catalogue: one per host, with a gap
+        Parallel      //!< images: several at once, still under a global cap
+    };
+
     struct Request
     {
         //! Opaque caller-chosen handle, echoed back in the Result. Not a feed id: this
         //! class is also what fetches the catalogue.
         qint64 id = -1;
+        Policy policy = Policy::Serialised;
         QUrl url;
         QString etag;          //!< sent as If-None-Match when present
         QString lastModified;  //!< sent as If-Modified-Since when present
@@ -64,8 +80,11 @@ public:
     /*! Gap between two requests to the same host. */
     static constexpr int PerHostDelayMs = 800;
 
-    /*! Ceiling on requests in flight across all hosts. */
+    /*! Ceiling on serialised requests in flight across all hosts. */
     static constexpr int MaxConcurrent = 4;
+
+    /*! Ceiling on parallel requests. Enough to keep a scrolling list fed, not a flood. */
+    static constexpr int MaxParallel = 6;
 
     explicit FeedFetcher(QObject *parent = nullptr);
     ~FeedFetcher() override;
@@ -116,6 +135,8 @@ private:
 
     //! One queue per host, so a publisher with many feeds is still served one at a time.
     QHash<QString, QQueue<Request>> m_queues;
+    QQueue<Request> m_parallelQueue;
+    int m_parallelInFlight = 0;
     QSet<QString> m_busyHosts;
     QHash<QString, QTimer *> m_hostCooldowns;
     QHash<QNetworkReply *, InFlight> m_inFlight;

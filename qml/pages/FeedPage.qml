@@ -31,11 +31,86 @@ Page {
     readonly property real delegateHeight: textHeight + 2 * Theme.paddingMedium
     readonly property real thumbnailSize: delegateHeight - 2 * Theme.paddingSmall
 
+    /*
+     * A docked bar, because the pulley menu is only reachable at the top of the list.
+     * After scrolling past three hundred articles, wanting to filter meant flicking all
+     * the way back up first. This is always in reach: it names the active filter, opens
+     * the filter page, and gives a way back to the top -- which also puts the rest of the
+     * pulley within reach again.
+     */
+    /*
+     * The pulley menu is only reachable at the top of the list, so after scrolling past
+     * three hundred articles, filtering meant flicking all the way back up first.
+     *
+     * This bar appears exactly when that problem exists -- once the list has scrolled far
+     * enough that the pulley is gone -- and floats over the list rather than displacing
+     * it. Keeping the list filling the page matters: with the list anchored below a
+     * permanent bar, Silica draws the pulley's backdrop in the exposed strip and it sits
+     * there as a solid orange band.
+     */
+    Item {
+        id: filterBar
+        z: 2
+        anchors { left: parent.left; right: parent.right; top: parent.top }
+        height: Theme.itemSizeExtraSmall
+        opacity: listView.contentY > listView.originY + 2 * page.delegateHeight ? 1.0 : 0.0
+        visible: opacity > 0
+        Behavior on opacity { FadeAnimation { duration: 150 } }
+
+        Rectangle {
+            anchors.fill: parent
+            // A dark scrim: the bar floats over article rows and over the ambience
+            // wallpaper, and has to stay legible against both.
+            color: Qt.rgba(0, 0, 0, 0.82)
+        }
+        Rectangle {
+            anchors { left: parent.left; right: parent.right; bottom: parent.bottom }
+            height: 1
+            color: Theme.rgba(Theme.primaryColor, 0.2)
+        }
+
+        BackgroundItem {
+            anchors { left: parent.left; right: toTop.left; top: parent.top; bottom: parent.bottom }
+            onClicked: pageStack.push(Qt.resolvedUrl("FilterPage.qml"))
+
+            Label {
+                anchors {
+                    left: parent.left
+                    leftMargin: Theme.horizontalPageMargin
+                    right: parent.right
+                    rightMargin: Theme.paddingMedium
+                    verticalCenter: parent.verticalCenter
+                }
+                truncationMode: TruncationMode.Fade
+                font.pixelSize: Theme.fontSizeSmall
+                color: App.filterActive ? Theme.highlightColor : Theme.primaryColor
+                text: App.filterActive
+                    ? qsTr("Filter: %1").arg(App.filterSummary)
+                    : qsTr("Filter · %n article group(s)", "", listView.count)
+            }
+        }
+
+        IconButton {
+            id: toTop
+            anchors {
+                right: parent.right
+                rightMargin: Theme.horizontalPageMargin - Theme.paddingMedium
+                verticalCenter: parent.verticalCenter
+            }
+            width: Theme.itemSizeExtraSmall
+            height: parent.height
+            icon.source: "image://theme/icon-m-up"
+            // Going back to the top also puts the pulley menu back within reach, which is
+            // the other half of the same problem.
+            onClicked: listView.scrollToTop()
+        }
+    }
+
     SilicaListView {
         id: listView
         anchors.fill: parent
         model: App.clusters
-        cacheBuffer: page.delegateHeight * 6
+        cacheBuffer: page.delegateHeight * 8
 
         PullDownMenu {
             busy: App.busy
@@ -53,6 +128,7 @@ Page {
                 text: App.filterActive ? qsTr("Filter: %1").arg(App.filterSummary)
                                        : qsTr("Filter")
                 onClicked: pageStack.push(Qt.resolvedUrl("FilterPage.qml"))
+
             }
             MenuItem {
                 text: qsTr("Mark all as read")
@@ -213,5 +289,50 @@ Page {
         }
 
         VerticalScrollDecorator { }
+
+        /*
+         * Ask for the pictures of the rows about to arrive, not only the ones on screen.
+         * Requesting only what is visible loses every image on a fast flick: the rows are
+         * gone before their fetches come back.
+         *
+         * Throttled, because contentY changes on every frame and a request per frame would
+         * be pointless work.
+         */
+        onContentYChanged: prefetchTimer.restart()
+
+        Timer {
+            id: prefetchTimer
+            interval: 120
+            onTriggered: {
+                if (listView.count === 0)
+                    return
+                var first = Math.max(0, Math.floor((listView.contentY - listView.originY)
+                                                   / page.delegateHeight))
+                App.prefetchThumbnails(first, App.thumbnailPrefetchRows)
+            }
+        }
+
+        Component.onCompleted: prefetchTimer.restart()
+
+        Connections {
+            target: App.clusters
+            onCountChanged: prefetchTimer.restart()
+        }
+    }
+
+    /*
+     * Coming back from an article used to land the reader at the top of the list. The
+     * model no longer resets for an in-place change, which was the main cause; this keeps
+     * the position across the page transition itself, which is cheap insurance.
+     */
+    property real savedContentY: 0
+
+    onStatusChanged: {
+        if (status === PageStatus.Inactive) {
+            savedContentY = listView.contentY
+        } else if (status === PageStatus.Active && savedContentY > 0) {
+            var maximum = Math.max(0, listView.contentHeight - listView.height)
+            listView.contentY = Math.min(savedContentY, maximum)
+        }
     }
 }

@@ -255,6 +255,13 @@
         <source>Pull down to change or clear the filter.</source>
         <translation>Nach unten ziehen, um den Filter zu ändern oder aufzuheben.</translation>
     </message>
+    <message numerus="yes">
+        <source>Filter · %n article group(s)</source>
+        <translation>
+            <numerusform>Filter · %n Meldung</numerusform>
+            <numerusform>Filter · %n Meldungen</numerusform>
+        </translation>
+    </message>
 </context>
 <context>
     <name>FilterPage</name>

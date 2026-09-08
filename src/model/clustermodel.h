@@ -65,6 +65,9 @@ public:
 
     Q_INVOKABLE int indexOfCluster(qint64 clusterId) const;
 
+    /*! Lead article ids for a range of rows, for prefetching their pictures. */
+    QVector<qint64> leadArticleIds(int firstRow, int count) const;
+
 signals:
     void countChanged();
 
