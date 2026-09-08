@@ -187,6 +187,15 @@ public:
      *  Silica's formatter, which follows the device locale. */
     Q_INVOKABLE QString relativeTime(qint64 published) const;
 
+    /*!
+     * Whether a stored link can be opened at all.
+     *
+     * Links come from feeds, so they are not trusted: ingest blanks the ones the app
+     * will not dereference, and rows already in an older database still hold theirs.
+     * The UI asks before offering an action rather than re-implementing the rule.
+     */
+    Q_INVOKABLE bool canOpen(const QString &link) const;
+
     /*! A stable colour per source name, for the thumbnail placeholder (section 8). */
     Q_INVOKABLE QString sourceColour(const QString &source) const;
 

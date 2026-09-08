@@ -17,6 +17,22 @@ class QTimer;
 namespace feed {
 
 /*!
+ * \brief Whether the app is willing to fetch, load or hand out this URL.
+ *
+ * http(s) only, and only with a host. Everything the app dereferences comes from a feed,
+ * a catalogue or a text field, so none of it is trusted: a "link" may be file://, and the
+ * article view runs a full browser engine inside this process, while
+ * Qt.openUrlExternally() reaches whatever handler the system has registered for a scheme.
+ *
+ * One predicate rather than a check per call site, because the rule is the same
+ * everywhere and the version that gets forgotten is the one that is written out by hand.
+ */
+bool isFetchableUrl(const QUrl &url);
+
+/*! Convenience for the many places holding a link as text. */
+bool isFetchableUrl(const QString &url);
+
+/*!
  * \brief Fetches feed documents over HTTP, politely.
  *
  * Section 5 of the plan makes the manners mandatory, not optional: conditional GET on

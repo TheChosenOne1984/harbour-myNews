@@ -16,6 +16,8 @@ Page {
     allowedOrientations: defaultAllowedOrientations
 
     readonly property bool webViewReady: webViewLoader.status === Loader.Ready
+    // Links come from feeds and are not trusted; App.canOpen is the single rule.
+    readonly property bool linkUsable: App.canOpen(page.articleLink)
 
     function showSources() {
         pageStack.push(Qt.resolvedUrl("ClusterSourcesPage.qml"), {
@@ -50,7 +52,7 @@ Page {
             bottom: parent.bottom
         }
         asynchronous: true
-        source: "WebViewLoader.qml"
+        source: page.linkUsable ? "WebViewLoader.qml" : ""
         onLoaded: item.pageUrl = page.articleLink
     }
 
@@ -106,6 +108,7 @@ Page {
                 }
             }
             IconButton {
+                visible: page.linkUsable
                 icon.source: "image://theme/icon-m-website"
                 onClicked: Qt.openUrlExternally(page.articleLink)
             }
@@ -118,17 +121,21 @@ Page {
         anchors.centerIn: parent
         width: parent.width - 2 * Theme.horizontalPageMargin
         spacing: Theme.paddingLarge
-        visible: webViewLoader.status === Loader.Error
+        visible: webViewLoader.status === Loader.Error || !page.linkUsable
 
         Label {
             width: parent.width
             wrapMode: Text.Wrap
             horizontalAlignment: Text.AlignHCenter
             color: Theme.secondaryColor
-            text: qsTr("The built-in browser is not available here.")
+            text: page.linkUsable
+                ? qsTr("The built-in browser is not available here.")
+                //: the feed gave an address the app will not open, e.g. not http(s)
+                : qsTr("This article has no usable web address.")
         }
         Button {
             anchors.horizontalCenter: parent.horizontalCenter
+            visible: page.linkUsable
             //: fallback for pages the built-in view cannot show, e.g. paywalled ones
             text: qsTr("Open in browser")
             onClicked: Qt.openUrlExternally(page.articleLink)

@@ -182,8 +182,16 @@ Page {
             // model context past the Repeater's own.
             readonly property bool isUnread: model.unread
 
+            // Links come from feeds and are not trusted; App.canOpen is the single rule.
+            readonly property bool linkUsable: App.canOpen(model.link)
+
             onClicked: {
                 App.markClusterRead(model.clusterId)
+                if (!linkUsable) {
+                    if (model.memberCount > 1)
+                        item.showSources()
+                    return
+                }
                 if (Settings.openArticlesExternally) {
                     Qt.openUrlExternally(model.link)
                     return
@@ -211,6 +219,7 @@ Page {
                     onClicked: item.showSources()
                 }
                 MenuItem {
+                    visible: item.linkUsable
                     text: qsTr("Open in browser")
                     onClicked: Qt.openUrlExternally(model.link)
                 }

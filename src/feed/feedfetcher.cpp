@@ -20,6 +20,20 @@ QString hostKey(const QUrl &url)
 
 } // namespace
 
+bool isFetchableUrl(const QUrl &url)
+{
+    if (!url.isValid() || url.host().isEmpty())
+        return false;
+    const QString scheme = url.scheme();
+    return scheme == QLatin1String("https") || scheme == QLatin1String("http");
+}
+
+bool isFetchableUrl(const QString &url)
+{
+    const QString trimmed = url.trimmed();
+    return !trimmed.isEmpty() && isFetchableUrl(QUrl(trimmed));
+}
+
 FeedFetcher::FeedFetcher(QObject *parent)
     : QObject(parent)
     , m_network(new QNetworkAccessManager(this))

@@ -1,5 +1,7 @@
 #include "ogimage.h"
 
+#include "feed/feedfetcher.h"
+
 #include <QRegularExpression>
 
 namespace image {
@@ -98,13 +100,10 @@ QString extractPreviewImage(const QByteArray &html, const QUrl &baseUrl)
     // Publishers write protocol-relative and root-relative paths freely; both need the
     // article's own address to become fetchable.
     const QUrl resolved = baseUrl.isValid() ? baseUrl.resolved(QUrl(found)) : QUrl(found);
-    if (!resolved.isValid() || resolved.host().isEmpty())
+    // Only http(s), and only with a host: a feed must not talk us into fetching a file://
+    // URL. The same rule now guards every other URL the app dereferences.
+    if (!feed::isFetchableUrl(resolved))
         return QString();
-    // Only over TLS, and only http(s): a feed must not talk us into fetching a file:// URL.
-    if (resolved.scheme() != QLatin1String("https")
-        && resolved.scheme() != QLatin1String("http")) {
-        return QString();
-    }
     return resolved.toString();
 }
 

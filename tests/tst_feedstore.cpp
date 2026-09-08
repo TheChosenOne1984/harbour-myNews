@@ -37,6 +37,7 @@ private slots:
     void ingestFallsBackToFirstSeen();
     void clustersAcrossFeeds();
     void clusterMembersCarryTheirSourceName();
+    void ingestBlanksUnusableLinks();
     void keepsLanguagesInSeparateClusters();
     void leadArticlePrefersOneWithAnImage();
     void clusterListIsNewestFirst();
@@ -294,6 +295,39 @@ void TestFeedStore::clusterMembersCarryTheirSourceName()
     names.sort();
     QCOMPARE(names, QStringList({QStringLiteral("Nordsee Anzeiger"),
                                  QStringLiteral("Tagesblatt")}));
+}
+
+void TestFeedStore::ingestBlanksUnusableLinks()
+{
+    // A link the app will not dereference must not be stored: it would otherwise reach
+    // the in-process browser engine and Qt.openUrlExternally untouched. The article stays,
+    // because dropping it would silently remove a cluster member.
+    const qint64 feedId = m_store->addFeed(QStringLiteral("https://example.invalid/hostile"),
+                                           QStringLiteral("Hostile"), QStringLiteral("de"));
+    ParsedArticle hostile = article(QStringLiteral("h1"),
+                                    QStringLiteral("Senat beschliesst neuen Haushalt"), m_now);
+    hostile.link = QStringLiteral("file:///home/defaultuser/.local/share/secrets");
+    ParsedArticle sound = article(QStringLiteral("h2"),
+                                  QStringLiteral("Hafen meldet steigenden Umschlag"), m_now);
+    sound.link = QStringLiteral("https://example.invalid/hafen");
+
+    QVERIFY2(feedId > 0, qPrintable(m_store->lastError()));
+    // article.link is NOT NULL, so "no link" has to be an empty string rather than a
+    // default-constructed QString -- which is what this assertion is really guarding.
+    const IngestResult ingested = m_store->ingest(feedId, {hostile, sound}, m_now);
+    QVERIFY2(ingested.inserted == 2, qPrintable(m_store->lastError()));
+
+    QHash<QString, QString> linkOf;
+    for (const qint64 id : m_store->allArticleIds()) {
+        ArticleRecord record;
+        QVERIFY(m_store->articleById(id, &record));
+        linkOf.insert(record.title, record.link);
+    }
+
+    QCOMPARE(linkOf.size(), 2);
+    QCOMPARE(linkOf.value(QStringLiteral("Senat beschliesst neuen Haushalt")), QString());
+    QCOMPARE(linkOf.value(QStringLiteral("Hafen meldet steigenden Umschlag")),
+             QStringLiteral("https://example.invalid/hafen"));
 }
 
 void TestFeedStore::storesLanguagesWithoutRegion()

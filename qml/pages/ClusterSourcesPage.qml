@@ -76,6 +76,8 @@ Page {
             }
 
             onClicked: {
+                if (!App.canOpen(modelData.link))
+                    return
                 if (Settings.openArticlesExternally) {
                     Qt.openUrlExternally(modelData.link)
                     return

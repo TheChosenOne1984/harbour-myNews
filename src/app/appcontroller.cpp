@@ -7,6 +7,7 @@
 #include <QDir>
 
 #include "app/backend.h"
+#include "feed/feedfetcher.h"
 #include "i18n/languagenames.h"
 #include "i18n/relativetime.h"
 
@@ -481,6 +482,11 @@ void AppController::loadClusterMembers(qint64 clusterId)
 QString AppController::relativeTime(qint64 published) const
 {
     return i18n::relativeTime(published, QDateTime::currentMSecsSinceEpoch() / 1000);
+}
+
+bool AppController::canOpen(const QString &link) const
+{
+    return feed::isFetchableUrl(link);
 }
 
 QString AppController::sourceColour(const QString &source) const

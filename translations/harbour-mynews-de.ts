@@ -54,6 +54,11 @@
         <source>The built-in browser is not available here.</source>
         <translation>Der eingebaute Browser ist hier nicht verfügbar.</translation>
     </message>
+    <message>
+        <source>This article has no usable web address.</source>
+        <extracomment>the feed gave an address the app will not open, e.g. not http(s)</extracomment>
+        <translation>Dieser Artikel hat keine verwendbare Web-Adresse.</translation>
+    </message>
 </context>
 <context>
     <name>CatalogPage</name>

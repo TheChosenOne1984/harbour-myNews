@@ -1,5 +1,7 @@
 #include "feedstore.h"
 
+#include "feed/feedfetcher.h"
+
 #include "cluster/normalize.h"
 #include "i18n/languagenames.h"
 #include "cluster/simhash.h"
@@ -609,6 +611,16 @@ IngestResult FeedStore::ingest(qint64 feedId, const QVector<ParsedArticle> &arti
         // article without a timestamp still sorts and still clusters.
         const qint64 published = incoming.published > 0 ? incoming.published : now;
 
+        // A link the app will not dereference is worse than no link at all: stored, it
+        // would reach the in-process browser engine and the system's URL handler
+        // untouched. The article itself is kept -- dropping it would remove a cluster
+        // member and quietly change the clustering result for a reason unrelated to
+        // clustering. The reading UI hides the actions that need a link.
+        // Empty, not null: article.link is NOT NULL, and a default-constructed QString
+        // binds as SQL NULL.
+        const QString link = isFetchableUrl(incoming.link) ? incoming.link
+                                                           : QStringLiteral("");
+
         QSqlQuery existing(m_db);
         existing.prepare(QStringLiteral(
             "SELECT id, title, cluster_id FROM article WHERE feed_id = ? AND guid = ?"));
@@ -637,7 +649,7 @@ IngestResult FeedStore::ingest(qint64 feedId, const QVector<ParsedArticle> &arti
                 "  published = ?, simhash = ? WHERE id = ?"));
             update.addBindValue(incoming.title);
             update.addBindValue(incoming.teaser);
-            update.addBindValue(incoming.link);
+            update.addBindValue(link);
             update.addBindValue(incoming.imageUrl.isEmpty() ? QVariant()
                                                             : QVariant(incoming.imageUrl));
             update.addBindValue(published);
@@ -712,7 +724,7 @@ IngestResult FeedStore::ingest(qint64 feedId, const QVector<ParsedArticle> &arti
             " VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0)"));
         insert.addBindValue(feedId);
         insert.addBindValue(incoming.guid);
-        insert.addBindValue(incoming.link);
+        insert.addBindValue(link);
         insert.addBindValue(incoming.title);
         insert.addBindValue(incoming.teaser);
         insert.addBindValue(published);

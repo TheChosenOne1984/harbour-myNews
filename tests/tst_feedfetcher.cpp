@@ -106,6 +106,8 @@ class TestFeedFetcher : public QObject
     Q_OBJECT
 
 private slots:
+    void acceptsOnlyHttpUrls_data();
+    void acceptsOnlyHttpUrls();
     void init();
     void cleanup();
 
@@ -336,6 +338,38 @@ void TestFeedFetcher::decompressesGzippedResponse()
 
     // Qt has to be the one asking, or it will not decompress.
     QVERIFY(m_server->header(0, "accept-encoding").contains("gzip"));
+}
+
+void TestFeedFetcher::acceptsOnlyHttpUrls_data()
+{
+    QTest::addColumn<QString>("url");
+    QTest::addColumn<bool>("fetchable");
+
+    QTest::newRow("https") << "https://example.invalid/feed.xml" << true;
+    QTest::newRow("http") << "http://example.invalid/feed.xml" << true;
+    QTest::newRow("uppercase scheme") << "HTTPS://example.invalid/feed.xml" << true;
+    QTest::newRow("port and query") << "https://example.invalid:8443/f?x=1" << true;
+
+    // Everything below reaches either the in-process browser engine or the system's URL
+    // handler if it is let through, and all of it can come out of a feed.
+    QTest::newRow("file") << "file:///etc/passwd" << false;
+    QTest::newRow("javascript") << "javascript:alert(1)" << false;
+    QTest::newRow("tel") << "tel:+4940123456" << false;
+    QTest::newRow("mailto") << "mailto:someone@example.invalid" << false;
+    QTest::newRow("data") << "data:text/html,<b>x</b>" << false;
+    QTest::newRow("ftp") << "ftp://example.invalid/feed.xml" << false;
+    QTest::newRow("no host") << "https:///feed.xml" << false;
+    QTest::newRow("scheme relative") << "//example.invalid/feed.xml" << false;
+    QTest::newRow("relative") << "/feed.xml" << false;
+    QTest::newRow("empty") << "" << false;
+    QTest::newRow("whitespace") << "   " << false;
+}
+
+void TestFeedFetcher::acceptsOnlyHttpUrls()
+{
+    QFETCH(QString, url);
+    QFETCH(bool, fetchable);
+    QCOMPARE(feed::isFetchableUrl(url), fetchable);
 }
 
 int runFeedFetcherTests(int argc, char **argv)
