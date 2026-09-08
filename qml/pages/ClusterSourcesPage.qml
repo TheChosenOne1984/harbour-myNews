@@ -1,5 +1,6 @@
 import QtQuick 2.0
 import Sailfish.Silica 1.0
+import "../components"
 
 /*
  * The other publishers that ran this story (plan section 9). The point of clustering made
@@ -53,13 +54,24 @@ Page {
                                                                : Theme.primaryColor
                     text: modelData.title
                 }
-                Label {
-                    font.pixelSize: Theme.fontSizeExtraSmall
-                    color: Theme.secondaryColor
-                    text: modelData.link === page.currentLink
-                        //: marks the article the reader came from
-                        ? qsTr("currently open")
-                        : App.relativeTime(modelData.published)
+                Row {
+                    width: parent.width
+                    spacing: Theme.paddingSmall
+
+                    SourcePill {
+                        anchors.verticalCenter: parent.verticalCenter
+                        text: modelData.source
+                        dimmed: modelData.read
+                    }
+                    Label {
+                        anchors.verticalCenter: parent.verticalCenter
+                        font.pixelSize: Theme.fontSizeExtraSmall
+                        color: Theme.secondaryColor
+                        text: modelData.link === page.currentLink
+                            //: marks the article the reader came from
+                            ? qsTr("currently open")
+                            : App.relativeTime(modelData.published)
+                    }
                 }
             }
 

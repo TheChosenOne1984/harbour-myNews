@@ -63,6 +63,7 @@ struct ArticleRecord
     quint64 simhash = 0;
     qint64 clusterId = -1;
     bool read = false;
+    QString sourceTitle;     //!< only filled where the query joins feed; empty otherwise
 };
 
 /*! A cluster as the feed list needs it. */

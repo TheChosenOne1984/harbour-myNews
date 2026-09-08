@@ -69,6 +69,9 @@ ArticleRecord articleFromRecord(const QSqlQuery &query)
     const QVariant clusterId = query.value(QStringLiteral("cluster_id"));
     article.clusterId = clusterId.isNull() ? -1 : clusterId.toLongLong();
     article.read = query.value(QStringLiteral("read")).toInt() != 0;
+    // Present only for the queries that join feed; value() on an absent column is
+    // invalid, which converts to an empty string, so the plain SELECTs stay unaffected.
+    article.sourceTitle = query.value(QStringLiteral("source_title")).toString();
     return article;
 }
 
@@ -970,7 +973,9 @@ QVector<ArticleRecord> FeedStore::articlesInCluster(qint64 clusterId) const
     QVector<ArticleRecord> result;
     QSqlQuery query(m_db);
     query.prepare(QStringLiteral(
-        "SELECT * FROM article WHERE cluster_id = ? ORDER BY published ASC"));
+        "SELECT article.*, feed.title AS source_title FROM article "
+        "LEFT JOIN feed ON feed.id = article.feed_id "
+        "WHERE article.cluster_id = ? ORDER BY article.published ASC"));
     query.addBindValue(clusterId);
     if (!query.exec()) {
         setError(QStringLiteral("cannot list cluster members"), query.lastError().text());

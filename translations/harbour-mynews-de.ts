@@ -266,6 +266,14 @@
         <source>Load older articles</source>
         <translation>Ältere Artikel laden</translation>
     </message>
+    <message numerus="yes">
+        <source>All %n source(s)</source>
+        <extracomment>opens the list of every publisher that ran this story</extracomment>
+        <translation>
+            <numerusform>Alle %n Quellen</numerusform>
+            <numerusform>Alle %n Quellen</numerusform>
+        </translation>
+    </message>
 </context>
 <context>
     <name>FilterPage</name>

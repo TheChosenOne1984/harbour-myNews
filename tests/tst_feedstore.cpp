@@ -36,6 +36,7 @@ private slots:
     void ingestUpdatesChangedTitleAndRehashes();
     void ingestFallsBackToFirstSeen();
     void clustersAcrossFeeds();
+    void clusterMembersCarryTheirSourceName();
     void keepsLanguagesInSeparateClusters();
     void leadArticlePrefersOneWithAnImage();
     void clusterListIsNewestFirst();
@@ -269,6 +270,30 @@ void TestFeedStore::languageOverrideReachesArticles()
     const QVector<ArticleRecord> members = m_store->articlesInCluster(1);
     QCOMPARE(members.size(), 1);
     QCOMPARE(members.first().lang, QStringLiteral("en"));
+}
+
+void TestFeedStore::clusterMembersCarryTheirSourceName()
+{
+    // The cluster view exists to show who else ran the story, so the member rows have to
+    // know their publisher. Nothing else joins feed into an article query, which is why
+    // this is easy to drop again without noticing.
+    const qint64 a = m_store->addFeed(QStringLiteral("https://example.invalid/na"),
+                                      QStringLiteral("Nordsee Anzeiger"),
+                                      QStringLiteral("de"));
+    const qint64 b = m_store->addFeed(QStringLiteral("https://example.invalid/tb"),
+                                      QStringLiteral("Tagesblatt"), QStringLiteral("de"));
+    const QString headline = QStringLiteral("Senat beschliesst neuen Haushalt fuer Hamburg");
+    m_store->ingest(a, {article(QStringLiteral("a1"), headline, m_now)}, m_now);
+    m_store->ingest(b, {article(QStringLiteral("b1"), headline, m_now)}, m_now);
+
+    const QVector<ArticleRecord> members = m_store->articlesInCluster(1);
+    QCOMPARE(members.size(), 2);
+    QStringList names;
+    for (const ArticleRecord &member : members)
+        names << member.sourceTitle;
+    names.sort();
+    QCOMPARE(names, QStringList({QStringLiteral("Nordsee Anzeiger"),
+                                 QStringLiteral("Tagesblatt")}));
 }
 
 void TestFeedStore::storesLanguagesWithoutRegion()

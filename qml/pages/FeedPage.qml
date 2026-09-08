@@ -194,7 +194,20 @@ Page {
                 })
             }
 
+            function showSources() {
+                pageStack.push(Qt.resolvedUrl("ClusterSourcesPage.qml"), {
+                    clusterId: model.clusterId,
+                    currentLink: ""
+                })
+            }
+
             menu: ContextMenu {
+                MenuItem {
+                    visible: model.memberCount > 1
+                    //: opens the list of every publisher that ran this story
+                    text: qsTr("All %n source(s)", "", model.memberCount)
+                    onClicked: item.showSources()
+                }
                 MenuItem {
                     text: qsTr("Open in browser")
                     onClicked: Qt.openUrlExternally(model.link)
@@ -265,34 +278,78 @@ Page {
                     text: model.teaser
                 }
 
-                Row {
+                Item {
                     width: parent.width
                     height: page.sourceRowHeight
-                    spacing: Theme.paddingSmall
-                    clip: true
 
-                    Repeater {
-                        model: visibleSources
-                        delegate: SourcePill {
-                            anchors.verticalCenter: parent.verticalCenter
-                            text: modelData
-                            dimmed: !item.isUnread
-                        }
-                    }
-
-                    SourcePill {
-                        anchors.verticalCenter: parent.verticalCenter
-                        visible: hiddenSourceCount > 0
-                        dimmed: !item.isUnread
-                        //: more contributing sources than fit on the row
-                        text: qsTr("+%1").arg(hiddenSourceCount)
-                    }
-
+                    /*
+                     * A single source is just a name; several are the point of the app.
+                     * Pills are therefore reserved for stories more than one publisher
+                     * ran, so a cluster is recognisable at a glance instead of by counting
+                     * labels -- and the pill row is the way in to the full list, because
+                     * the thing that signals the cluster should also be the thing you tap.
+                     *
+                     * The age anchors right and the names give way to it: a truncated
+                     * publisher still reads, a missing timestamp leaves the row undated.
+                     */
                     Label {
-                        anchors.verticalCenter: parent.verticalCenter
+                        id: age
+                        anchors { right: parent.right; verticalCenter: parent.verticalCenter }
                         font.pixelSize: Theme.fontSizeExtraSmall
                         color: Theme.secondaryColor
                         text: App.relativeTime(published)
+                    }
+
+                    Label {
+                        anchors {
+                            left: parent.left
+                            right: age.left
+                            rightMargin: Theme.paddingMedium
+                            verticalCenter: parent.verticalCenter
+                        }
+                        visible: model.memberCount <= 1
+                        truncationMode: TruncationMode.Fade
+                        font.pixelSize: Theme.fontSizeExtraSmall
+                        color: Theme.secondaryColor
+                        text: model.sources.length > 0 ? model.sources[0] : ""
+                    }
+
+                    MouseArea {
+                        id: sourcesArea
+                        anchors {
+                            left: parent.left
+                            right: age.left
+                            rightMargin: Theme.paddingMedium
+                            top: parent.top
+                            bottom: parent.bottom
+                        }
+                        visible: model.memberCount > 1
+                        clip: true
+                        onClicked: item.showSources()
+
+                        Row {
+                            anchors.verticalCenter: parent.verticalCenter
+                            spacing: Theme.paddingSmall
+
+                            Repeater {
+                                model: visibleSources
+                                delegate: SourcePill {
+                                    anchors.verticalCenter: parent.verticalCenter
+                                    text: modelData
+                                    dimmed: !item.isUnread
+                                    highlighted: sourcesArea.pressed
+                                }
+                            }
+
+                            SourcePill {
+                                anchors.verticalCenter: parent.verticalCenter
+                                visible: hiddenSourceCount > 0
+                                dimmed: !item.isUnread
+                                highlighted: sourcesArea.pressed
+                                //: more contributing sources than fit on the row
+                                text: qsTr("+%1").arg(hiddenSourceCount)
+                            }
+                        }
                     }
                 }
             }

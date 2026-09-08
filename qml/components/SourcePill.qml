@@ -11,12 +11,14 @@ Rectangle {
 
     property string text
     property bool dimmed
+    property bool highlighted
 
     height: label.height + Theme.paddingSmall
     width: label.width + 2 * Theme.paddingSmall
     radius: height / 4
-    color: dimmed ? Theme.rgba(Theme.secondaryColor, 0.10)
-                  : Theme.rgba(Theme.highlightColor, 0.15)
+    color: highlighted ? Theme.rgba(Theme.highlightColor, 0.40)
+                       : (dimmed ? Theme.rgba(Theme.secondaryColor, 0.10)
+                                 : Theme.rgba(Theme.highlightColor, 0.15))
 
     Label {
         id: label

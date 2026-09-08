@@ -44,3 +44,10 @@ documentation.list
 *.db
 *.db-wal
 *.db-shm
+
+# rpmbuild leftovers
+debugfiles.list
+debuglinks.list
+debugsourcefiles.list
+debugsources.list
+elfbins.list

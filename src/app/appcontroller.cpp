@@ -111,6 +111,7 @@ AppController::AppController(QObject *parent)
             map.insert(QStringLiteral("link"), article.link);
             map.insert(QStringLiteral("published"), article.published);
             map.insert(QStringLiteral("read"), article.read);
+            map.insert(QStringLiteral("source"), article.sourceTitle);
             list.append(map);
         }
         emit clusterMembersLoaded(clusterId, list);
