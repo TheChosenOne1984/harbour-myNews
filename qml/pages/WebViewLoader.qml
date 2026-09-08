@@ -11,22 +11,18 @@ import Sailfish.WebEngine 1.0
  * ArticlePage would make that page fail to load; behind a Loader, a missing module is an
  * error status the page can answer with the external-browser fallback section 9 asks for.
  *
- * WebViewFlickable rather than a bare WebView: the web view scrolls itself, so a
- * PullDownMenu needs a flickable of its own to hang from, and it has to be the one wrapping
- * the view. Put the menu on the Page instead and every downward drag over the article opens
- * the menu -- the article then cannot be scrolled at all.
+ * Deliberately a bare WebView and not WebViewFlickable: the view does its own scrolling,
+ * and a SilicaFlickable around it arms boundsBehavior DragOverBounds as soon as a pulley
+ * menu is attached, which makes the flickable swallow every vertical drag. Dragging to
+ * read then pulls the header down instead of scrolling the article.
  */
-WebViewFlickable {
-    id: view
+WebView {
+    id: webView
 
     property url pageUrl
-    //! The page's pulley menu, mounted inside this flickable where it belongs.
-    property alias menu: menuLoader.sourceComponent
 
-    onPageUrlChanged: if (pageUrl != "") webView.url = pageUrl
-    Component.onCompleted: if (pageUrl != "") webView.url = pageUrl
-
-    Loader { id: menuLoader }
+    onPageUrlChanged: if (pageUrl != "") url = pageUrl
+    Component.onCompleted: if (pageUrl != "") url = pageUrl
 
     /*!
      * Hands memory back to the system when the reader leaves the article.
