@@ -292,6 +292,7 @@ Page {
                                     : qsTr("Pull down to refresh."))
         }
 
+
         VerticalScrollDecorator { }
 
         /*

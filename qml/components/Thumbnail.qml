@@ -51,6 +51,13 @@ Item {
         asynchronous: true
         sourceSize.width: width * 2
         sourceSize.height: height * 2
+
+        // Not held in Qt's pixmap cache. A decoded thumbnail is around 290 kB of RGBA, so
+        // a couple of hundred rows scrolled past would be tens of megabytes held for rows
+        // nobody is looking at. The file on disk is a 360-pixel JPEG of some twenty
+        // kilobytes; decoding it again when the row comes back is cheap, and this keeps
+        // the app's footprint flat however far someone scrolls.
+        cache: false
         fillMode: Image.PreserveAspectCrop
         clip: true
         opacity: thumbnail.dimmed ? 0.4 : 1.0

@@ -71,6 +71,24 @@ Retention takes thumbnails with it. When articles are purged on start, the cache
 every file whose article is gone, or it would slowly fill with pictures for stories that no
 longer exist.
 
+## Decoded thumbnails are not kept
+
+`Image.cache` is off. A decoded 360-pixel thumbnail is around 290 kB of RGBA, and Qt's
+pixmap cache holds them past the life of the delegate — so scrolling a few hundred rows
+quietly accumulates tens of megabytes for rows nobody is looking at.
+
+Measured in the emulator, scrolling through 300 rows:
+
+| | peak resident memory |
+| --- | --- |
+| with Qt's pixmap cache | 261 MB |
+| without | 173 MB |
+
+A third of the footprint, and the file on disk is a twenty-kilobyte JPEG that decodes
+again in a couple of milliseconds when the row comes back. On a phone sharing memory with
+a browser engine in the same process, that headroom is the difference between running and
+being killed.
+
 ## Qt 5.6 note
 
 `touch()` uses `utime()` rather than `QFileDevice::setFileTime`, which arrived in Qt 5.10.

@@ -39,6 +39,16 @@ Page {
         }
     }
 
+    /*
+     * Leaving the article gives the engine's memory back. Done on Inactive rather than on
+     * destruction, because by then the loader's item may already be gone -- and Inactive
+     * also covers pushing another page on top, where the article is equally out of sight.
+     */
+    onStatusChanged: {
+        if (status === PageStatus.Inactive && webViewLoader.item)
+            webViewLoader.item.releaseMemory()
+    }
+
     Loader {
         id: webViewLoader
         anchors {
