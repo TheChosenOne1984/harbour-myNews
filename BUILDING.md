@@ -146,17 +146,19 @@ This is the emulator's software-rendered Gecko, not the app: it reproduces on un
 commits. Reboot the emulator (`systemctl reboot` over SSH) for each article-view check,
 and do not read a dead process after a successful screenshot as an app bug.
 
-### The article view does not scroll in the emulator
+### The article view is unusable in the emulator
 
-Reproducible, measured, and not yet explained. The engine scrolls correctly; the
-compositor does not follow.
+Two symptoms, months apart in appearance and probably one cause. Neither is reproducible
+without a device, and both cost a lot of session time -- so what is known is written down
+in full.
 
-`QuickMozView.scrollableOffset.y` tracks a drag smoothly from 0 to the end of the
-gesture and stays there, and `scrollTo()`, `scrollBy()` and `window.scrollTo()` move it
-just as well. But the painted web layer is placed at the *document* origin rather than
-the viewport origin: content at document position d appears at screen position d, and
-only the band Gecko currently has painted is drawn at all. Measured against the
-ambience showing through the unpainted area, with the view filling the page:
+**The engine scrolls; the compositor does not follow.**
+`QuickMozView.scrollableOffset.y` tracks a drag smoothly and stays where it is left, and
+`scrollTo()`, `scrollBy()` and `window.scrollTo()` move it just as well. But the painted
+layer is placed at the *document* origin rather than the viewport origin: content at
+document position d appears at screen position d, and only the band Gecko currently has
+painted is drawn at all. Measured against the ambience showing through the unpainted
+area, with the view filling the page:
 
 | `scrollableOffset.y` | first painted screen row |
 |---------------------:|-------------------------:|
@@ -164,7 +166,10 @@ ambience showing through the unpainted area, with the view filling the page:
 | 1200                 | 1199                     |
 | 2000                 | off screen               |
 
-So the reader sees the article stand still while an empty strip grows from the top.
+**Later, no drag reached the view at all.** A one-second heartbeat in the page kept
+ticking, `hasView` stayed yes and the article stayed painted, but `dragging` never went
+true while the reader was dragging, and neither scrolling nor Lipstick's own left-edge
+back gesture did anything. The app had to be restarted.
 
 Ruled out, each by experiment rather than argument:
 
@@ -172,10 +177,14 @@ Ruled out, each by experiment rather than argument:
 * `chromeGestureEnabled`, Gecko's dynamic toolbar (disabled; unchanged),
 * the view sitting below a `PageHeader` at non-zero y (filled the page; unchanged),
 * `layers.async-pan-zoom.enabled` and `apz.enabled` (set false; unchanged),
-* the gesture itself -- programmatic scrolling displaces the layer identically.
+* the gesture itself -- programmatic scrolling displaces the layer identically,
+* **our own code**: commit `5c980e5`, from before the audit work, hangs exactly the same
+  way. Whatever this is, it is not something the app grew,
+* **pointer delivery in the VM**: every other part of the app -- list, pulley, page stack
+  -- responds to drags normally in the same session.
 
 Binding the view's `y` to `-scrollableOffset.y` cancels the displacement exactly, which
-confirms the mechanism, but it is not a fix: moving the item moves Qt's input mapping
+confirms that mechanism, but it is not a fix: moving the item moves Qt's input mapping
 with it, trading the rendering error for an equal error in where touches land.
 
 sailfish-browser scrolls the same page on the same emulator, but that is not a
@@ -183,9 +192,10 @@ counter-example: it renders through `QOpenGLWebPage` into its own window, not th
 `QuickMozView` and the scene graph. No other component on the image uses `QuickMozView`,
 so the emulator offers no second opinion.
 
-**Untested on hardware.** The device check is two minutes: open any article, drag, and
-see whether the text moves. Until then treat the built-in reader as unverified and use
-Settings → "open articles in the system browser", which bypasses the view entirely.
+**Do not spend more session time on this without hardware.** The device check is two
+minutes: open an article, drag, see whether the text moves. Until then Settings →
+"Always use the system browser" bypasses the view entirely, and with it switched on the
+app behaves normally throughout.
 
 ## Tests
 
