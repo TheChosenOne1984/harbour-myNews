@@ -61,11 +61,13 @@ void FeedFetcher::setUserAgent(const QString &userAgent)
 
 void FeedFetcher::enqueue(const Request &request)
 {
-    if (!request.url.isValid() || request.url.host().isEmpty()) {
+    if (!isFetchableUrl(request.url)) {
         Result result;
         result.id = request.id;
         result.url = request.url;
-        result.error = QStringLiteral("invalid URL");
+        result.error = QStringLiteral("refusing to fetch %1").arg(
+            request.url.scheme().isEmpty() ? QStringLiteral("an invalid URL")
+                                           : QStringLiteral("a %1 URL").arg(request.url.scheme()));
         emit finished(result);
         return;
     }

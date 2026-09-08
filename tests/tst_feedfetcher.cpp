@@ -106,6 +106,7 @@ class TestFeedFetcher : public QObject
     Q_OBJECT
 
 private slots:
+    void refusesToFetchNonHttpUrls();
     void acceptsOnlyHttpUrls_data();
     void acceptsOnlyHttpUrls();
     void init();
@@ -370,6 +371,25 @@ void TestFeedFetcher::acceptsOnlyHttpUrls()
     QFETCH(QString, url);
     QFETCH(bool, fetchable);
     QCOMPARE(feed::isFetchableUrl(url), fetchable);
+}
+
+void TestFeedFetcher::refusesToFetchNonHttpUrls()
+{
+    // Feed URLs arrive from a remotely hosted catalogue and from a free-text field, so
+    // the fetcher must not be the component that trusts them.
+    FeedFetcher fetcher;
+    QSignalSpy spy(&fetcher, &FeedFetcher::finished);
+
+    FeedFetcher::Request request;
+    request.id = 7;
+    request.url = QUrl(QStringLiteral("file:///etc/passwd"));
+    fetcher.enqueue(request);
+
+    QCOMPARE(spy.count(), 1);
+    const auto result = spy.at(0).at(0).value<FeedFetcher::Result>();
+    QCOMPARE(result.id, qint64(7));
+    QVERIFY(!result.isSuccess());
+    QCOMPARE(fetcher.pending(), 0);
 }
 
 int runFeedFetcherTests(int argc, char **argv)

@@ -1,5 +1,7 @@
 #include "catalogservice.h"
 
+#include "feed/feedfetcher.h"
+
 #include <QDir>
 #include <QFile>
 #include <QFileInfo>
@@ -83,9 +85,10 @@ void CatalogService::refresh(const QString &url, bool force)
         return;
     }
 
-    const QUrl parsed(url);
-    if (!parsed.isValid() || parsed.host().isEmpty()) {
-        emit refreshed(false, tr("The catalogue address is not a valid URL."));
+    const QUrl parsed(url.trimmed());
+    if (!feed::isFetchableUrl(parsed)) {
+        //: shown when the catalogue address in settings cannot be fetched
+        emit refreshed(false, tr("The catalogue address must be an http:// or https:// URL."));
         return;
     }
 

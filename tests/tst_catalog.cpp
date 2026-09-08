@@ -360,6 +360,16 @@ void TestCatalog::servicePrefersCacheUntilStale()
     service.refresh(QStringLiteral("not a url"), true);
     QCOMPARE(spy.size(), 2);
     QVERIFY(!spy.at(1).at(1).toString().isEmpty());
+
+    // Nor is a well-formed address in a scheme we will not fetch. The field is free text,
+    // so this is the only thing standing between it and QNetworkAccessManager.
+    service.refresh(QStringLiteral("file:///etc/passwd"), true);
+    QCOMPARE(spy.size(), 3);
+    QVERIFY(!spy.at(2).at(1).toString().isEmpty());
+
+    service.refresh(QStringLiteral("ftp://example.invalid/catalog.json"), true);
+    QCOMPARE(spy.size(), 4);
+    QVERIFY(!spy.at(3).at(1).toString().isEmpty());
 }
 
 int runCatalogTests(int argc, char **argv)
