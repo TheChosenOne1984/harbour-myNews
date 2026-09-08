@@ -2,6 +2,7 @@
 
 #include <QColor>
 #include <QFile>
+#include <QFileInfo>
 #include <QLocale>
 #include <QStandardPaths>
 #include <QDir>
@@ -528,6 +529,28 @@ void AppController::exportOpml(const QString &filePath)
 {
     QMetaObject::invokeMethod(m_backend, "exportOpml", Qt::QueuedConnection,
                               Q_ARG(QString, filePath));
+}
+
+QStringList AppController::opmlCandidates() const
+{
+    QDir dir(opmlFolder());
+    if (!dir.exists())
+        return QStringList();
+
+    // .xml as well as .opml: plenty of readers export "subscriptions.xml".
+    dir.setNameFilters(QStringList() << QStringLiteral("*.opml") << QStringLiteral("*.xml"));
+    dir.setFilter(QDir::Files | QDir::Readable);
+    dir.setSorting(QDir::Time);
+
+    QStringList paths;
+    for (const QFileInfo &info : dir.entryInfoList())
+        paths.append(info.absoluteFilePath());
+    return paths;
+}
+
+QString AppController::opmlFolder() const
+{
+    return QStandardPaths::writableLocation(QStandardPaths::DocumentsLocation);
 }
 
 QString AppController::defaultOpmlExportPath() const

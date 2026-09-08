@@ -87,6 +87,7 @@ DISTFILES += \
     qml/pages/CatalogPage.qml \
     qml/pages/FeedPage.qml \
     qml/pages/FilterPage.qml \
+    qml/pages/ImportOpmlPage.qml \
     qml/pages/LanguagePickerPage.qml \
     qml/pages/SettingsPage.qml \
     qml/pages/SubscriptionsPage.qml \

@@ -203,6 +203,21 @@ public:
     Q_INVOKABLE void exportOpml(const QString &filePath);
     Q_INVOKABLE QString defaultOpmlExportPath() const;
 
+    /*!
+     * OPML files sitting in the documents folder, newest first.
+     *
+     * Sailfish.Pickers would be the obvious way to choose a file, but it is a
+     * runtime-only module -- present on a device image, absent from the build target, so
+     * a page importing it cannot be compiled against or checked here. Listing the
+     * candidates ourselves needs no module, keeps the logic where the tests can reach it,
+     * and covers the case that matters: a file exported from another reader and copied
+     * onto the phone.
+     */
+    Q_INVOKABLE QStringList opmlCandidates() const;
+
+    /*! The folder opmlCandidates() looks in, for the UI to name when it finds nothing. */
+    Q_INVOKABLE QString opmlFolder() const;
+
     /*! Language codes offered when adding a feed: the shipped UI languages plus
      *  whatever the catalogue uses, so the common cases are one tap. */
     Q_INVOKABLE QStringList suggestedLanguages() const;

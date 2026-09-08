@@ -38,6 +38,10 @@ Page {
 
         PullDownMenu {
             MenuItem {
+                text: qsTr("Import subscriptions")
+                onClicked: pageStack.push(Qt.resolvedUrl("ImportOpmlPage.qml"))
+            }
+            MenuItem {
                 text: qsTr("Export subscriptions")
                 onClicked: App.exportOpml(App.defaultOpmlExportPath())
             }
