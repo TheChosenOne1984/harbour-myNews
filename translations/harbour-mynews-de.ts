@@ -266,13 +266,10 @@
         <source>Load older articles</source>
         <translation>Ältere Artikel laden</translation>
     </message>
-    <message numerus="yes">
-        <source>All %n source(s)</source>
-        <extracomment>opens the list of every publisher that ran this story</extracomment>
-        <translation>
-            <numerusform>Alle %n Quellen</numerusform>
-            <numerusform>Alle %n Quellen</numerusform>
-        </translation>
+    <message>
+        <source>All %1 sources</source>
+        <extracomment>only offered for clustered stories, so never singular</extracomment>
+        <translation>Alle %1 Quellen</translation>
     </message>
 </context>
 <context>

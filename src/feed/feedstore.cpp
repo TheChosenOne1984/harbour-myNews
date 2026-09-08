@@ -69,9 +69,6 @@ ArticleRecord articleFromRecord(const QSqlQuery &query)
     const QVariant clusterId = query.value(QStringLiteral("cluster_id"));
     article.clusterId = clusterId.isNull() ? -1 : clusterId.toLongLong();
     article.read = query.value(QStringLiteral("read")).toInt() != 0;
-    // Present only for the queries that join feed; value() on an absent column is
-    // invalid, which converts to an empty string, so the plain SELECTs stay unaffected.
-    article.sourceTitle = query.value(QStringLiteral("source_title")).toString();
     return article;
 }
 
@@ -981,8 +978,14 @@ QVector<ArticleRecord> FeedStore::articlesInCluster(qint64 clusterId) const
         setError(QStringLiteral("cannot list cluster members"), query.lastError().text());
         return result;
     }
-    while (query.next())
-        result.append(articleFromRecord(query));
+    while (query.next()) {
+        // Only this query joins feed. Reading the column in the shared helper would ask
+        // every other article query for a field it does not select, which Qt answers with
+        // a warning per row.
+        ArticleRecord article = articleFromRecord(query);
+        article.sourceTitle = query.value(QStringLiteral("source_title")).toString();
+        result.append(article);
+    }
     return result;
 }
 

@@ -80,13 +80,31 @@ Page {
                     Qt.openUrlExternally(modelData.link)
                     return
                 }
-                pageStack.pop()
-                pageStack.push(Qt.resolvedUrl("ArticlePage.qml"), {
+                /*
+                 * pop() followed by push() silently did nothing: pop() starts an animated
+                 * transition and PageStack refuses to push during one, so the reader was
+                 * dropped back on the list instead of into the article.
+                 *
+                 * replaceAbove the feed page also keeps the stack flat. Reaching this page
+                 * from an article and picking another would otherwise stack article on
+                 * article, and each one holds a live web engine -- the thing that ran the
+                 * app out of memory before. Going back always lands on the list, and the
+                 * article's own pulley leads back to the other sources.
+                 */
+                var properties = {
                     clusterId: page.clusterId,
                     articleTitle: modelData.title,
                     articleLink: modelData.link,
                     memberCount: page.members.length
+                }
+                var feedPage = pageStack.find(function (candidate) {
+                    return candidate.objectName === "feedPage"
                 })
+                if (feedPage)
+                    pageStack.replaceAbove(feedPage, Qt.resolvedUrl("ArticlePage.qml"),
+                                           properties)
+                else
+                    pageStack.replace(Qt.resolvedUrl("ArticlePage.qml"), properties)
             }
         }
 

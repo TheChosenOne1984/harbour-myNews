@@ -8,6 +8,8 @@ import "../components"
  */
 Page {
     id: page
+    // Named so pages further up the stack can unwind back to it (ClusterSourcesPage).
+    objectName: "feedPage"
 
     allowedOrientations: defaultAllowedOrientations
 
@@ -204,8 +206,8 @@ Page {
             menu: ContextMenu {
                 MenuItem {
                     visible: model.memberCount > 1
-                    //: opens the list of every publisher that ran this story
-                    text: qsTr("All %n source(s)", "", model.memberCount)
+                    //: only offered for clustered stories, so never singular
+                    text: qsTr("All %1 sources").arg(model.memberCount)
                     onClicked: item.showSources()
                 }
                 MenuItem {

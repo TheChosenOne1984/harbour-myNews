@@ -15,28 +15,44 @@ Page {
 
     allowedOrientations: defaultAllowedOrientations
 
-    PageHeader {
-        id: header
-        title: page.articleTitle
-        _titleItem.maximumLineCount: 2
-        _titleItem.wrapMode: Text.Wrap
+    /*
+     * Header and pulley menu are components, not plain children, because they have two
+     * possible homes. When the web view loads they mount inside its flickable -- a
+     * PullDownMenu only reaches the reader's drag from there, and anywhere else it
+     * swallows every downward swipe meant for the article. When the view is unavailable
+     * the same header mounts on the Page above the fallback.
+     */
+    Component {
+        id: headerComponent
+        PageHeader {
+            title: page.articleTitle
+            _titleItem.maximumLineCount: 2
+            _titleItem.wrapMode: Text.Wrap
+        }
     }
 
-    PullDownMenu {
-        MenuItem {
-            visible: page.memberCount > 1
-            //: opens the list of other publishers that ran the same story
-            text: qsTr("Other sources (%1)").arg(page.memberCount - 1)
-            onClicked: pageStack.push(Qt.resolvedUrl("ClusterSourcesPage.qml"), {
-                clusterId: page.clusterId,
-                currentLink: page.articleLink
-            })
+    Component {
+        id: menuComponent
+        PullDownMenu {
+            MenuItem {
+                visible: page.memberCount > 1
+                //: opens the list of other publishers that ran the same story
+                text: qsTr("Other sources (%1)").arg(page.memberCount - 1)
+                onClicked: page.showSources()
+            }
+            MenuItem {
+                //: fallback for pages the built-in view cannot show, e.g. paywalled ones
+                text: qsTr("Open in browser")
+                onClicked: Qt.openUrlExternally(page.articleLink)
+            }
         }
-        MenuItem {
-            //: fallback for pages the built-in view cannot show, e.g. paywalled ones
-            text: qsTr("Open in browser")
-            onClicked: Qt.openUrlExternally(page.articleLink)
-        }
+    }
+
+    function showSources() {
+        pageStack.push(Qt.resolvedUrl("ClusterSourcesPage.qml"), {
+            clusterId: page.clusterId,
+            currentLink: page.articleLink
+        })
     }
 
     /*
@@ -51,19 +67,26 @@ Page {
 
     Loader {
         id: webViewLoader
-        anchors {
-            top: header.bottom
-            left: parent.left
-            right: parent.right
-            bottom: parent.bottom
-        }
+        anchors.fill: parent
         asynchronous: true
         source: "WebViewLoader.qml"
-        onLoaded: item.pageUrl = page.articleLink
+        onLoaded: {
+            item.header = headerComponent
+            item.menu = menuComponent
+            item.pageUrl = page.articleLink
+        }
     }
 
-    // Shown when the WebView is unavailable -- on the emulator, or if a device ever ships
-    // without it. Failing to an explanation and a working button beats a blank page.
+    // The web view brings its own header once it is up; until then, and if it never
+    // arrives, the page supplies one.
+    Loader {
+        id: fallbackHeader
+        width: parent.width
+        sourceComponent: webViewLoader.status === Loader.Ready ? undefined : headerComponent
+    }
+
+    // Shown when the web view is unavailable -- if a device ever ships without it. Failing
+    // to an explanation and working buttons beats a blank page.
     Column {
         anchors.centerIn: parent
         width: parent.width - 2 * Theme.horizontalPageMargin
@@ -81,6 +104,12 @@ Page {
             anchors.horizontalCenter: parent.horizontalCenter
             text: qsTr("Open in browser")
             onClicked: Qt.openUrlExternally(page.articleLink)
+        }
+        Button {
+            anchors.horizontalCenter: parent.horizontalCenter
+            visible: page.memberCount > 1
+            text: qsTr("Other sources (%1)").arg(page.memberCount - 1)
+            onClicked: page.showSources()
         }
     }
 

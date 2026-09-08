@@ -51,9 +51,13 @@ CoverBackground {
     }
 
     CoverActionList {
+        // CoverAction itself carries only an icon and a signal; the list is what can be
+        // switched off. Assigning enabled to the action left the button live and logged an
+        // error on every cover load.
+        enabled: App.subscriptionCount > 0 && !App.busy
+
         CoverAction {
             iconSource: "image://theme/icon-cover-refresh"
-            enabled: App.subscriptionCount > 0 && !App.busy
             onTriggered: App.refresh()
         }
     }

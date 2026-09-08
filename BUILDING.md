@@ -110,6 +110,24 @@ From the host, without touching the guest:
 VBoxManage controlvm "SailfishOS-5.1.0.11" screenshotpng out.png
 ```
 
+### The web view in the emulator
+
+`Sailfish.WebView` is not in the i486 target, so it cannot be built or checked against
+there; it arrives in the *emulator image* only once `sailfish-browser` is installed
+(`pkcon install sailfish-browser` as root). After that articles do render.
+
+They render exactly once per boot. The second and further launches segfault in
+`GeckoWorkerThre` inside `libxul.so`, which kills the whole app because the engine is
+in-process:
+
+```
+kernel: GeckoWorkerThre[…]: segfault at 6c … in libxul.so
+```
+
+This is the emulator's software-rendered Gecko, not the app: it reproduces on unmodified
+commits. Reboot the emulator (`systemctl reboot` over SSH) for each article-view check,
+and do not read a dead process after a successful screenshot as an app bug.
+
 ## Tests
 
 Headless, and they run on the real target through scratchbox2's qemu — same Qt, same
