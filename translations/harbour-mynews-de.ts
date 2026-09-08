@@ -116,20 +116,6 @@
         <translation>Der Feed-Katalog wird nicht heruntergeladen.</translation>
     </message>
     <message>
-        <source>The list of suggested sources is not part of the app. It is downloaded from:</source>
-        <translation>Die Liste der vorgeschlagenen Quellen ist nicht Teil der App. Sie wird heruntergeladen von:</translation>
-    </message>
-    <message>
-        <source>This is the only address the app contacts that does not belong to a publisher. Only the list of feeds is requested — nothing about you or your subscriptions is sent. Your IP address is visible to that server, as with any download.</source>
-        <extracomment>consent prompt: what is and is not sent when the catalogue is fetched</extracomment>
-        <translation>Dies ist die einzige Adresse, die die App kontaktiert und die keinem Verlag gehört. Abgefragt wird ausschließlich die Feed-Liste — nichts über dich oder deine Abonnements wird übermittelt. Deine IP-Adresse ist für diesen Server sichtbar, wie bei jedem Download.</translation>
-    </message>
-    <message>
-        <source>You can decline and still add feeds by entering their address yourself. You can change this later in the settings.</source>
-        <extracomment>consent prompt: reassures the user that declining is workable</extracomment>
-        <translation>Du kannst ablehnen und Feeds trotzdem hinzufügen, indem du ihre Adresse selbst eingibst. Das lässt sich später in den Einstellungen ändern.</translation>
-    </message>
-    <message>
         <source>Download the catalogue</source>
         <translation>Katalog herunterladen</translation>
     </message>
@@ -140,6 +126,11 @@
     <message>
         <source>No, thank you</source>
         <translation>Nein, danke</translation>
+    </message>
+    <message>
+        <source>The suggested sources are downloaded from a server on the internet:</source>
+        <extracomment>consent prompt: the whole of it, deliberately one sentence</extracomment>
+        <translation>Die vorgeschlagenen Quellen werden von einem Server im Internet geladen:</translation>
     </message>
 </context>
 <context>
@@ -342,6 +333,34 @@
     <message>
         <source>Show everything again</source>
         <translation>Wieder alles anzeigen</translation>
+    </message>
+</context>
+<context>
+    <name>ImportOpmlPage</name>
+    <message>
+        <source>Import subscriptions</source>
+        <translation>Abos importieren</translation>
+    </message>
+    <message numerus="yes">
+        <source>%n file(s) found</source>
+        <translation>
+            <numerusform>%n Datei gefunden</numerusform>
+            <numerusform>%n Dateien gefunden</numerusform>
+        </translation>
+    </message>
+    <message>
+        <source>Adds these feeds to your subscriptions</source>
+        <extracomment>reassures the reader that importing adds to what is already there</extracomment>
+        <translation>Fügt diese Feeds zu deinen Abos hinzu</translation>
+    </message>
+    <message>
+        <source>No OPML files found</source>
+        <translation>Keine OPML-Dateien gefunden</translation>
+    </message>
+    <message>
+        <source>Copy a subscriptions file into %1 and come back.</source>
+        <extracomment>%1 is a folder path</extracomment>
+        <translation>Lege eine Abo-Datei in %1 ab und komm zurück.</translation>
     </message>
 </context>
 <context>
@@ -581,6 +600,10 @@
         <source>Pull down to add sources from the catalogue.</source>
         <translation>Nach unten ziehen, um Quellen aus dem Katalog hinzuzufügen.</translation>
     </message>
+    <message>
+        <source>Import subscriptions</source>
+        <translation>Abos importieren</translation>
+    </message>
 </context>
 <context>
     <name>app::AppController</name>
@@ -660,7 +683,7 @@
     <message>
         <source>The catalogue address must be an http:// or https:// URL.</source>
         <extracomment>shown when the catalogue address in settings cannot be fetched</extracomment>
-        <translation type="unfinished"></translation>
+        <translation>Die Katalog-Adresse muss eine http://- oder https://-URL sein.</translation>
     </message>
 </context>
 </TS>
