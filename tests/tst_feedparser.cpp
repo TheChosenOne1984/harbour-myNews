@@ -31,6 +31,8 @@ private slots:
     void parsesTimestamps_data();
     void parsesTimestamps();
     void keepsArticlesFromTruncatedDocument();
+    void survivesDeeplyNestedItem();
+    void keepsShallowNestingIntact();
     void reportsEmptyDocument();
 };
 
@@ -325,6 +327,58 @@ void TestFeedParser::keepsArticlesFromTruncatedDocument()
     QVERIFY(!feed.error.isEmpty());
     QCOMPARE(feed.articles.size(), 1);
     QCOMPARE(feed.articles.first().title, QStringLiteral("Erhalten"));
+}
+
+namespace {
+
+QByteArray nestedItem(int depth)
+{
+    QByteArray xml =
+        "<?xml version=\"1.0\" encoding=\"UTF-8\"?>"
+        "<rss version=\"2.0\"><channel><item>"
+        "<title>Senat beschliesst Haushalt</title><link>https://example.invalid/a</link>"
+        "<description>";
+    for (int i = 0; i < depth; ++i)
+        xml += "<b>";
+    xml += "Kern";
+    for (int i = 0; i < depth; ++i)
+        xml += "</b>";
+    xml += "</description></item></channel></rss>";
+    return xml;
+}
+
+} // namespace
+
+void TestFeedParser::survivesDeeplyNestedItem()
+{
+    // readNode() used to recurse once per level with no limit. Measured on aarch64, about
+    // 35 000 levels exhausted the stack -- a document of roughly 245 KB, so the 5 MB
+    // response cap was no protection at all. Any subscribed feed could crash the app on
+    // every refresh.
+    const ParsedFeed feed = parseFeed(nestedItem(50000));
+
+    // The point of the test is that we get here at all.
+    QCOMPARE(feed.articles.size(), 1);
+    QCOMPARE(feed.articles.first().title, QStringLiteral("Senat beschliesst Haushalt"));
+    QCOMPARE(feed.articles.first().link, QStringLiteral("https://example.invalid/a"));
+    // Shallow fields survive; the document is still reported as not fully read.
+    QVERIFY2(!feed.error.isEmpty(), "a skipped subtree must be reported");
+}
+
+void TestFeedParser::keepsShallowNestingIntact()
+{
+    // The nesting an Atom <content type="xhtml"> actually carries must pass untouched, or
+    // the limit would be a bug of its own: no skipping, and therefore nothing to report.
+    //
+    // Not asserted here: that the text *inside* those elements reaches the teaser. It does
+    // not, and never did -- a Node keeps only the character data of its own level, so
+    // markup nested as real elements loses its text. Escaped HTML and CDATA, which is what
+    // publishers actually send, arrive as characters on the description itself and are
+    // unaffected. Out of scope for the depth limit; noted rather than silently widened.
+    const ParsedFeed feed = parseFeed(nestedItem(20));
+    QCOMPARE(feed.articles.size(), 1);
+    QVERIFY2(feed.error.isEmpty(), qPrintable(feed.error));
+    QCOMPARE(feed.articles.first().title, QStringLiteral("Senat beschliesst Haushalt"));
 }
 
 void TestFeedParser::reportsEmptyDocument()

@@ -17,6 +17,19 @@ const QString NsContent = QStringLiteral("http://purl.org/rss/1.0/modules/conten
 const QString NsMedia = QStringLiteral("http://search.yahoo.com/mrss/");
 
 /*!
+ * How deep inside one item we are willing to descend.
+ *
+ * readNode() recurses per nested element, so without a limit a document can exhaust the
+ * stack: measured on aarch64, ~35 000 levels segfault, and a document that deep is only
+ * about 245 KB -- far inside the 5 MB response cap, which therefore protects nothing here.
+ *
+ * The eight feeds in tools/corpus-feeds.json nest four to five levels *including* the
+ * document root, so two or three inside an item. A hundred leaves room for the nested
+ * XHTML an Atom <content> may carry and still stops three hundred times short of trouble.
+ */
+constexpr int MaxNodeDepth = 100;
+
+/*!
  * A single element with its attributes, text and children.
  *
  * Only ever built for one <item>/<entry> at a time, so peak memory stays proportional to
@@ -58,7 +71,13 @@ struct Node
     }
 };
 
-Node readNode(QXmlStreamReader &reader)
+/*!
+ * Materialises one element and its subtree.
+ *
+ * \a tooDeep is set if anything below MaxNodeDepth was skipped, so the caller can report
+ * a document it did not read in full rather than pretending it did.
+ */
+Node readNode(QXmlStreamReader &reader, bool *tooDeep, int depth = 1)
 {
     Node node;
     node.name = reader.name().toString();
@@ -70,9 +89,16 @@ Node readNode(QXmlStreamReader &reader)
 
     while (!reader.atEnd()) {
         const QXmlStreamReader::TokenType token = reader.readNext();
-        if (token == QXmlStreamReader::StartElement)
-            node.children.append(readNode(reader));
-        else if (token == QXmlStreamReader::Characters)
+        if (token == QXmlStreamReader::StartElement) {
+            if (depth >= MaxNodeDepth) {
+                // Skipping rather than descending: skipCurrentElement() walks the subtree
+                // iteratively, so the stack stops growing here whatever the document does.
+                *tooDeep = true;
+                reader.skipCurrentElement();
+                continue;
+            }
+            node.children.append(readNode(reader, tooDeep, depth + 1));
+        } else if (token == QXmlStreamReader::Characters)
             node.text += reader.text();
         else if (token == QXmlStreamReader::EndElement)
             break;
@@ -427,7 +453,15 @@ ParsedFeed parseFeed(const QByteArray &data)
             || (feed.format == ParsedFeed::Rdf && name == QLatin1String("item") && ns == NsRss1);
 
         if (isItem) {
-            const Node node = readNode(reader);
+            bool tooDeep = false;
+            const Node node = readNode(reader, &tooDeep);
+            if (tooDeep && feed.error.isEmpty()) {
+                // The item is kept: its title, link and description sit two levels down
+                // and are unaffected by a subtree that was skipped further in. But a
+                // document we did not read in full has to say so.
+                feed.error = QStringLiteral("item nested deeper than %1 levels; "
+                                            "the excess was skipped").arg(MaxNodeDepth);
+            }
             ParsedArticle article;
             switch (feed.format) {
             case ParsedFeed::Rss2: article = articleFromRss2(node); break;
