@@ -11,6 +11,7 @@ const QString KeyCatalogUrl = QStringLiteral("catalog/url");
 const QString KeyCatalogConsent = QStringLiteral("catalog/consent");
 const QString KeyRetentionDays = QStringLiteral("storage/retentionDays");
 const QString KeyThumbnailCacheMb = QStringLiteral("storage/thumbnailCacheMb");
+const QString KeyOpenExternally = QStringLiteral("reading/openArticlesExternally");
 const QString KeyClusterThreshold = QStringLiteral("cluster/hammingThreshold");
 const QString KeyClusterWindow = QStringLiteral("cluster/windowHours");
 
@@ -128,6 +129,20 @@ void Settings::setThumbnailCacheMegabytes(int megabytes)
         return;
     m_settings->setValue(KeyThumbnailCacheMb, clamped);
     emit thumbnailCacheMegabytesChanged();
+    emit openArticlesExternallyChanged();
+}
+
+bool Settings::openArticlesExternally() const
+{
+    return m_settings->value(KeyOpenExternally, false).toBool();
+}
+
+void Settings::setOpenArticlesExternally(bool external)
+{
+    if (external == openArticlesExternally())
+        return;
+    m_settings->setValue(KeyOpenExternally, external);
+    emit openArticlesExternallyChanged();
 }
 
 int Settings::clusterThreshold() const
@@ -184,6 +199,7 @@ void Settings::resetToDefaults()
     // contacting a third party is not something "restore defaults" should do silently.
     m_settings->remove(KeyRetentionDays);
     m_settings->remove(KeyThumbnailCacheMb);
+    m_settings->remove(KeyOpenExternally);
     m_settings->remove(KeyClusterThreshold);
     m_settings->remove(KeyClusterWindow);
 
@@ -191,6 +207,7 @@ void Settings::resetToDefaults()
     emit catalogUrlChanged();
     emit retentionDaysChanged();
     emit thumbnailCacheMegabytesChanged();
+    emit openArticlesExternallyChanged();
     emit clusterThresholdChanged();
     emit clusterWindowHoursChanged();
 }

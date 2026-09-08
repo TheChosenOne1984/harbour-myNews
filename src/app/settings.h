@@ -36,6 +36,8 @@ class Settings : public QObject
                    NOTIFY retentionDaysChanged)
     Q_PROPERTY(int thumbnailCacheMegabytes READ thumbnailCacheMegabytes
                    WRITE setThumbnailCacheMegabytes NOTIFY thumbnailCacheMegabytesChanged)
+    Q_PROPERTY(bool openArticlesExternally READ openArticlesExternally
+                   WRITE setOpenArticlesExternally NOTIFY openArticlesExternallyChanged)
     Q_PROPERTY(int clusterThreshold READ clusterThreshold WRITE setClusterThreshold
                    NOTIFY clusterThresholdChanged)
     Q_PROPERTY(int clusterWindowHours READ clusterWindowHours WRITE setClusterWindowHours
@@ -97,6 +99,17 @@ public:
     int thumbnailCacheMegabytes() const;
     void setThumbnailCacheMegabytes(int megabytes);
 
+    /*!
+     * Hand articles to the system browser instead of showing them in the built-in view.
+     *
+     * The built-in view is a full Gecko engine in the app's own process, so when it runs
+     * out of memory on a heavy page it takes the whole app with it -- which is exactly
+     * what happened in a 1 GB emulator. A reader who hits that has to be able to get out
+     * of it without waiting for a new version.
+     */
+    bool openArticlesExternally() const;
+    void setOpenArticlesExternally(bool external);
+
     //! Hamming distance, 0-64. Measured default is 14; above 16 clusters run away.
     int clusterThreshold() const;
     void setClusterThreshold(int bits);
@@ -117,6 +130,7 @@ signals:
     void catalogConsentChanged();
     void retentionDaysChanged();
     void thumbnailCacheMegabytesChanged();
+    void openArticlesExternallyChanged();
     void clusterThresholdChanged();
     void clusterWindowHoursChanged();
 

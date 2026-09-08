@@ -134,6 +134,24 @@ Neither is packaged for Harbour. Both build the same way as the tests.
 
 Remember to clean between targets here too; these build in-source as well.
 
+## The emulator needs more memory than it ships with
+
+The emulator VM is created with 1024 MB, which is not enough to render a web page: the
+article view is a full Gecko engine in the app's own process, and it dies with
+`MOZ_CRASH([unhandlable oom] Failed to allocate new chunk during GC)`, taking the app with
+it. Give it more before testing anything that opens an article:
+
+```sh
+sfdk emulator stop
+sfdk emulator set vm.memory-size=3072
+sfdk emulator start
+```
+
+Even then the built-in view is unreliable in the emulator — the plan said so from the
+start, and nothing here contradicts it. That is what the settings switch "open articles in
+the system browser" is for, and it is also the honest answer for a device where a heavy
+page misbehaves.
+
 ## Running the app against a local catalogue
 
 Nothing is bundled, so a fresh install fetches the catalogue from the address in the

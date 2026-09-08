@@ -49,6 +49,18 @@ Page {
                 }
             }
 
+            SectionHeader { text: qsTr("Reading") }
+
+            TextSwitch {
+                checked: Settings.openArticlesExternally
+                text: qsTr("Open articles in the system browser")
+                //: explains the trade-off of the built-in article view
+                description: qsTr("The built-in view keeps you in the app, but it runs a "
+                                  + "full browser engine inside it. If a page makes the app "
+                                  + "close unexpectedly, switch this on.")
+                onClicked: Settings.openArticlesExternally = !Settings.openArticlesExternally
+            }
+
             SectionHeader { text: qsTr("Feed catalogue") }
 
             Label {

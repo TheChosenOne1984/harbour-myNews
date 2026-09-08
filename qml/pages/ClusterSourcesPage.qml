@@ -64,6 +64,10 @@ Page {
             }
 
             onClicked: {
+                if (Settings.openArticlesExternally) {
+                    Qt.openUrlExternally(modelData.link)
+                    return
+                }
                 pageStack.pop()
                 pageStack.push(Qt.resolvedUrl("ArticlePage.qml"), {
                     clusterId: page.clusterId,

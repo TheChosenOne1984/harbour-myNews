@@ -163,6 +163,10 @@ Page {
 
             onClicked: {
                 App.markClusterRead(model.clusterId)
+                if (Settings.openArticlesExternally) {
+                    Qt.openUrlExternally(model.link)
+                    return
+                }
                 pageStack.push(Qt.resolvedUrl("ArticlePage.qml"), {
                     clusterId: model.clusterId,
                     articleTitle: model.title,
