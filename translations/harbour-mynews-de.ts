@@ -262,6 +262,10 @@
             <numerusform>Filter · %n Meldungen</numerusform>
         </translation>
     </message>
+    <message>
+        <source>Load older articles</source>
+        <translation>Ältere Artikel laden</translation>
+    </message>
 </context>
 <context>
     <name>FilterPage</name>

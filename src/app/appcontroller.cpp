@@ -68,6 +68,18 @@ AppController::AppController(QObject *parent)
         }
     });
 
+    connect(m_backend, &Backend::clustersAppended, this,
+            [this](const QVector<feed::ClusterSummary> &clusters) {
+        m_clusters.appendClusters(clusters);
+    });
+
+    connect(m_backend, &Backend::hasMoreClustersChanged, this, [this](bool hasMore) {
+        if (hasMore == m_hasMoreArticles)
+            return;
+        m_hasMoreArticles = hasMore;
+        emit hasMoreArticlesChanged();
+    });
+
     connect(m_backend, &Backend::subscribedCategoriesChanged, this,
             [this](const QStringList &categories) {
         if (categories == m_subscribedCategories)
@@ -335,6 +347,13 @@ void AppController::addFeed(const QString &url, const QString &lang, const QStri
                               Q_ARG(QString, url), Q_ARG(QString, title),
                               Q_ARG(QString, lang), Q_ARG(QString, QStringLiteral("manual")),
                               Q_ARG(QString, QString()));   // no region for a hand-added feed
+}
+
+void AppController::loadMoreArticles()
+{
+    if (!m_hasMoreArticles)
+        return;
+    QMetaObject::invokeMethod(m_backend, "loadMoreClusters", Qt::QueuedConnection);
 }
 
 void AppController::prefetchThumbnails(int firstRow, int count)

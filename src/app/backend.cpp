@@ -113,9 +113,31 @@ void Backend::emitClusters()
 {
     if (!m_store)
         return;
-    emit clustersChanged(m_store->clusterSummaries(m_filter, nowSeconds(), m_clusterLimit));
+
+    const QVector<feed::ClusterSummary> page =
+        m_store->clusterSummaries(m_filter, nowSeconds(), m_clusterLimit, 0);
+    m_loadedClusters = page.size();
+    m_hasMoreClusters = page.size() == m_clusterLimit;
+
+    emit clustersChanged(page);
+    emit hasMoreClustersChanged(m_hasMoreClusters);
     emit unreadCountChanged(m_store->unreadCount());
     emit subscribedCategoriesChanged(m_store->subscribedCategories());
+}
+
+void Backend::loadMoreClusters()
+{
+    if (!m_store || !m_hasMoreClusters)
+        return;
+
+    const QVector<feed::ClusterSummary> page =
+        m_store->clusterSummaries(m_filter, nowSeconds(), PageSize, m_loadedClusters);
+    m_loadedClusters += page.size();
+    m_hasMoreClusters = page.size() == PageSize;
+
+    if (!page.isEmpty())
+        emit clustersAppended(page);
+    emit hasMoreClustersChanged(m_hasMoreClusters);
 }
 
 void Backend::setClusterFilter(bool unreadOnly, const QString &category, qint64 feedId,

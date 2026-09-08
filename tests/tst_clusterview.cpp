@@ -26,6 +26,8 @@ private slots:
     void modelMarksRowsReadWithoutResetting();
     void modelKeepsPositionWhenRowsAreUnchanged();
     void modelPrefetchSkipsPicturesAlreadyHeld();
+    void modelAppendsPagesWithoutDisturbingWhatIsThere();
+    void storePagesThroughClusters();
 
     void filtersByUnread();
     void filtersByRegion();
@@ -376,6 +378,87 @@ void TestClusterView::modelPrefetchSkipsPicturesAlreadyHeld()
     model.setRowThumbnail(1, QStringLiteral("/tmp/1.jpg"));
     model.setRowThumbnail(2, QStringLiteral("/tmp/2.jpg"));
     QCOMPARE(model.leadArticleIds(0, 4).size(), 2);
+}
+
+void TestClusterView::modelAppendsPagesWithoutDisturbingWhatIsThere()
+{
+    model::ClusterModel model;
+    QVector<feed::ClusterSummary> first;
+    for (int i = 0; i < 3; ++i) {
+        feed::ClusterSummary summary = summaryWith({QStringLiteral("Alpha")});
+        summary.clusterId = i + 1;
+        summary.leadArticleId = i + 1;
+        first.append(summary);
+    }
+    model.setClusters(first);
+    model.setRowThumbnail(1, QStringLiteral("/tmp/1.jpg"));
+
+    QSignalSpy reset(&model, &QAbstractItemModel::modelReset);
+    QSignalSpy inserted(&model, &QAbstractItemModel::rowsInserted);
+
+    QVector<feed::ClusterSummary> second;
+    for (int i = 3; i < 6; ++i) {
+        feed::ClusterSummary summary = summaryWith({QStringLiteral("Beta")});
+        summary.clusterId = i + 1;
+        summary.leadArticleId = i + 1;
+        second.append(summary);
+    }
+    model.appendClusters(second);
+
+    QCOMPARE(model.rowCount(), 6);
+    // Appending must not reset: the reader is at the bottom of the list when this happens,
+    // and a reset would throw them back to the top just as the new rows arrive.
+    QCOMPARE(reset.size(), 0);
+    QCOMPARE(inserted.size(), 1);
+    // A picture already held stays held.
+    QCOMPARE(model.data(model.index(0), model::ClusterModel::ThumbnailPathRole).toString(),
+             QStringLiteral("/tmp/1.jpg"));
+
+    // A page overlapping what is loaded must not show the same story twice.
+    model.appendClusters(second);
+    QCOMPARE(model.rowCount(), 6);
+    model.appendClusters(QVector<feed::ClusterSummary>());
+    QCOMPARE(model.rowCount(), 6);
+}
+
+void TestClusterView::storePagesThroughClusters()
+{
+    Fixture f;
+    QVERIFY(f.build());
+
+    // Genuinely unrelated headlines. Titles differing by a single digit cluster together,
+    // which is the algorithm working correctly and a useless fixture for paging.
+    const QStringList headlines{
+        QStringLiteral("Landgericht eröffnet Verfahren gegen Xavier Naidoo"),
+        QStringLiteral("Finnland errichtet Zaun an der Grenze zu Russland"),
+        QStringLiteral("Hamburger Gründerpreis vergeben im Hafen"),
+        QStringLiteral("Verwaltung des Panamakanals erstmals von einer Frau geleitet"),
+        QStringLiteral("Sperrung der A7 sorgt für lange Umleitungen"),
+        QStringLiteral("Bergmann-Klinikum sieht Fehler bei Verlegung von Stationen"),
+        QStringLiteral("Tausende protestieren in Schwerin gegen die Landesregierung"),
+    };
+    for (int i = 0; i < headlines.size(); ++i) {
+        f.store->ingest(f.feedA, {f.article(QString::number(i), headlines.at(i),
+                                            f.now + i * 60)}, f.now + i * 60);
+    }
+    QCOMPARE(f.store->clusterSummaries(feed::ClusterFilter(), f.now, 50, 0).size(), 7);
+
+    const feed::ClusterFilter none;
+    const QVector<feed::ClusterSummary> page1 = f.store->clusterSummaries(none, f.now, 3, 0);
+    const QVector<feed::ClusterSummary> page2 = f.store->clusterSummaries(none, f.now, 3, 3);
+    QCOMPARE(page1.size(), 3);
+    QCOMPARE(page2.size(), 3);
+
+    // Pages must not overlap, or the list would repeat stories as it loads more.
+    for (const feed::ClusterSummary &a : page1) {
+        for (const feed::ClusterSummary &b : page2)
+            QVERIFY(a.clusterId != b.clusterId);
+    }
+    // And they must continue in the same order: newest first, across the boundary.
+    QVERIFY(page1.last().published >= page2.first().published);
+
+    // Past the end comes back empty rather than wrapping.
+    QVERIFY(f.store->clusterSummaries(none, f.now, 3, 99).isEmpty());
 }
 
 void TestClusterView::filtersByUnread()

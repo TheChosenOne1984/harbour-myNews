@@ -1,5 +1,7 @@
 #include "clustermodel.h"
 
+#include <QSet>
+
 namespace model {
 
 ClusterModel::ClusterModel(QObject *parent)
@@ -108,6 +110,33 @@ void ClusterModel::setClusters(const QVector<feed::ClusterSummary> &clusters)
     endResetModel();
     if (sizeChanged)
         emit countChanged();
+}
+
+void ClusterModel::appendClusters(const QVector<feed::ClusterSummary> &clusters)
+{
+    if (clusters.isEmpty())
+        return;
+
+    // Guard against a page that overlaps what is already loaded, which would otherwise
+    // show the same story twice.
+    QSet<qint64> known;
+    for (const feed::ClusterSummary &cluster : m_clusters)
+        known.insert(cluster.clusterId);
+
+    QVector<feed::ClusterSummary> fresh;
+    fresh.reserve(clusters.size());
+    for (const feed::ClusterSummary &cluster : clusters) {
+        if (!known.contains(cluster.clusterId))
+            fresh.append(cluster);
+    }
+    if (fresh.isEmpty())
+        return;
+
+    beginInsertRows(QModelIndex(), m_clusters.size(),
+                    m_clusters.size() + fresh.size() - 1);
+    m_clusters += fresh;
+    endInsertRows();
+    emit countChanged();
 }
 
 QVector<qint64> ClusterModel::leadArticleIds(int firstRow, int count) const

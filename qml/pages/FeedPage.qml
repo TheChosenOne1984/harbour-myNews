@@ -142,6 +142,25 @@ Page {
             }
         }
 
+        // Older stories arrive as the reader gets near the end, rather than the list
+        // stopping at an arbitrary number. Triggered a little before the end so the pause
+        // falls where a flick is already slowing down.
+        onContentYChanged: {
+            prefetchTimer.restart()
+            if (App.hasMoreArticles && !App.busy
+                    && contentY + height > contentHeight - 8 * page.delegateHeight) {
+                App.loadMoreArticles()
+            }
+        }
+
+        PushUpMenu {
+            visible: App.hasMoreArticles
+            MenuItem {
+                text: qsTr("Load older articles")
+                onClicked: App.loadMoreArticles()
+            }
+        }
+
         header: PageHeader {
             //: application title shown above the article list
             title: qsTr("myNews")
@@ -303,8 +322,6 @@ Page {
          * Throttled, because contentY changes on every frame and a request per frame would
          * be pointless work.
          */
-        onContentYChanged: prefetchTimer.restart()
-
         Timer {
             id: prefetchTimer
             interval: 120

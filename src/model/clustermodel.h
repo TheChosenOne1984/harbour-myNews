@@ -56,6 +56,9 @@ public:
 
     void setClusters(const QVector<feed::ClusterSummary> &clusters);
 
+    /*! Adds the next page. Rows already present keep their position and their pictures. */
+    void appendClusters(const QVector<feed::ClusterSummary> &clusters);
+
     /*! Fills in a thumbnail that has just been cached, without refetching the page. */
     void setRowThumbnail(qint64 articleId, const QString &path);
 

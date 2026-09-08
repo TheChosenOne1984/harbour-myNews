@@ -46,8 +46,18 @@ public slots:
 
     void reloadFeeds();
 
-    /*! Re-reads the article list under the current filter. */
+    /*! Re-reads the article list under the current filter, from the first page. */
     void reloadClusters(int limit);
+
+    /*!
+     * Reads the page after the ones already shown.
+     *
+     * Paging rather than one configurable ceiling: a row costs about three kilobytes, so
+     * a fortnight of twenty feeds would be tens of megabytes held for articles nobody has
+     * scrolled to -- and a number a reader can set wrong is a way to make the app behave
+     * badly. This way memory follows what was actually read.
+     */
+    void loadMoreClusters();
 
     /*! Replaces the filter and re-reads. */
     void setClusterFilter(bool unreadOnly, const QString &category, qint64 feedId,
@@ -89,6 +99,8 @@ signals:
     void initialised(bool ok, const QString &error);
     void feedsChanged(const QVector<feed::FeedRecord> &feeds);
     void clustersChanged(const QVector<feed::ClusterSummary> &clusters);
+    void clustersAppended(const QVector<feed::ClusterSummary> &clusters);
+    void hasMoreClustersChanged(bool hasMore);
     void subscribedCategoriesChanged(const QStringList &categories);
     void unreadCountChanged(int count);
 
@@ -117,7 +129,12 @@ private:
     void emitFeeds();
     void emitClusters();
 
-    int m_clusterLimit = 200;
+    /*! Rows per page. Roughly a dozen screenfuls, so reaching the end is uncommon. */
+    static constexpr int PageSize = 200;
+
+    int m_clusterLimit = PageSize;
+    int m_loadedClusters = 0;
+    bool m_hasMoreClusters = false;
     feed::ClusterFilter m_filter;
 
     feed::FeedStore *m_store = nullptr;

@@ -58,6 +58,9 @@ class AppController : public QObject
     Q_PROPERTY(int clusterWindowMaximum READ clusterWindowMaximum CONSTANT)
     Q_PROPERTY(int unreadCount READ unreadCount NOTIFY unreadCountChanged)
 
+    /*! True while there are older stories the list has not loaded yet. */
+    Q_PROPERTY(bool hasMoreArticles READ hasMoreArticles NOTIFY hasMoreArticlesChanged)
+
     /*! Headline of the newest cluster, for the cover page. */
     Q_PROPERTY(QString leadHeadline READ leadHeadline NOTIFY leadHeadlineChanged)
 
@@ -104,6 +107,10 @@ public:
     QString catalogError() const { return m_catalogError; }
     int subscriptionCount() const { return m_subscriptions.rowCount(); }
     int unreadCount() const { return m_unreadCount; }
+    bool hasMoreArticles() const { return m_hasMoreArticles; }
+
+    /*! Loads the next page. Cheap and idempotent -- the backend ignores it when done. */
+    Q_INVOKABLE void loadMoreArticles();
     int clusterThresholdMinimum() const { return cluster::Params::MinThreshold; }
     int clusterThresholdMaximum() const { return cluster::Params::MaxThreshold; }
     int clusterWindowMinimum() const { return cluster::Params::MinWindowHours; }
@@ -201,6 +208,7 @@ signals:
     void subscriptionCountChanged();
     void catalogConsentChanged();
     void unreadCountChanged();
+    void hasMoreArticlesChanged();
     void filterChanged();
     void subscribedCategoriesChanged();
     void catalogStatusChanged();
@@ -228,6 +236,7 @@ private:
     model::CatalogModel m_catalog;
     model::ClusterModel m_clusters;
     int m_unreadCount = 0;
+    bool m_hasMoreArticles = false;
     QString m_leadHeadline;
 
     bool m_filterUnreadOnly = false;
