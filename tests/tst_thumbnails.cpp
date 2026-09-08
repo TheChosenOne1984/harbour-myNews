@@ -23,6 +23,7 @@ class TestThumbnails : public QObject
 
 private slots:
     void refusesImagesItCannotMeasure();
+    void rewritingAThumbnailDoesNotDoubleCount();
     void findsOpenGraphImage();
     void prefersOpenGraphOverTwitter();
     void acceptsSingleQuotesAndAttributeOrder();
@@ -470,6 +471,30 @@ void TestThumbnails::refusesImagesItCannotMeasure()
     QVERIFY(!cache.contains(1));
     QVERIFY(!cache.contains(2));
     QCOMPARE(cache.usedBytes(), qint64(0));
+}
+
+void TestThumbnails::rewritingAThumbnailDoesNotDoubleCount()
+{
+    // pathFor() is deterministic, so storing an article's picture twice overwrites the
+    // file -- but the first size stayed on the books, so the total drifted up on every
+    // rewrite and eviction began firing below the configured cap.
+    QTemporaryDir dir;
+    image::ThumbnailCache cache(dir.path());
+    QVERIFY(cache.open());
+
+    const QByteArray png = pngOfSize(600, 400);
+    QVERIFY(!cache.store(1, png).isEmpty());
+    const qint64 afterFirst = cache.usedBytes();
+    QVERIFY(afterFirst > 0);
+
+    QVERIFY(!cache.store(1, png).isEmpty());
+    QCOMPARE(cache.usedBytes(), afterFirst);
+    QCOMPARE(cache.count(), 1);
+
+    // And the books agree with the directory.
+    image::ThumbnailCache reopened(dir.path());
+    QVERIFY(reopened.open());
+    QCOMPARE(reopened.usedBytes(), cache.usedBytes());
 }
 
 int runThumbnailTests(int argc, char **argv)

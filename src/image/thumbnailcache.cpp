@@ -108,10 +108,14 @@ QString ThumbnailCache::store(qint64 articleId, const QByteArray &imageData)
     }
 
     const QString path = pathFor(articleId);
+    // pathFor() is deterministic, so re-storing an article overwrites its file. The size
+    // already counted has to come off first, or the total drifts up on every rewrite and
+    // eviction starts firing below the configured cap.
+    const qint64 replaced = QFileInfo::exists(path) ? QFileInfo(path).size() : 0;
     if (!decoded.save(path, "JPEG", JpegQuality))
         return QString();
 
-    m_usedBytes += QFileInfo(path).size();
+    m_usedBytes += QFileInfo(path).size() - replaced;
     evictToFit();
     // Eviction may have just removed what we wrote, if the cap is smaller than one file.
     return QFileInfo::exists(path) ? path : QString();
