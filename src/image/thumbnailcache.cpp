@@ -83,17 +83,20 @@ QString ThumbnailCache::store(qint64 articleId, const QByteArray &imageData)
     QImageReader reader(&buffer);
     reader.setAutoTransform(true);
 
+    // Refusing an image whose header declares no size, rather than decoding it to find
+    // out: the check below is the only thing standing between a feed-supplied URL and a
+    // full-size decode, and Qt 5.6 has no QImageReader::setAllocationLimit to fall back
+    // on (that arrived in 5.14). A picture we cannot measure is a picture we do not take.
     const QSize sourceSize = reader.size();
-    if (sourceSize.isValid()) {
-        if (sourceSize.width() > MaxSourceDimension || sourceSize.height() > MaxSourceDimension)
-            return QString();
-        // Scaling during decode, so the full-size image is never materialised. This is the
-        // difference between a smooth list and a stuttering one on a phone.
-        if (sourceSize.width() > TargetSize || sourceSize.height() > TargetSize) {
-            reader.setScaledSize(sourceSize.scaled(TargetSize, TargetSize,
-                                                   Qt::KeepAspectRatio));
-        }
-    }
+    if (!sourceSize.isValid())
+        return QString();
+    if (sourceSize.width() > MaxSourceDimension || sourceSize.height() > MaxSourceDimension)
+        return QString();
+
+    // Scaling during decode, so the full-size image is never materialised. This is the
+    // difference between a smooth list and a stuttering one on a phone.
+    if (sourceSize.width() > TargetSize || sourceSize.height() > TargetSize)
+        reader.setScaledSize(sourceSize.scaled(TargetSize, TargetSize, Qt::KeepAspectRatio));
 
     QImage decoded = reader.read();
     if (decoded.isNull())

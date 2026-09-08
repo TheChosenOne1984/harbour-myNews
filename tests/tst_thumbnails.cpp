@@ -22,6 +22,7 @@ class TestThumbnails : public QObject
     Q_OBJECT
 
 private slots:
+    void refusesImagesItCannotMeasure();
     void findsOpenGraphImage();
     void prefersOpenGraphOverTwitter();
     void acceptsSingleQuotesAndAttributeOrder();
@@ -450,6 +451,25 @@ void TestThumbnails::doesNotFetchUntilAsked()
     QTest::qWait(500);
     QVERIFY2(f.server.requested.isEmpty(),
              qPrintable(f.server.requested.join(QStringLiteral(", "))));
+}
+
+void TestThumbnails::refusesImagesItCannotMeasure()
+{
+    // The dimension guard is the only thing between a feed-supplied URL and a full-size
+    // decode -- Qt 5.6 has no QImageReader::setAllocationLimit. It used to sit inside an
+    // "if the header declared a size" branch, so anything unmeasurable walked past it.
+    QTemporaryDir dir;
+    image::ThumbnailCache cache(dir.path());
+    QVERIFY(cache.open());
+
+    QCOMPARE(cache.store(1, QByteArray("not an image at all")), QString());
+    // A JPEG cut off before its frame header: the reader knows the format and cannot
+    // give a size.
+    QCOMPARE(cache.store(2, QByteArray::fromHex("ffd8ffe000104a46494600010100000100010000")),
+             QString());
+    QVERIFY(!cache.contains(1));
+    QVERIFY(!cache.contains(2));
+    QCOMPARE(cache.usedBytes(), qint64(0));
 }
 
 int runThumbnailTests(int argc, char **argv)
