@@ -119,6 +119,11 @@ Page {
                 onClicked: pageStack.push(Qt.resolvedUrl("SubscriptionsPage.qml"))
             }
             MenuItem {
+                //: opens full-text search over downloaded articles
+                text: qsTr("Search")
+                onClicked: pageStack.push(Qt.resolvedUrl("SearchPage.qml"))
+            }
+            MenuItem {
                 //: opens the page that narrows the article list
                 text: App.filterActive ? qsTr("Filter: %1").arg(App.filterSummary)
                                        : qsTr("Filter")

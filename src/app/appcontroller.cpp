@@ -119,6 +119,24 @@ AppController::AppController(QObject *parent)
         emit clusterMembersLoaded(clusterId, list);
     });
 
+    connect(m_backend, &Backend::searchFinished, this,
+            [this](const QString &text, const QVector<feed::ArticleRecord> &hits) {
+        QVariantList list;
+        for (const feed::ArticleRecord &article : hits) {
+            QVariantMap map;
+            map.insert(QStringLiteral("articleId"), article.id);
+            map.insert(QStringLiteral("clusterId"), article.clusterId);
+            map.insert(QStringLiteral("title"), article.title);
+            map.insert(QStringLiteral("teaser"), article.teaser);
+            map.insert(QStringLiteral("link"), article.link);
+            map.insert(QStringLiteral("published"), article.published);
+            map.insert(QStringLiteral("read"), article.read);
+            map.insert(QStringLiteral("source"), article.sourceTitle);
+            list.append(map);
+        }
+        emit searchFinished(text, list);
+    });
+
     connect(m_backend, &Backend::thumbnailReady, this,
             [this](qint64 articleId, const QString &path) {
         m_clusters.setRowThumbnail(articleId, path);
@@ -472,6 +490,12 @@ void AppController::markAllRead()
 {
     m_clusters.setAllRead();
     QMetaObject::invokeMethod(m_backend, "markAllRead", Qt::QueuedConnection);
+}
+
+void AppController::search(const QString &text)
+{
+    QMetaObject::invokeMethod(m_backend, "search", Qt::QueuedConnection,
+                              Q_ARG(QString, text));
 }
 
 void AppController::loadClusterMembers(qint64 clusterId)

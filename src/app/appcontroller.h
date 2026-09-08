@@ -183,6 +183,14 @@ public:
     /*! Asks for the members of a cluster; answered by clusterMembersLoaded(). */
     Q_INVOKABLE void loadClusterMembers(qint64 clusterId);
 
+    /*!
+     * Full-text search over stored articles; answered by searchFinished().
+     *
+     * Runs on the worker thread like every other query. The reply echoes the query text
+     * so the page can drop an answer to something the reader has already typed past.
+     */
+    Q_INVOKABLE void search(const QString &text);
+
     /*! Short translated age, e.g. "5 min". Follows the chosen UI language, unlike
      *  Silica's formatter, which follows the device locale. */
     Q_INVOKABLE QString relativeTime(qint64 published) const;
@@ -240,6 +248,9 @@ signals:
 
     /*! Members of the cluster asked for by loadClusterMembers(). */
     void clusterMembersLoaded(qint64 clusterId, const QVariantList &members);
+
+    /*! Hits for the query asked by search(), newest first. */
+    void searchFinished(const QString &text, const QVariantList &hits);
 
     /*! Result of probeFeed(), for the add-feed page. */
     void feedProbed(const QString &url, const QString &title, const QString &lang,

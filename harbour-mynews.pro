@@ -89,6 +89,7 @@ DISTFILES += \
     qml/pages/FilterPage.qml \
     qml/pages/ImportOpmlPage.qml \
     qml/pages/LanguagePickerPage.qml \
+    qml/pages/SearchPage.qml \
     qml/pages/SettingsPage.qml \
     qml/pages/SubscriptionsPage.qml \
     rpm/harbour-mynews.spec \

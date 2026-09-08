@@ -1110,7 +1110,9 @@ QVector<ArticleRecord> FeedStore::search(const QString &text, int limit) const
 
     QSqlQuery query(m_db);
     query.prepare(QStringLiteral(
-        "SELECT a.* FROM article_fts f JOIN article a ON a.id = f.rowid"
+        "SELECT a.*, feed.title AS source_title FROM article_fts f"
+        "  JOIN article a ON a.id = f.rowid"
+        "  LEFT JOIN feed ON feed.id = a.feed_id"
         " WHERE article_fts MATCH ? ORDER BY a.published DESC LIMIT ?"));
     // The trigram tokenizer matches substrings, so the raw text is the query. Quoting it
     // keeps FTS5 operators in user input from being interpreted as syntax.
@@ -1122,8 +1124,12 @@ QVector<ArticleRecord> FeedStore::search(const QString &text, int limit) const
         setError(QStringLiteral("search failed"), query.lastError().text());
         return result;
     }
-    while (query.next())
-        result.append(articleFromRecord(query));
+    while (query.next()) {
+        // Same join as articlesInCluster: a hit is useless without knowing who ran it.
+        ArticleRecord article = articleFromRecord(query);
+        article.sourceTitle = query.value(QStringLiteral("source_title")).toString();
+        result.append(article);
+    }
     return result;
 }
 

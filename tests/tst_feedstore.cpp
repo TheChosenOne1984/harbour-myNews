@@ -45,6 +45,7 @@ private slots:
     void purgeRemovesArticlesAndEmptyClusters();
     void purgeRepairsSurvivingCluster();
     void searchFindsSubstring();
+    void searchResultsNameTheirSource();
 
 private:
     ParsedArticle article(const QString &guid, const QString &title,
@@ -554,6 +555,24 @@ void TestFeedStore::searchFindsSubstring()
     QCOMPARE(m_store->search(QStringLiteral("speicher")).size(), 1);
     QCOMPARE(m_store->search(QStringLiteral("Speicherstadt")).size(), 1);
     QCOMPARE(m_store->search(QStringLiteral("Kiel")).size(), 0);
+}
+
+void TestFeedStore::searchResultsNameTheirSource()
+{
+    if (!m_store->hasFullTextSearch())
+        QSKIP("FTS5 unavailable");
+
+    // A hit without a publisher is not a usable search result, and only this query and
+    // articlesInCluster join feed -- so it is easy to lose again without noticing.
+    const qint64 feedId = m_store->addFeed(QStringLiteral("https://example.invalid/s"),
+                                           QStringLiteral("Nordsee Anzeiger"),
+                                           QStringLiteral("de"));
+    m_store->ingest(feedId, {article(QStringLiteral("1"),
+        QStringLiteral("Deichbau vor Cuxhaven beginnt im Herbst"), m_now)}, m_now);
+
+    const QVector<ArticleRecord> hits = m_store->search(QStringLiteral("Deichbau"));
+    QCOMPARE(hits.size(), 1);
+    QCOMPARE(hits.first().sourceTitle, QStringLiteral("Nordsee Anzeiger"));
 }
 
 int runFeedStoreTests(int argc, char **argv)

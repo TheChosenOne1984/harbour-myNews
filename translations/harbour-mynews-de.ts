@@ -267,6 +267,11 @@
         <extracomment>only offered for clustered stories, so never singular</extracomment>
         <translation>Alle %1 Quellen</translation>
     </message>
+    <message>
+        <source>Search</source>
+        <extracomment>opens full-text search over downloaded articles</extracomment>
+        <translation>Suche</translation>
+    </message>
 </context>
 <context>
     <name>FilterPage</name>
@@ -375,6 +380,36 @@
     <message>
         <source>Language</source>
         <translation>Sprache</translation>
+    </message>
+</context>
+<context>
+    <name>SearchPage</name>
+    <message>
+        <source>Search</source>
+        <translation>Suche</translation>
+    </message>
+    <message>
+        <source>Search headlines and teasers</source>
+        <extracomment>placeholder in the search field</extracomment>
+        <translation>Schlagzeilen und Anrisstexte</translation>
+    </message>
+    <message>
+        <source>Search your articles</source>
+        <translation>Deine Artikel durchsuchen</translation>
+    </message>
+    <message>
+        <source>Nothing found</source>
+        <translation>Nichts gefunden</translation>
+    </message>
+    <message>
+        <source>Type at least %1 characters.</source>
+        <extracomment>%1 is a small number of characters</extracomment>
+        <translation>Gib mindestens %1 Zeichen ein.</translation>
+    </message>
+    <message>
+        <source>Only articles already downloaded are searched.</source>
+        <extracomment>reminds the reader that search covers only downloaded articles</extracomment>
+        <translation>Es werden nur bereits geladene Artikel durchsucht.</translation>
     </message>
 </context>
 <context>

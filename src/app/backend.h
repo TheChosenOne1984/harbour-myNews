@@ -90,6 +90,14 @@ public slots:
     /*! Loads the members of one cluster so the detail view can offer the other sources. */
     void loadClusterMembers(qint64 clusterId);
 
+    /*!
+     * Full-text search over stored articles.
+     *
+     * Answered by searchFinished, echoing the query so a result that arrives after the
+     * reader has typed on can be discarded instead of replacing a newer one.
+     */
+    void search(const QString &text);
+
     /*! Asked for when a row becomes visible -- never for a whole batch (section 8). */
     void requestThumbnail(qint64 articleId);
 
@@ -106,6 +114,9 @@ signals:
 
     /*! The members of one cluster, for the "other sources" list. */
     void clusterMembersLoaded(qint64 clusterId, const QVector<feed::ArticleRecord> &members);
+
+    /*! Hits for the query that was asked, newest first. */
+    void searchFinished(const QString &text, const QVector<feed::ArticleRecord> &hits);
     void catalogChanged(const catalog::Catalog &catalog);
 
     void busyChanged(bool busy);
@@ -146,6 +157,9 @@ private:
 
     /*! Request id used for one-off probe fetches; distinct from feed ids. */
     static constexpr qint64 ProbeRequestId = -2000;
+
+    /*! Hits per query. A phone list nobody scrolls to the end of; the query narrows. */
+    static constexpr int SearchLimit = 200;
     QString m_probeUrl;
     bool m_busy = false;
 };

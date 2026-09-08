@@ -347,6 +347,15 @@ void Backend::exportOpml(const QString &filePath)
     emit opmlExported(filePath, QString());
 }
 
+void Backend::search(const QString &text)
+{
+    if (!m_store) {
+        emit searchFinished(text, QVector<feed::ArticleRecord>());
+        return;
+    }
+    emit searchFinished(text, m_store->search(text, SearchLimit));
+}
+
 void Backend::requestThumbnail(qint64 articleId)
 {
     if (m_thumbnailService)
