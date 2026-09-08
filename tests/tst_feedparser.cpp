@@ -26,6 +26,7 @@ private slots:
     void dropsPlaceholderTeasers();
     void stripsHtmlFromTitleAndTeaser();
     void resolvesEntities();
+    void dropsSoftHyphenAndKeepsUnknownEntities();
     void extractsImages_data();
     void extractsImages();
     void parsesTimestamps_data();
@@ -313,6 +314,18 @@ void TestFeedParser::parsesTimestamps()
     QFETCH(QString, input);
     QFETCH(qint64, expected);
     QCOMPARE(parseTimestamp(input), expected);
+}
+
+void TestFeedParser::dropsSoftHyphenAndKeepsUnknownEntities()
+{
+    // &shy; is the one entry in the table that expands to nothing, and it was the one
+    // entry that never resolved: "not found" and "expands to nothing" were both a default
+    // QString, so the lookup could not tell them apart and the entity survived as text.
+    QCOMPARE(stripHtml(QStringLiteral("Bun&shy;des&shy;tag")), QStringLiteral("Bundestag"));
+
+    // The other half of the same decision: a name we do not know must be left alone
+    // rather than silently swallowed.
+    QCOMPARE(stripHtml(QStringLiteral("A&frasl;B")), QStringLiteral("A&frasl;B"));
 }
 
 void TestFeedParser::keepsArticlesFromTruncatedDocument()

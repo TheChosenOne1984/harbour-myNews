@@ -254,8 +254,14 @@ ParsedArticle articleFromRdf(const Node &item)
 
 namespace {
 
-/*! The handful of named entities that actually turn up in feeds. */
-QString resolveEntity(const QString &name)
+/*!
+ * The handful of named entities that actually turn up in feeds.
+ *
+ * Returns whether the name was known, separately from what it expands to. The two were
+ * conflated by returning a default QString for "not found", which made the one entry that
+ * deliberately expands to nothing -- &shy; -- the one entry that never resolved.
+ */
+bool resolveEntity(const QString &name, QString *expansion)
 {
     static const QHash<QString, QString> known{
         {QStringLiteral("amp"), QStringLiteral("&")},
@@ -285,7 +291,11 @@ QString resolveEntity(const QString &name)
         {QStringLiteral("Uuml"), QStringLiteral("\u00dc")},
         {QStringLiteral("szlig"), QStringLiteral("\u00df")},
     };
-    return known.value(name, QString());
+    const auto it = known.constFind(name);
+    if (it == known.constEnd())
+        return false;
+    *expansion = it.value();
+    return true;
 }
 
 } // namespace
@@ -328,8 +338,7 @@ QString stripHtml(const QString &html)
                         resolved = true;
                     }
                 } else {
-                    replacement = resolveEntity(body);
-                    resolved = !replacement.isNull();
+                    resolved = resolveEntity(body, &replacement);
                 }
                 if (resolved) {
                     out.append(replacement);
