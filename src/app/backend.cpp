@@ -35,8 +35,29 @@ Backend::Backend(QObject *parent)
 
 Backend::~Backend()
 {
+    /*
+     * The children first, and only then the store they point at.
+     *
+     * m_fetcher, m_refresher, m_catalog and m_thumbnailService are QObject children, so
+     * left alone they would be destroyed *after* this body -- and ~FeedFetcher aborts its
+     * replies, which emits finished() synchronously into handlers that dereference
+     * m_store. It does not crash today only because an aborted reply carries the default
+     * id of -1 and every handler rejects that on its first line. That is an accident, not
+     * a design, and it is one refactor away from being a use-after-free.
+     */
+    delete m_thumbnailService;
+    m_thumbnailService = nullptr;
+    delete m_refresher;
+    m_refresher = nullptr;
+    delete m_catalog;
+    m_catalog = nullptr;
+    delete m_fetcher;
+    m_fetcher = nullptr;
+
     delete m_store;
+    m_store = nullptr;
     delete m_thumbnails;
+    m_thumbnails = nullptr;
 }
 
 void Backend::setBusy(bool busy)
