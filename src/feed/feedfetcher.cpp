@@ -108,16 +108,25 @@ void FeedFetcher::pumpQueues()
         start(m_parallelQueue.dequeue());
     }
 
-    for (auto it = m_queues.begin(); it != m_queues.end(); ++it) {
+    for (auto it = m_queues.begin(); it != m_queues.end();) {
         if (m_inFlight.size() >= MaxConcurrent)
             return;
         const QString host = it.key();
         // One at a time per host, and only once the cooldown from the previous request
         // to that host has elapsed.
-        if (it.value().isEmpty() || m_busyHosts.contains(host))
+        if (it.value().isEmpty() && !m_busyHosts.contains(host)) {
+            // Nothing left for this host and nothing on the way: drop the queue rather
+            // than keeping an empty one for every publisher ever fetched.
+            it = m_queues.erase(it);
             continue;
+        }
+        if (it.value().isEmpty() || m_busyHosts.contains(host)) {
+            ++it;
+            continue;
+        }
         m_busyHosts.insert(host);
         start(it.value().dequeue());
+        ++it;
     }
 
     if (isIdle())
@@ -251,6 +260,13 @@ void FeedFetcher::releaseHost(const QString &host)
         connect(cooldown, &QTimer::timeout, this, [this, host]() {
             m_busyHosts.remove(host);
             pumpQueues();
+            // Once the host is idle its timer is dead weight; the next request to it
+            // makes a new one. deleteLater, not delete: this runs inside the timer's own
+            // timeout signal.
+            if (!m_queues.contains(host)) {
+                if (QTimer *spent = m_hostCooldowns.take(host))
+                    spent->deleteLater();
+            }
         });
         m_hostCooldowns.insert(host, cooldown);
     }
