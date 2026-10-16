@@ -6,7 +6,21 @@ WebView, Harbour rules — see [task0-findings.md](task0-findings.md).
 ## Prerequisites
 
 Sailfish SDK 3.13.5 in `~/SailfishOS`, Docker build engine, targets for
-`SailfishOS-5.1.0.11` in `aarch64` (device) and `i486` (emulator). VirtualBox 7.2.6 for
+`SailfishOS-5.1.0.11` in `aarch64` and `armv7hl` (devices) and `i486` (emulator).
+VirtualBox 7.2 for the emulator (7.2.6 and 7.2.20 both work).
+
+The online installer runs headless, and needs no root if Docker and VirtualBox are already
+installed and the user is in the `docker` and `vboxusers` groups:
+
+```sh
+./SailfishSDK-3.13.5-linux64-online.run --platform minimal \
+    non-interactive=1 accept-licenses=1 build-engine-type=docker
+sfdk tools target package-install SailfishOS-5.1.0.11-aarch64 \
+    sailfish-components-webview-qt5-devel qtmozembed-qt5-devel
+```
+
+The installer is at `https://releases.sailfishos.org/sdk/installers/3.13.5/`; compare its
+MD5 with the one on the SDK page of docs.sailfishos.org. It brings all three targets and
 the emulator.
 
 ```sh
@@ -28,9 +42,13 @@ sfdk -c target=SailfishOS-5.1.0.11-i486    build     # emulator
 > 64-bit `libstdc++`, for instance. Before switching architecture:
 >
 > ```sh
-> rm -f Makefile .qmake.stash *.o moc_*.cpp moc_*.h harbour-mynews
-> rm -rf RPMS documentation.list
+> find . -maxdepth 1 -type f \( -name '*.o' -o -name 'moc_*' -o -name Makefile \
+>     -o -name .qmake.stash -o -name harbour-mynews -o -name documentation.list \) -delete
 > ```
+>
+> A `find` rather than `rm` with globs: in zsh and fish a glob that matches nothing aborts
+> the whole `rm`, so it silently cleans nothing. The same goes for `tests/`, where stale
+> `tst_*.moc` files additionally hide new test slots from the build.
 
 ## Harbour validation
 
@@ -41,6 +59,59 @@ sfdk -c target=SailfishOS-5.1.0.11-aarch64 check
 Must end in `Validation succeeded` with zero rpmlint errors. The remaining
 `unstripped-binary-or-object` warning is produced by `sfdk`'s own `QMAKE_STRIP=:` and is
 expected for local builds.
+
+## Deploying to a device
+
+Settings → System → Developer tools: switch on developer mode and remote connection, and
+set a password. Allow untrusted software in Settings → System. Over USB, with the USB
+mode set to developer mode, the phone is `192.168.2.15` and the PC gets an address in
+`192.168.2.0/24` from it.
+
+Use a key of its own for the phone, so nothing else in `~/.ssh` is ever offered to it:
+
+```sh
+ssh-keygen -t ed25519 -f ~/.ssh/id_ed25519_jolla -N "" -C "myNews dev phone"
+ssh-copy-id -i ~/.ssh/id_ed25519_jolla.pub defaultuser@192.168.2.15
+```
+
+Installing needs root. `pkcon install-local` over SSH fails with *Failed to obtain
+authentication*, and `devel-su` asks for the password interactively. Without root access
+for the key, copy the package into Downloads and install it from the Files app on the
+phone:
+
+```sh
+scp -i ~/.ssh/id_ed25519_jolla -o IdentitiesOnly=yes \
+    RPMS/harbour-mynews-*.aarch64.rpm defaultuser@192.168.2.15:Downloads/
+```
+
+Raise `Release:` in the spec for every package meant to replace an installed one, or the
+phone reports it as already installed. A changed permission set makes Sailjail ask again
+on the next start, which is expected.
+
+## Every architecture Harbour takes
+
+```sh
+mkdir -p release
+for arch in aarch64 armv7hl; do
+  find . -maxdepth 1 -type f \( -name '*.o' -o -name 'moc_*' -o -name Makefile \
+      -o -name .qmake.stash -o -name harbour-mynews -o -name documentation.list \) -delete
+  sfdk -c target=SailfishOS-5.1.0.11-$arch build && \
+  sfdk -c target=SailfishOS-5.1.0.11-$arch check && \
+  mv RPMS/harbour-mynews-*.$arch.rpm release/
+done
+```
+
+Three traps, each hit once:
+
+- **The clean is not optional**, see the note under Build. Write it as a `find`: the
+  `rm` with globs above stops at the first pattern that matches nothing in zsh and fish
+  (`moc_*.h` usually does), deletes nothing, and the next architecture then links the
+  previous one's objects. That produced a 3 MB armv7hl package once.
+- **Check `file harbour-mynews`** after each build, if in doubt: `ELF 64-bit … aarch64` or
+  `ELF 32-bit … ARM`.
+- **`sfdk check` lints every package in `RPMS/`** with the current target's tools, so an
+  aarch64 package left there fails the armv7hl run with `objdump-failed … file format
+  not recognized`. Move each package out after its check, as above.
 
 ## Emulator
 
@@ -148,6 +219,11 @@ and do not read a dead process after a successful screenshot as an app bug.
 
 ### The article view is unusable in the emulator
 
+**Settled on hardware, 2026-10-16:** on a Jolla Phone running Sailfish OS 5.2.0.20,
+articles scroll normally in the built-in view, and video plays with sound since the
+Audio permission was added. Everything below is an emulator defect and is kept so the
+next person to see it in the VM knows not to chase it.
+
 Two symptoms, months apart in appearance and probably one cause. Neither is reproducible
 without a device, and both cost a lot of session time -- so what is known is written down
 in full.
@@ -192,10 +268,9 @@ counter-example: it renders through `QOpenGLWebPage` into its own window, not th
 `QuickMozView` and the scene graph. No other component on the image uses `QuickMozView`,
 so the emulator offers no second opinion.
 
-**Do not spend more session time on this without hardware.** The device check is two
-minutes: open an article, drag, see whether the text moves. Until then Settings →
-"Always use the system browser" bypasses the view entirely, and with it switched on the
-app behaves normally throughout.
+**Check the article view on a device, not here.** In the emulator, Settings → "Always use
+the system browser" bypasses the view entirely, and with it switched on the app behaves
+normally throughout.
 
 ## Tests
 

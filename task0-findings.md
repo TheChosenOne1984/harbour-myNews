@@ -456,3 +456,18 @@ action.
 
 `rpmlint` rejects a `%changelog` date whose weekday does not match the date. 2026-09-07 is a
 Monday; `Sun Sep 07 2026` produced *bogus date in %changelog*.
+
+---
+
+## 12. Answered on hardware (2026-10-16)
+
+On a Jolla Phone with Sailfish OS **5.2.0.20 (Finlayson)**:
+
+- A package built against the 5.1.0.11 target installs and runs. Open item §10.2 is
+  answered: it behaves as on 5.1.
+- `Sailfish.WebView` runs. Articles render and scroll in the built-in view, which answers
+  §8.1 and §10.1. The emulator's scroll defect does not exist on the device (BUILDING.md).
+- The device ships `sailfish-components-webview-qt5` 1.7.4, newer than the 1.6.9 in the
+  build target. Nothing in the app depended on the difference.
+- Video in the web view is silent unless the app asks for the `Audio` permission:
+  `Base.permission` disables PulseAudio for every app, and `WebView` does not lift it.
