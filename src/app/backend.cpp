@@ -185,9 +185,7 @@ void Backend::markClusterRead(qint64 clusterId, bool read)
     // Every member, not only the lead: the cluster is one story to the reader, and a
     // cluster counts as unread while any member is, so marking the lead alone would leave
     // the row looking untouched.
-    const QVector<feed::ArticleRecord> members = m_store->articlesInCluster(clusterId);
-    for (const feed::ArticleRecord &article : members)
-        m_store->markRead(article.id, read);
+    m_store->markClusterRead(clusterId, read);
     emit unreadCountChanged(m_store->unreadCount());
 
     // With an unread-only filter active the row has just stopped matching, so the list

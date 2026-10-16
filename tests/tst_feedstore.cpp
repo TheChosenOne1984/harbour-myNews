@@ -38,6 +38,9 @@ private slots:
     void changedTitleJoinsMatchingCluster();
     void changedTitleLeavesClusterItNoLongerMatches();
     void changedTitleReachesSearchIndex();
+    void readStateDoesNotTouchSearchIndex();
+    void migratesSearchTriggerToTitleAndTeaserOnly();
+    void markClusterReadCoversEveryMember();
     void ingestFallsBackToFirstSeen();
     void clustersAcrossFeeds();
     void clusterMembersCarryTheirSourceName();
@@ -92,7 +95,7 @@ void TestFeedStore::cleanup()
 void TestFeedStore::createsSchemaAndReportsVersion()
 {
     QVERIFY(m_store->isOpen());
-    QCOMPARE(m_store->schemaVersion(), 3);
+    QCOMPARE(m_store->schemaVersion(), 4);
     QVERIFY(m_store->feeds().isEmpty());
 }
 
@@ -135,7 +138,7 @@ void TestFeedStore::migratesRegionalLanguageTags()
 
     feed::FeedStore store(path);
     QVERIFY2(store.open(), qPrintable(store.lastError()));
-    QCOMPARE(store.schemaVersion(), 3);
+    QCOMPARE(store.schemaVersion(), 4);
 
     // Both English feeds must now share a clustering partition instead of being unable to
     // ever match each other.
@@ -501,6 +504,81 @@ void TestFeedStore::changedTitleReachesSearchIndex()
 
     QCOMPARE(m_store->search(QStringLiteral("Hafencity")).size(), 1);
     QCOMPARE(m_store->search(QStringLiteral("Speicherstadt")).size(), 0);
+}
+
+void TestFeedStore::readStateDoesNotTouchSearchIndex()
+{
+    if (!m_store->hasFullTextSearch())
+        QSKIP("FTS5 unavailable");
+
+    // Marking read, or recording a thumbnail, changes nothing that is indexed. Re-indexing
+    // on those would make "mark all as read" rewrite the whole index.
+    QSqlQuery query(QSqlDatabase::database(m_store->connectionName()));
+    QVERIFY(query.exec(QStringLiteral(
+        "SELECT sql FROM sqlite_master WHERE type = 'trigger' AND name = 'article_fts_au'")));
+    QVERIFY(query.next());
+    QVERIFY2(query.value(0).toString().contains(QLatin1String("UPDATE OF title, teaser")),
+             qPrintable(query.value(0).toString()));
+}
+
+void TestFeedStore::migratesSearchTriggerToTitleAndTeaserOnly()
+{
+    if (!m_store->hasFullTextSearch())
+        QSKIP("FTS5 unavailable");
+
+    // A version 3 database carries the trigger that fired on every update.
+    const QString path = m_dir->path() + QStringLiteral("/mynews.db");
+    delete m_store;
+    m_store = nullptr;
+    {
+        QSqlDatabase db = QSqlDatabase::addDatabase(QStringLiteral("QSQLITE"),
+                                                    QStringLiteral("v3"));
+        db.setDatabaseName(path);
+        QVERIFY(db.open());
+        QSqlQuery q(db);
+        QVERIFY(q.exec("DROP TRIGGER article_fts_au"));
+        QVERIFY(q.exec("CREATE TRIGGER article_fts_au AFTER UPDATE ON article BEGIN"
+                       "  INSERT INTO article_fts(article_fts, rowid, title, teaser)"
+                       "    VALUES ('delete', old.id, old.title, old.teaser);"
+                       "  INSERT INTO article_fts(rowid, title, teaser)"
+                       "    VALUES (new.id, new.title, new.teaser);"
+                       " END"));
+        QVERIFY(q.exec("PRAGMA user_version = 3"));
+        db.close();
+    }
+    QSqlDatabase::removeDatabase(QStringLiteral("v3"));
+
+    m_store = new FeedStore(path);
+    QVERIFY2(m_store->open(), qPrintable(m_store->lastError()));
+    QCOMPARE(m_store->schemaVersion(), 4);
+
+    QSqlQuery query(QSqlDatabase::database(m_store->connectionName()));
+    QVERIFY(query.exec(QStringLiteral(
+        "SELECT sql FROM sqlite_master WHERE type = 'trigger' AND name = 'article_fts_au'")));
+    QVERIFY(query.next());
+    QVERIFY(query.value(0).toString().contains(QLatin1String("UPDATE OF title, teaser")));
+}
+
+void TestFeedStore::markClusterReadCoversEveryMember()
+{
+    const qint64 a = m_store->addFeed(QStringLiteral("https://example.invalid/w1"),
+                                      QString(), QStringLiteral("de"));
+    const qint64 b = m_store->addFeed(QStringLiteral("https://example.invalid/w2"),
+                                      QString(), QStringLiteral("de"));
+    const QString story = QStringLiteral("Landgericht eröffnet Verfahren gegen Xavier Naidoo");
+    m_store->ingest(a, {article(QStringLiteral("1"), story, m_now)}, m_now);
+    m_store->ingest(b, {article(QStringLiteral("1"), story, m_now + 60),
+                        article(QStringLiteral("2"),
+                                QStringLiteral("Hafenfähre fällt wegen Sturmflut aus"),
+                                m_now + 30)}, m_now + 60);
+    QCOMPARE(m_store->unreadCount(), 3);
+
+    // Newest first, so the two-source story leads the list.
+    const qint64 clusterId = m_store->clusterSummaries().first().clusterId;
+    QCOMPARE(m_store->markClusterRead(clusterId, true), 2);
+    QCOMPARE(m_store->unreadCount(), 1);
+    QCOMPARE(m_store->markClusterRead(clusterId, false), 2);
+    QCOMPARE(m_store->unreadCount(), 3);
 }
 
 void TestFeedStore::clustersAcrossFeeds()

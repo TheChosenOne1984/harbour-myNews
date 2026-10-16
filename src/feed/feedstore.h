@@ -157,6 +157,9 @@ public:
 
     QString lastError() const { return m_lastError; }
 
+    /*! The QSqlDatabase connection this store owns, for tests that inspect the schema. */
+    QString connectionName() const { return m_connectionName; }
+
     /*! Current schema version, from PRAGMA user_version. */
     int schemaVersion() const;
 
@@ -232,6 +235,14 @@ public:
     QVector<qint64> allArticleIds() const;
     bool articleById(qint64 articleId, ArticleRecord *out) const;
     bool markRead(qint64 articleId, bool read = true);
+
+    /*!
+     * Marks every member of a cluster at once -- one statement rather than one per
+     * article, since the cluster is one story to the reader.
+     *
+     * \return number of articles changed.
+     */
+    int markClusterRead(qint64 clusterId, bool read = true);
     int markAllRead();
     int unreadCount() const;
 

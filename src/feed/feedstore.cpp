@@ -20,7 +20,7 @@ namespace feed {
 namespace {
 
 /*! Bump this and add a migrate() branch whenever the schema changes. */
-constexpr int SchemaVersion = 3;
+constexpr int SchemaVersion = 4;
 
 /*! Backoff: 15 min, then doubling, capped at a day (section 5). */
 qint64 backoffSeconds(int failureCount)
@@ -301,6 +301,18 @@ bool FeedStore::migrate(int fromVersion)
         version = 3;
     }
 
+    // 3 -> 4: the search index's update trigger fired on *every* update, so marking an
+    // article read or recording its thumbnail re-indexed it -- and "mark all as read"
+    // rewrote the whole index. Dropped here; detectFullTextSearch() recreates it limited
+    // to the two columns that are actually indexed.
+    if (version == 3) {
+        if (!exec(QStringLiteral("DROP TRIGGER IF EXISTS article_fts_au"))) {
+            m_db.rollback();
+            return false;
+        }
+        version = 4;
+    }
+
     if (version != SchemaVersion) {
         setError(QStringLiteral("no migration path"),
                  QStringLiteral("from schema version %1").arg(fromVersion));
@@ -346,7 +358,8 @@ bool FeedStore::detectFullTextSearch()
             "    VALUES ('delete', old.id, old.title, old.teaser);"
             " END"),
         QStringLiteral(
-            "CREATE TRIGGER IF NOT EXISTS article_fts_au AFTER UPDATE ON article BEGIN"
+            "CREATE TRIGGER IF NOT EXISTS article_fts_au"
+            " AFTER UPDATE OF title, teaser ON article BEGIN"
             "  INSERT INTO article_fts(article_fts, rowid, title, teaser)"
             "    VALUES ('delete', old.id, old.title, old.teaser);"
             "  INSERT INTO article_fts(rowid, title, teaser)"
@@ -1118,6 +1131,17 @@ bool FeedStore::markRead(qint64 articleId, bool read)
     query.addBindValue(read ? 1 : 0);
     query.addBindValue(articleId);
     return query.exec();
+}
+
+int FeedStore::markClusterRead(qint64 clusterId, bool read)
+{
+    QSqlQuery query(m_db);
+    query.prepare(QStringLiteral("UPDATE article SET read = ? WHERE cluster_id = ?"));
+    query.addBindValue(read ? 1 : 0);
+    query.addBindValue(clusterId);
+    if (!query.exec())
+        return 0;
+    return query.numRowsAffected();
 }
 
 int FeedStore::markAllRead()
