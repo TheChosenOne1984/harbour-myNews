@@ -27,6 +27,7 @@ private slots:
     void settingsCatalogUrlFallsBackToDefault();
     void settingsClusterParamsFollowSettings();
     void settingsResetRestoresDefaults();
+    void settingsChangeNotifiesOnlyItsOwnProperty();
 
     void servicePrefersCacheUntilStale();
 };
@@ -322,6 +323,21 @@ void TestCatalog::settingsResetRestoresDefaults()
     QCOMPARE(spy.size(), 1);
     QCOMPARE(settings.clusterThreshold(), cluster::Params().hammingThreshold);
     QCOMPARE(settings.retentionDays(), 14);
+}
+
+void TestCatalog::settingsChangeNotifiesOnlyItsOwnProperty()
+{
+    QTemporaryDir dir;
+    app::Settings settings(dir.path() + QStringLiteral("/s.ini"), nullptr);
+
+    QSignalSpy cache(&settings, &app::Settings::thumbnailCacheMegabytesChanged);
+    QSignalSpy browser(&settings, &app::Settings::openArticlesExternallyChanged);
+    settings.setThumbnailCacheMegabytes(200);
+
+    QCOMPARE(cache.size(), 1);
+    // Re-evaluating the external-browser binding for an unrelated change is harmless
+    // today and misleading always.
+    QCOMPARE(browser.size(), 0);
 }
 
 void TestCatalog::servicePrefersCacheUntilStale()

@@ -129,7 +129,6 @@ void Settings::setThumbnailCacheMegabytes(int megabytes)
         return;
     m_settings->setValue(KeyThumbnailCacheMb, clamped);
     emit thumbnailCacheMegabytesChanged();
-    emit openArticlesExternallyChanged();
 }
 
 bool Settings::openArticlesExternally() const
