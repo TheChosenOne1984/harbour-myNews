@@ -739,6 +739,11 @@ void TestFeedStore::searchFindsSubstring()
     QCOMPARE(m_store->search(QStringLiteral("speicher")).size(), 1);
     QCOMPARE(m_store->search(QStringLiteral("Speicherstadt")).size(), 1);
     QCOMPARE(m_store->search(QStringLiteral("Kiel")).size(), 0);
+
+    // Trigrams: three characters is the shortest query that can match. SearchPage's
+    // minimum length rests on this.
+    QCOMPARE(m_store->search(QStringLiteral("Spe")).size(), 1);
+    QCOMPARE(m_store->search(QStringLiteral("Sp")).size(), 0);
 }
 
 void TestFeedStore::searchResultsNameTheirSource()

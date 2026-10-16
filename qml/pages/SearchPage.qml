@@ -10,7 +10,8 @@ import "../components"
  * answers through "other sources".
  *
  * The trigram index matches substrings, so there is no stemming and no word boundary to
- * get wrong; two characters is where a query starts to mean something.
+ * get wrong -- but it indexes runs of three characters, so a shorter query can never match
+ * anything. Three is therefore the minimum, not a matter of taste.
  */
 Page {
     id: page
@@ -21,7 +22,7 @@ Page {
     property var hits: []
     property bool searching: false
 
-    readonly property int minimumQueryLength: 2
+    readonly property int minimumQueryLength: 3
 
     function runSearch() {
         var text = query.trim()
