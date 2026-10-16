@@ -26,6 +26,7 @@ private slots:
     void hasFullTextSearch();
     void addFeedIsIdempotent();
     void removingFeedCascadesToArticles();
+    void removingFeedRepairsSharedCluster();
     void manualLanguageOverrideSurvivesRefresh();
     void curatedTitleSurvivesRefresh();
     void catalogueLanguageSurvivesRefresh();
@@ -179,6 +180,35 @@ void TestFeedStore::removingFeedCascadesToArticles()
     QCOMPARE(m_store->unreadCount(), 0);
     // The cluster must go with it, or the feed page shows an entry with nothing behind it.
     QVERIFY(m_store->articlesInCluster(1).isEmpty());
+}
+
+void TestFeedStore::removingFeedRepairsSharedCluster()
+{
+    const qint64 a = m_store->addFeed(QStringLiteral("https://example.invalid/r1"),
+                                      QString(), QStringLiteral("de"));
+    const qint64 b = m_store->addFeed(QStringLiteral("https://example.invalid/r2"),
+                                      QString(), QStringLiteral("de"));
+    const QString title = QStringLiteral("Landgericht eröffnet Verfahren gegen Xavier Naidoo");
+    m_store->ingest(a, {article(QStringLiteral("1"), title, m_now)}, m_now);
+    m_store->ingest(b, {article(QStringLiteral("1"), title, m_now + 60)}, m_now + 60);
+
+    // Feed a supplies the lead: lowest feed id, earliest published.
+    QVector<ClusterSummary> before = m_store->clusterSummaries();
+    QCOMPARE(before.size(), 1);
+    QCOMPARE(before.first().memberCount, 2);
+    const qint64 leadBefore = before.first().leadArticleId;
+
+    QVERIFY(m_store->removeFeed(a));
+
+    // The story is still carried by feed b, so it must stay in the list -- with b's
+    // article as its lead, not a dangling pointer at the one that was deleted.
+    const QVector<ClusterSummary> after = m_store->clusterSummaries();
+    QCOMPARE(after.size(), 1);
+    QCOMPARE(after.first().memberCount, 1);
+    QVERIFY(after.first().leadArticleId != leadBefore);
+    ArticleRecord lead;
+    QVERIFY(m_store->articleById(after.first().leadArticleId, &lead));
+    QCOMPARE(lead.feedId, b);
 }
 
 void TestFeedStore::manualLanguageOverrideSurvivesRefresh()

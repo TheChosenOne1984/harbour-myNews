@@ -9,6 +9,7 @@
 #include <QDateTime>
 #include <QDir>
 #include <QFileInfo>
+#include <QSet>
 #include <QSqlError>
 #include <QSqlQuery>
 #include <QSqlRecord>
@@ -404,16 +405,42 @@ qint64 FeedStore::addFeed(const QString &url, const QString &title, const QStrin
 
 bool FeedStore::removeFeed(qint64 feedId)
 {
+    if (!m_db.transaction()) {
+        setError(QStringLiteral("cannot start remove transaction"), m_db.lastError().text());
+        return false;
+    }
+
+    // Remember which clusters the feed contributed to before the cascade takes its rows.
+    QVector<qint64> touched;
+    QSqlQuery affected(m_db);
+    affected.prepare(QStringLiteral(
+        "SELECT DISTINCT cluster_id FROM article WHERE feed_id = ? AND cluster_id IS NOT NULL"));
+    affected.addBindValue(feedId);
+    if (affected.exec()) {
+        while (affected.next())
+            touched.append(affected.value(0).toLongLong());
+    }
+
     QSqlQuery query(m_db);
     query.prepare(QStringLiteral("DELETE FROM feed WHERE id = ?"));
     query.addBindValue(feedId);
     if (!query.exec()) {
         setError(QStringLiteral("cannot remove feed"), query.lastError().text());
+        m_db.rollback();
         return false;
     }
-    // ON DELETE CASCADE took the articles; the clusters they were in may now be empty.
-    exec(QStringLiteral("DELETE FROM cluster WHERE id NOT IN "
-                        "(SELECT DISTINCT cluster_id FROM article WHERE cluster_id IS NOT NULL)"));
+
+    // ON DELETE CASCADE took the articles. A cluster they were alone in is now empty; one
+    // they shared with another feed may have lost its lead article -- and the list joins
+    // on the lead, so left alone that story would vanish although another source still
+    // carries it.
+    repairClusters(touched);
+
+    if (!m_db.commit()) {
+        setError(QStringLiteral("cannot commit feed removal"), m_db.lastError().text());
+        m_db.rollback();
+        return false;
+    }
     return true;
 }
 
@@ -786,6 +813,20 @@ bool FeedStore::refreshCluster(qint64 clusterId)
     return update.exec();
 }
 
+void FeedStore::repairClusters(const QVector<qint64> &clusterIds)
+{
+    QSet<qint64> done;
+    for (const qint64 clusterId : clusterIds) {
+        if (clusterId < 0 || done.contains(clusterId))
+            continue;
+        done.insert(clusterId);
+        refreshCluster(clusterId);
+    }
+    // A cluster whose members are gone would otherwise stay in the list as an entry with
+    // nothing behind it.
+    exec(QStringLiteral("DELETE FROM cluster WHERE member_count = 0"));
+}
+
 namespace {
 
 ClusterRecord clusterFromRecord(const QSqlQuery &query)
@@ -1086,11 +1127,8 @@ int FeedStore::purgeArticlesOlderThan(qint64 cutoff)
     }
     const int deleted = del.numRowsAffected();
 
-    // A cluster whose members are gone would otherwise stay in the list as an entry with
-    // nothing behind it, and a surviving cluster may have lost its lead article.
-    for (const qint64 clusterId : touched)
-        refreshCluster(clusterId);
-    exec(QStringLiteral("DELETE FROM cluster WHERE member_count = 0"));
+    // A surviving cluster may have lost its lead article; an emptied one goes.
+    repairClusters(touched);
 
     if (!m_db.commit()) {
         setError(QStringLiteral("cannot commit purge"), m_db.lastError().text());

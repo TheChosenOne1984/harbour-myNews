@@ -266,6 +266,9 @@ private:
     /*! Recomputes lead article, published and member_count for one cluster. */
     bool refreshCluster(qint64 clusterId);
 
+    /*! Repairs the given clusters, then deletes those left without members. */
+    void repairClusters(const QVector<qint64> &clusterIds);
+
     QString m_path;
     QString m_connectionName;
     QSqlDatabase m_db;
