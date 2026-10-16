@@ -30,7 +30,7 @@ from email.utils import parsedate_to_datetime
 from xml.etree import ElementTree as ET
 
 # Section 5 of the plan: honest, identifiable User-Agent. Same string the app will send.
-USER_AGENT = "myNews/0.1 (+https://github.com/kaiwiechers/myNews)"
+USER_AGENT = "myNews/0.1 (+https://github.com/TheChosenOne1984/harbour-myNews)"
 CONNECT_TIMEOUT = 30
 MAX_BYTES = 5 * 1024 * 1024
 PER_HOST_DELAY = 1.0

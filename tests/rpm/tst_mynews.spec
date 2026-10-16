@@ -3,7 +3,7 @@ Summary:    myNews unit tests (development only, never shipped)
 Version:    0.1.0
 Release:    1
 License:    BSD-3-Clause
-URL:        https://github.com/kaiwiechers/myNews
+URL:        https://github.com/TheChosenOne1984/harbour-myNews
 Source0:    %{name}-%{version}.tar.bz2
 BuildRequires:  pkgconfig(Qt5Core)
 BuildRequires:  pkgconfig(Qt5Test)

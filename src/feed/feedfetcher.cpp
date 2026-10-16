@@ -17,7 +17,7 @@ const char *const AppVersion = MYNEWS_VERSION;
 #else
 const char *const AppVersion = "dev";
 #endif
-const char *const ProjectUrl = "https://github.com/kaiwiechers/myNews";
+const char *const ProjectUrl = "https://github.com/TheChosenOne1984/harbour-myNews";
 
 QString hostKey(const QUrl &url)
 {

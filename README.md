@@ -24,7 +24,7 @@ reader's.
 ## For publishers
 
 If you found this page through the User-Agent `myNews/<version>
-(+https://github.com/kaiwiechers/myNews)` in your logs, this is what the app does:
+(+https://github.com/TheChosenOne1984/harbour-myNews)` in your logs, this is what the app does:
 
 - It fetches your feed when the reader opens the app, pulls down to refresh or uses the
   cover action. There is no background polling.

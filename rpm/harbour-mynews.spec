@@ -3,7 +3,7 @@ Summary:    News reader that groups the same story across sources
 Version:    1.0.0
 Release:    1
 License:    BSD-3-Clause
-URL:        https://github.com/kaiwiechers/myNews
+URL:        https://github.com/TheChosenOne1984/harbour-myNews
 Source0:    %{name}-%{version}.tar.bz2
 
 Requires:   sailfishsilica-qt5 >= 0.10.9
