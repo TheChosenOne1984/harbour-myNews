@@ -39,6 +39,11 @@ AppController::AppController(QObject *parent)
         // filling with pictures for stories that no longer exist.
         QMetaObject::invokeMethod(m_backend, "purge", Qt::QueuedConnection,
                                   Q_ARG(int, m_settings->retentionDays()));
+        // Section 12: refresh on app start, on the cover action and on pull-down. Queued
+        // behind the purge, so it never ingests into rows about to be deleted. Feeds still
+        // in backoff are skipped by the refresher, and with no subscriptions this is a
+        // no-op -- a first start contacts nobody.
+        refresh();
     });
 
     connect(m_backend, &Backend::feedsChanged, this,
