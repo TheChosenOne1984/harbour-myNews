@@ -344,7 +344,7 @@
     <name>ImportOpmlPage</name>
     <message>
         <source>Import subscriptions</source>
-        <translation>Abos importieren</translation>
+        <translation>Abonnements importieren</translation>
     </message>
     <message numerus="yes">
         <source>%n file(s) found</source>
@@ -356,7 +356,7 @@
     <message>
         <source>Adds these feeds to your subscriptions</source>
         <extracomment>reassures the reader that importing adds to what is already there</extracomment>
-        <translation>Fügt diese Feeds zu deinen Abos hinzu</translation>
+        <translation>Fügt diese Feeds zu deinen Abonnements hinzu</translation>
     </message>
     <message>
         <source>No OPML files found</source>
@@ -380,6 +380,37 @@
     <message>
         <source>Language</source>
         <translation>Sprache</translation>
+    </message>
+</context>
+<context>
+    <name>RelativeTime</name>
+    <message>
+        <source>now</source>
+        <translation>jetzt</translation>
+    </message>
+    <message numerus="yes">
+        <source>%n min</source>
+        <comment>minutes ago, abbreviated</comment>
+        <translation>
+            <numerusform>%n Min.</numerusform>
+            <numerusform>%n Min.</numerusform>
+        </translation>
+    </message>
+    <message numerus="yes">
+        <source>%n h</source>
+        <comment>hours ago, abbreviated</comment>
+        <translation>
+            <numerusform>%n Std.</numerusform>
+            <numerusform>%n Std.</numerusform>
+        </translation>
+    </message>
+    <message numerus="yes">
+        <source>%n d</source>
+        <comment>days ago, abbreviated</comment>
+        <translation>
+            <numerusform>%n Tg.</numerusform>
+            <numerusform>%n Tg.</numerusform>
+        </translation>
     </message>
 </context>
 <context>
@@ -637,7 +668,7 @@
     </message>
     <message>
         <source>Import subscriptions</source>
-        <translation>Abos importieren</translation>
+        <translation>Abonnements importieren</translation>
     </message>
 </context>
 <context>

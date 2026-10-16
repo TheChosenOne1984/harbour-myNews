@@ -7,8 +7,6 @@
 namespace i18n {
 namespace {
 
-const char *const Context = "RelativeTime";
-
 constexpr qint64 Minute = 60;
 constexpr qint64 Hour = 60 * Minute;
 constexpr qint64 Day = 24 * Hour;
@@ -24,19 +22,23 @@ QString relativeTime(qint64 published, qint64 now)
 
     // A publisher's clock running ahead, or a feed dating articles into the future, must
     // not produce "in -3 minutes".
+    //
+    // The context is written out in every call rather than kept in a constant: lupdate
+    // only extracts a translate() whose context is a literal, and with a constant none of
+    // these four strings ever reached a .ts file -- a German interface said "now" and "3 d".
     if (age < Minute)
-        return QCoreApplication::translate(Context, "now");
+        return QCoreApplication::translate("RelativeTime", "now");
 
     if (age < Hour) {
-        return QCoreApplication::translate(Context, "%n min", "minutes ago, abbreviated",
+        return QCoreApplication::translate("RelativeTime", "%n min", "minutes ago, abbreviated",
                                            int(age / Minute));
     }
     if (age < Day) {
-        return QCoreApplication::translate(Context, "%n h", "hours ago, abbreviated",
+        return QCoreApplication::translate("RelativeTime", "%n h", "hours ago, abbreviated",
                                            int(age / Hour));
     }
     if (age < 7 * Day) {
-        return QCoreApplication::translate(Context, "%n d", "days ago, abbreviated",
+        return QCoreApplication::translate("RelativeTime", "%n d", "days ago, abbreviated",
                                            int(age / Day));
     }
 
