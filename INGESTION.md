@@ -68,7 +68,7 @@ the second is precisely why a changed title triggers a re-hash and re-clustering
 ## Running it
 
 ```sh
-# unit tests -- 78 of them, no network beyond a local stub server
+# unit tests -- no network beyond a local stub server
 cd tests
 sfdk -c target=SailfishOS-5.1.0.11-aarch64 build
 sfdk tools exec SailfishOS-5.1.0.11-aarch64 $PWD/tst_mynews
@@ -85,18 +85,13 @@ Further options: `--list` (print clusters), `--search TEXT` (FTS5), `--purge-day
 The database it writes contains publisher content and is gitignored, like the clustering
 corpus (section 11).
 
-## Not done yet
+## Left open here, done since
 
-- **The add-feed flow** (section 7). Languages are assigned, not detected — that decision
-  replaced the original Cavnar-Trenkle plan, so there is nothing to implement on the
-  detection side. What is still missing is the UI half: fetching a feed once before
-  showing a pre-filled language picker, and the OPML import defaults. Both land with
-  subscriptions in milestone 6. `FeedStore` already refuses to let a later refresh
-  overwrite a `manual` or `catalogue` language.
-- **Threading.** Everything runs on one thread today. The store is built for a worker
-  thread to own it, but nothing moves it there yet — that lands with the UI, where it
-  matters.
-- **Retention on start.** `purgeArticlesOlderThan()` exists and is tested; nothing calls
-  it automatically yet.
-- **`src/feed/` is not in the app's `.pro`.** The app does not use it until milestone 4;
-  it is compiled by the tests and by `ingest-cli`.
+This milestone shipped headless. What it left for later has all landed:
+
+- **The add-feed flow** (section 7) — milestone 6: the feed is probed once so the language
+  picker opens pre-filled, and OPML import assigns defaults and flags them for review.
+- **Threading** — milestone 4: `Backend` owns the store on a worker thread, and the GUI
+  side only ever reaches it through queued calls.
+- **Retention on start** — the app purges on every start, before it refreshes.
+- **`src/feed/` in the app's `.pro`** — since milestone 4.

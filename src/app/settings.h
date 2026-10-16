@@ -108,7 +108,8 @@ public:
     bool openArticlesExternally() const;
     void setOpenArticlesExternally(bool external);
 
-    //! Hamming distance, 0-64. Measured default is 14; above 16 clusters run away.
+    //! Hamming distance, clamped to Params::MinThreshold..MaxThreshold. Measured default
+    //! is 13; from 16 up a sixth or more of the groupings are wrong (CLUSTERING.md).
     int clusterThreshold() const;
     void setClusterThreshold(int bits);
 

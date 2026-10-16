@@ -46,8 +46,6 @@ public:
     /*! Refreshes every enabled feed whose backoff has expired. */
     void refreshDue(qint64 now);
 
-    /*! Refreshes one feed regardless of its backoff -- for an explicit user action. */
-
     Summary summary() const { return m_summary; }
 
 signals:

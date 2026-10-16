@@ -3,7 +3,7 @@ import Sailfish.Silica 1.0
 
 /*
  * Plan section 9: unread count plus the current lead headline, refresh as cover action.
- * The counts and headline are placeholders until the store lands (milestone 3).
+ * The count is of articles, not of rows: a story three sources ran is three unread.
  */
 CoverBackground {
     id: cover

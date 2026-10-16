@@ -1,7 +1,11 @@
 # SailfishOS News Reader — Implementation Handoff
 
-**Status:** planning complete, implementation not started.
-**Audience:** coding agent picking up implementation.
+**Status:** implemented. Milestones 1–7 are done; this document is kept as the record of the
+decisions behind them. What changed against the plan while building it is in
+[CLUSTERING.md](CLUSTERING.md), [INGESTION.md](INGESTION.md), [THUMBNAILS.md](THUMBNAILS.md),
+[task0-findings.md](task0-findings.md) and [PLAN-AUDIT.md](PLAN-AUDIT.md); what is still open
+is in [BUILDING.md](BUILDING.md).
+**Audience:** originally the coding agent picking up implementation.
 **Author of plan:** Kai — decisions below are his; open items are marked as such.
 
 ---
