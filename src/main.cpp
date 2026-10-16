@@ -21,6 +21,10 @@ int main(int argc, char *argv[])
 
     app::Settings settings;
     LanguageManager languages;
+    // The choice is remembered, so it has to be applied before the first page loads --
+    // otherwise every start falls back to "System" whatever the reader picked. No view is
+    // set yet, so this installs the translator without reloading anything.
+    languages.setLanguage(settings.uiLanguage());
 
     app::AppController controller;
     controller.setSettings(&settings);

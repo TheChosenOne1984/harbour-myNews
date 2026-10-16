@@ -263,6 +263,7 @@ private:
     void setBusy(bool busy);
     void setCatalogError(const QString &error);
     void applyThumbnailCacheLimit();
+    void applyCatalogueLanguage();
 
     QThread m_thread;
     Backend *m_backend;

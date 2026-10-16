@@ -80,6 +80,9 @@ void LanguageManager::install(const QString &code)
         delete translator;
     }
 
+    // Translations cover qsTr(); dates and numbers go through QLocale, which has to be
+    // told separately.
+    i18n::setDefaultLocale(code);
     m_current = code;
 }
 

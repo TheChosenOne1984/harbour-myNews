@@ -41,6 +41,15 @@ QString languageDisplayName(const QString &code);
  */
 inline QString sourceLanguage() { return QStringLiteral("en"); }
 
+/*!
+ * \brief Makes QLocale's default follow the chosen UI language.
+ *
+ * Everything formatted through a default-constructed QLocale -- the dates the article
+ * list shows for anything older than a week -- otherwise stays in the device locale while
+ * the rest of the interface is in another language. Empty means "System".
+ */
+void setDefaultLocale(const QString &code);
+
 } // namespace i18n
 
 #endif // I18N_LANGUAGENAMES_H

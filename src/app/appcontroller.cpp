@@ -223,12 +223,23 @@ void AppController::setSettings(Settings *settings)
                 this, &AppController::applyThumbnailCacheLimit);
         connect(m_settings, &Settings::catalogConsentChanged,
                 this, &AppController::catalogConsentChanged);
+        // The models outlive the view reload a language switch causes, so the catalogue's
+        // category names and descriptions have to be told about the switch themselves.
+        connect(m_settings, &Settings::uiLanguageChanged,
+                this, &AppController::applyCatalogueLanguage);
+        applyCatalogueLanguage();
     }
-    if (m_settings) {
-        m_catalog.setUiLanguage(m_settings->uiLanguage().isEmpty()
-                                    ? QLocale().name().left(2)
-                                    : m_settings->uiLanguage());
-    }
+}
+
+void AppController::applyCatalogueLanguage()
+{
+    if (!m_settings)
+        return;
+    // QLocale::system() rather than QLocale(): the default follows the UI language, and
+    // "System" has to mean the device here.
+    m_catalog.setUiLanguage(m_settings->uiLanguage().isEmpty()
+                                ? QLocale::system().name().left(2)
+                                : m_settings->uiLanguage());
 }
 
 void AppController::start(const QString &databasePath, const QString &catalogCachePath,
@@ -548,7 +559,7 @@ void AppController::importOpml(const QString &filePath)
     // rather than the import stopping once per feed to ask (§7).
     const QString fallback = m_settings && !m_settings->uiLanguage().isEmpty()
         ? m_settings->uiLanguage()
-        : QLocale().name().left(2);
+        : QLocale::system().name().left(2);
 
     QMetaObject::invokeMethod(m_backend, "importOpml", Qt::QueuedConnection,
                               Q_ARG(QByteArray, xml), Q_ARG(QString, fallback));
@@ -598,7 +609,7 @@ QStringList AppController::suggestedLanguages() const
         if (!codes.contains(fallback))
             codes.append(fallback);
     }
-    const QString device = QLocale().name().left(2);
+    const QString device = QLocale::system().name().left(2);
     if (!device.isEmpty() && !codes.contains(device))
         codes.prepend(device);
     return codes;

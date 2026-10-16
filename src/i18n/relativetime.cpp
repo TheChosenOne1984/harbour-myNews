@@ -41,7 +41,7 @@ QString relativeTime(qint64 published, qint64 now)
     }
 
     // Older than a week, a date says more than a count of days. Follows the UI language
-    // through QLocale's default, which the language switch sets.
+    // through QLocale's default, which LanguageManager sets via i18n::setDefaultLocale().
     return QLocale().toString(QDateTime::fromMSecsSinceEpoch(published * 1000).date(),
                               QLocale::ShortFormat);
 }

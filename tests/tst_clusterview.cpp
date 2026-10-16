@@ -3,6 +3,7 @@
 #include <QTemporaryDir>
 
 #include "feed/feedstore.h"
+#include "i18n/languagenames.h"
 #include "i18n/relativetime.h"
 #include "model/clustermodel.h"
 #include "testrunner.h"
@@ -14,6 +15,7 @@ class TestClusterView : public QObject
 private slots:
     void relativeTime_data();
     void relativeTime();
+    void oldDatesFollowTheUiLanguage();
 
     void summariesJoinLeadAndSources();
     void summariesPutTheLeadSourceFirst();
@@ -67,6 +69,24 @@ void TestClusterView::relativeTime()
     QVERIFY(!old.isEmpty());
     // Nothing to say about an article with no date at all.
     QVERIFY(i18n::relativeTime(0, now).isEmpty());
+}
+
+void TestClusterView::oldDatesFollowTheUiLanguage()
+{
+    const qint64 now = 1788762600;
+    const qint64 published = now - 30 * 24 * 3600;
+    const QDate date = QDateTime::fromMSecsSinceEpoch(published * 1000).date();
+
+    // An English interface on a German phone must not show German dates, and back.
+    i18n::setDefaultLocale(QStringLiteral("de"));
+    QCOMPARE(i18n::relativeTime(published, now),
+             QLocale(QStringLiteral("de")).toString(date, QLocale::ShortFormat));
+    i18n::setDefaultLocale(QStringLiteral("en"));
+    QCOMPARE(i18n::relativeTime(published, now),
+             QLocale(QStringLiteral("en")).toString(date, QLocale::ShortFormat));
+
+    i18n::setDefaultLocale(QString());
+    QCOMPARE(QLocale(), QLocale::system());
 }
 
 namespace {

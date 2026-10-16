@@ -28,6 +28,11 @@ QString normalizeLanguageTag(const QString &code)
     return (primary.size() >= 2 && primary.size() <= 3) ? primary : QString();
 }
 
+void setDefaultLocale(const QString &code)
+{
+    QLocale::setDefault(code.isEmpty() ? QLocale::system() : QLocale(code));
+}
+
 QString languageDisplayName(const QString &code)
 {
     if (code.isEmpty())
