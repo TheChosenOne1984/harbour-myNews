@@ -55,6 +55,9 @@ constexpr int MaxTeaserLength = 300;
  * Never throws and never returns partial nonsense: on a malformed document the result
  * carries an \c error and whatever articles were read before the failure, so one broken
  * item does not discard a whole feed.
+ *
+ * An image URL shared by several items of the document is dropped from all of them: it is
+ * the feed's placeholder, not an article's picture.
  */
 ParsedFeed parseFeed(const QByteArray &data);
 

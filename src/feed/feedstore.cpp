@@ -20,7 +20,7 @@ namespace feed {
 namespace {
 
 /*! Bump this and add a migrate() branch whenever the schema changes. */
-constexpr int SchemaVersion = 4;
+constexpr int SchemaVersion = 5;
 
 /*! Backoff: 15 min, then doubling, capped at a day (section 5). */
 qint64 backoffSeconds(int failureCount)
@@ -311,6 +311,39 @@ bool FeedStore::migrate(int fromVersion)
             return false;
         }
         version = 4;
+    }
+
+    // 4 -> 5: an image URL several articles of one feed share is the feed's placeholder,
+    // not a picture of any of them; the parser drops those now, but rows stored before it
+    // did still carry one -- and a cluster led by such a row showed the placeholder over
+    // a story another source had a real picture for. Reset to "none", so the article page
+    // is asked instead; the thumbnails go when Backend reconciles the cache on start.
+    if (version == 4) {
+        QVector<qint64> touched;
+        QSqlQuery affected(m_db);
+        if (!affected.exec(QStringLiteral(
+                "SELECT DISTINCT cluster_id FROM article a"
+                " WHERE cluster_id IS NOT NULL AND image_url IS NOT NULL"
+                "   AND EXISTS (SELECT 1 FROM article o WHERE o.feed_id = a.feed_id"
+                "               AND o.image_url = a.image_url AND o.id <> a.id)"))) {
+            setError(QStringLiteral("migration 4->5 failed"), affected.lastError().text());
+            m_db.rollback();
+            return false;
+        }
+        while (affected.next())
+            touched.append(affected.value(0).toLongLong());
+
+        if (!exec(QStringLiteral(
+                "UPDATE article SET image_url = NULL, image_state = 'none'"
+                " WHERE image_url IS NOT NULL"
+                "   AND EXISTS (SELECT 1 FROM article o WHERE o.feed_id = article.feed_id"
+                "               AND o.image_url = article.image_url AND o.id <> article.id)"))) {
+            m_db.rollback();
+            return false;
+        }
+        // The lead prefers a member with a picture, so these clusters may now pick another.
+        repairClusters(touched);
+        version = 5;
     }
 
     if (version != SchemaVersion) {
@@ -1111,6 +1144,17 @@ QVector<ArticleRecord> FeedStore::articlesInCluster(qint64 clusterId) const
         result.append(article);
     }
     return result;
+}
+
+QVector<qint64> FeedStore::articleIdsWithCachedImage() const
+{
+    QVector<qint64> ids;
+    QSqlQuery query(m_db);
+    if (!query.exec(QStringLiteral("SELECT id FROM article WHERE image_state = 'cached'")))
+        return ids;
+    while (query.next())
+        ids.append(query.value(0).toLongLong());
+    return ids;
 }
 
 QVector<qint64> FeedStore::allArticleIds() const

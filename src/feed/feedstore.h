@@ -233,6 +233,12 @@ public:
 
     /*! Every article id, so the thumbnail cache can drop files for purged articles. */
     QVector<qint64> allArticleIds() const;
+
+    /*!
+     * Articles whose thumbnail is recorded as cached. Anything else in the cache is
+     * orphaned -- its article purged, or its picture found to be a placeholder.
+     */
+    QVector<qint64> articleIdsWithCachedImage() const;
     bool articleById(qint64 articleId, ArticleRecord *out) const;
     bool markRead(qint64 articleId, bool read = true);
 

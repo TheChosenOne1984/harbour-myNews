@@ -372,13 +372,17 @@ void Backend::purge(int retentionDays)
         return;
     const qint64 cutoff = nowSeconds() - static_cast<qint64>(retentionDays) * 24 * 3600;
     const int deleted = m_store->purgeArticlesOlderThan(cutoff);
-    if (deleted > 0) {
-        // Section 8: purging articles takes their thumbnails with them, or the cache
-        // fills up with pictures for stories that no longer exist.
-        if (m_thumbnails)
-            m_thumbnails->removeAllExcept(m_store->allArticleIds());
+
+    // Section 8: purging articles takes their thumbnails with them, or the cache fills up
+    // with pictures for stories that no longer exist. Done on every start, not only after
+    // a purge, and against the articles recorded as cached rather than all of them: a file
+    // whose article no longer claims it -- a placeholder a migration reset, say -- would
+    // otherwise be served from the cache ahead of the article's real picture.
+    if (m_thumbnails)
+        m_thumbnails->removeAllExcept(m_store->articleIdsWithCachedImage());
+
+    if (deleted > 0)
         emitClusters();
-    }
     emit purged(deleted);
 }
 

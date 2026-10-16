@@ -504,6 +504,20 @@ ParsedFeed parseFeed(const QByteArray &data)
     if (feed.error.isEmpty() && reader.hasError())
         feed.error = reader.errorString();
 
+    // An image URL that several items of one document share is the feed's picture -- a
+    // stock photo or a logo -- not any article's. Kept, it would be cached once per
+    // article and shown on all of them. Dropped, the article page's own og:image is looked
+    // up lazily instead (section 8), which is what the publisher declared for the article.
+    QHash<QString, int> imageUses;
+    for (const ParsedArticle &article : feed.articles) {
+        if (!article.imageUrl.isEmpty())
+            ++imageUses[article.imageUrl];
+    }
+    for (ParsedArticle &article : feed.articles) {
+        if (imageUses.value(article.imageUrl) > 1)
+            article.imageUrl.clear();
+    }
+
     if (feed.articles.isEmpty() && feed.error.isEmpty())
         feed.error = QStringLiteral("no items found");
     return feed;

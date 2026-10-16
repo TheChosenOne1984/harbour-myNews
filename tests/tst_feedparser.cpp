@@ -29,6 +29,7 @@ private slots:
     void dropsSoftHyphenAndKeepsUnknownEntities();
     void extractsImages_data();
     void extractsImages();
+    void dropsImageEveryItemShares();
     void parsesTimestamps_data();
     void parsesTimestamps();
     void keepsArticlesFromTruncatedDocument();
@@ -286,6 +287,31 @@ void TestFeedParser::extractsImages()
     const ParsedFeed feed = parseFeed(xml);
     QCOMPARE(feed.articles.size(), 1);
     QCOMPARE(feed.articles.first().imageUrl, expected);
+}
+
+void TestFeedParser::dropsImageEveryItemShares()
+{
+    // Seen at the Hamburger Morgenpost: every item carries the same <enclosure>, a stock
+    // aerial of the city. Taken as the article's picture, it went on all 58 of them -- and
+    // led every cluster MOPO's subscription order let it lead.
+    const QByteArray xml =
+        "<rss version=\"2.0\"><channel><title>T</title>"
+        "<item><title>Eins</title><link>https://example.invalid/1</link>"
+        "<enclosure url=\"https://cdn.invalid/stock.jpg\" type=\"image/jpeg\"/></item>"
+        "<item><title>Zwei</title><link>https://example.invalid/2</link>"
+        "<enclosure url=\"https://cdn.invalid/stock.jpg\" type=\"image/jpeg\"/></item>"
+        "<item><title>Drei</title><link>https://example.invalid/3</link>"
+        "<enclosure url=\"https://cdn.invalid/own.jpg\" type=\"image/jpeg\"/></item>"
+        "</channel></rss>";
+
+    const ParsedFeed feed = parseFeed(xml);
+    QCOMPARE(feed.articles.size(), 3);
+    // Shared means it is the feed's picture, not the article's: dropped, so the article
+    // page's own og:image is looked up instead.
+    QVERIFY(feed.articles.at(0).imageUrl.isEmpty());
+    QVERIFY(feed.articles.at(1).imageUrl.isEmpty());
+    // An image of its own is untouched.
+    QCOMPARE(feed.articles.at(2).imageUrl, QStringLiteral("https://cdn.invalid/own.jpg"));
 }
 
 void TestFeedParser::parsesTimestamps_data()

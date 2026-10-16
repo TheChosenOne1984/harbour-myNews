@@ -40,6 +40,7 @@ private slots:
     void changedTitleReachesSearchIndex();
     void readStateDoesNotTouchSearchIndex();
     void migratesSearchTriggerToTitleAndTeaserOnly();
+    void migrationResetsSharedPlaceholderImages();
     void markClusterReadCoversEveryMember();
     void ingestFallsBackToFirstSeen();
     void clustersAcrossFeeds();
@@ -95,7 +96,7 @@ void TestFeedStore::cleanup()
 void TestFeedStore::createsSchemaAndReportsVersion()
 {
     QVERIFY(m_store->isOpen());
-    QCOMPARE(m_store->schemaVersion(), 4);
+    QCOMPARE(m_store->schemaVersion(), 5);
     QVERIFY(m_store->feeds().isEmpty());
 }
 
@@ -138,7 +139,7 @@ void TestFeedStore::migratesRegionalLanguageTags()
 
     feed::FeedStore store(path);
     QVERIFY2(store.open(), qPrintable(store.lastError()));
-    QCOMPARE(store.schemaVersion(), 4);
+    QCOMPARE(store.schemaVersion(), 5);
 
     // Both English feeds must now share a clustering partition instead of being unable to
     // ever match each other.
@@ -550,13 +551,69 @@ void TestFeedStore::migratesSearchTriggerToTitleAndTeaserOnly()
 
     m_store = new FeedStore(path);
     QVERIFY2(m_store->open(), qPrintable(m_store->lastError()));
-    QCOMPARE(m_store->schemaVersion(), 4);
+    QCOMPARE(m_store->schemaVersion(), 5);
 
     QSqlQuery query(QSqlDatabase::database(m_store->connectionName()));
     QVERIFY(query.exec(QStringLiteral(
         "SELECT sql FROM sqlite_master WHERE type = 'trigger' AND name = 'article_fts_au'")));
     QVERIFY(query.next());
     QVERIFY(query.value(0).toString().contains(QLatin1String("UPDATE OF title, teaser")));
+}
+
+void TestFeedStore::migrationResetsSharedPlaceholderImages()
+{
+    // Rows from before the parser dropped shared images: feed a gave the same stock
+    // picture to both its articles, and its article leads a cluster that feed b, with a
+    // real picture, also carries.
+    const qint64 a = m_store->addFeed(QStringLiteral("https://example.invalid/p1"),
+                                      QString(), QStringLiteral("de"));
+    const qint64 b = m_store->addFeed(QStringLiteral("https://example.invalid/p2"),
+                                      QString(), QStringLiteral("de"));
+    const QString story = QStringLiteral("Landgericht eröffnet Verfahren gegen Xavier Naidoo");
+    const QString stock = QStringLiteral("https://cdn.invalid/stock.jpg");
+    m_store->ingest(a, {article(QStringLiteral("1"), story, m_now, stock)}, m_now);
+    m_store->ingest(a, {article(QStringLiteral("2"),
+        QStringLiteral("Hafenfähre fällt wegen Sturmflut den ganzen Tag aus"), m_now, stock)},
+        m_now);
+    m_store->ingest(b, {article(QStringLiteral("1"), story, m_now + 60,
+                                QStringLiteral("https://cdn.invalid/real.jpg"))}, m_now + 60);
+
+    const QString path = m_dir->path() + QStringLiteral("/mynews.db");
+    delete m_store;
+    m_store = nullptr;
+    {
+        QSqlDatabase db = QSqlDatabase::addDatabase(QStringLiteral("QSQLITE"),
+                                                    QStringLiteral("v4"));
+        db.setDatabaseName(path);
+        QVERIFY(db.open());
+        QSqlQuery q(db);
+        // As a version 4 store left it: the placeholder already fetched and cached.
+        QVERIFY(q.exec("UPDATE article SET image_state = 'cached' WHERE image_url IS NOT NULL"));
+        QVERIFY(q.exec("PRAGMA user_version = 4"));
+        db.close();
+    }
+    QSqlDatabase::removeDatabase(QStringLiteral("v4"));
+
+    m_store = new FeedStore(path);
+    QVERIFY2(m_store->open(), qPrintable(m_store->lastError()));
+    QCOMPARE(m_store->schemaVersion(), 5);
+
+    // Only feed b's own picture is still claimed, so the cache reconcile keeps just that.
+    const QVector<qint64> cached = m_store->articleIdsWithCachedImage();
+    QCOMPARE(cached.size(), 1);
+    ArticleRecord real;
+    QVERIFY(m_store->articleById(cached.first(), &real));
+    QCOMPARE(real.feedId, b);
+
+    // And the shared story is led by the member with the real picture now.
+    int shared = 0;
+    for (const ClusterSummary &cluster : m_store->clusterSummaries()) {
+        if (cluster.memberCount == 2) {
+            ++shared;
+            QCOMPARE(cluster.leadArticleId, real.id);
+        }
+    }
+    QCOMPARE(shared, 1);
 }
 
 void TestFeedStore::markClusterReadCoversEveryMember()
