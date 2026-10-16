@@ -280,6 +280,11 @@ void TestCatalog::settingsClampOutOfRangeValues()
     QCOMPARE(settings.retentionDays(), 1);
     settings.setClusterWindowHours(0);
     QCOMPARE(settings.clusterWindowHours(), cluster::Params::MinWindowHours);
+    // The same bounds the slider offers.
+    settings.setThumbnailCacheMegabytes(5000);
+    QCOMPARE(settings.thumbnailCacheMegabytes(), 500);
+    settings.setThumbnailCacheMegabytes(1);
+    QCOMPARE(settings.thumbnailCacheMegabytes(), 10);
 }
 
 void TestCatalog::settingsCatalogUrlFallsBackToDefault()

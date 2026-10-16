@@ -17,6 +17,9 @@ const QString KeyClusterWindow = QStringLiteral("cluster/windowHours");
 
 constexpr int DefaultRetentionDays = 14;
 constexpr int DefaultThumbnailCacheMb = 100;   // section 8
+// What the settings slider offers, and what THUMBNAILS.md promises.
+constexpr int MinThumbnailCacheMb = 10;
+constexpr int MaxThumbnailCacheMb = 500;
 
 int clampInt(int value, int lo, int hi)
 {
@@ -119,12 +122,12 @@ void Settings::setRetentionDays(int days)
 int Settings::thumbnailCacheMegabytes() const
 {
     return clampInt(m_settings->value(KeyThumbnailCacheMb, DefaultThumbnailCacheMb).toInt(),
-                    10, 1000);
+                    MinThumbnailCacheMb, MaxThumbnailCacheMb);
 }
 
 void Settings::setThumbnailCacheMegabytes(int megabytes)
 {
-    const int clamped = clampInt(megabytes, 10, 1000);
+    const int clamped = clampInt(megabytes, MinThumbnailCacheMb, MaxThumbnailCacheMb);
     if (clamped == thumbnailCacheMegabytes())
         return;
     m_settings->setValue(KeyThumbnailCacheMb, clamped);
