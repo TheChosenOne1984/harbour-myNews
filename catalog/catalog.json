@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updated": "2026-09-07",
+  "updated": "2026-10-16",
   "_comment": "Curated starter list for myNews.",
   "categories": [
     {
@@ -12,6 +12,76 @@
       "id": "national",
       "name": "Germany",
       "name_de": "Deutschland"
+    },
+    {
+      "id": "schleswig-holstein",
+      "name": "Schleswig-Holstein",
+      "name_de": "Schleswig-Holstein"
+    },
+    {
+      "id": "niedersachsen",
+      "name": "Lower Saxony",
+      "name_de": "Niedersachsen"
+    },
+    {
+      "id": "nordrhein-westfalen",
+      "name": "North Rhine-Westphalia",
+      "name_de": "Nordrhein-Westfalen"
+    },
+    {
+      "id": "hessen",
+      "name": "Hesse",
+      "name_de": "Hessen"
+    },
+    {
+      "id": "mecklenburg-vorpommern",
+      "name": "Mecklenburg-Western Pomerania",
+      "name_de": "Mecklenburg-Vorpommern"
+    },
+    {
+      "id": "berlin",
+      "name": "Berlin",
+      "name_de": "Berlin"
+    },
+    {
+      "id": "brandenburg",
+      "name": "Brandenburg",
+      "name_de": "Brandenburg"
+    },
+    {
+      "id": "sachsen",
+      "name": "Saxony",
+      "name_de": "Sachsen"
+    },
+    {
+      "id": "sachsen-anhalt",
+      "name": "Saxony-Anhalt",
+      "name_de": "Sachsen-Anhalt"
+    },
+    {
+      "id": "bayern",
+      "name": "Bavaria",
+      "name_de": "Bayern"
+    },
+    {
+      "id": "baden-wuerttemberg",
+      "name": "Baden-Württemberg",
+      "name_de": "Baden-Württemberg"
+    },
+    {
+      "id": "international",
+      "name": "International",
+      "name_de": "International"
+    },
+    {
+      "id": "usa",
+      "name": "United States",
+      "name_de": "USA"
+    },
+    {
+      "id": "uk",
+      "name": "United Kingdom",
+      "name_de": "Großbritannien"
     }
   ],
   "feeds": [
@@ -203,6 +273,339 @@
       "site_url": "https://www.heise.de/",
       "description": "Technology and digital policy news.",
       "description_de": "Nachrichten zu Technik und Digitalpolitik."
+    },
+    {
+      "url": "https://rss.golem.de/rss.php?feed=RSS2.0",
+      "title": "Golem.de",
+      "lang": "de",
+      "category": "national",
+      "site_url": "https://www.golem.de/",
+      "description": "News site for IT and technology.",
+      "description_de": "Nachrichtenportal für IT und Technik."
+    },
+    {
+      "url": "https://www.kn-online.de/arc/outboundfeeds/rss/",
+      "title": "Kieler Nachrichten",
+      "lang": "de",
+      "category": "schleswig-holstein",
+      "site_url": "https://www.kn-online.de/",
+      "description": "Daily newspaper from Kiel.",
+      "description_de": "Tageszeitung aus Kiel."
+    },
+    {
+      "url": "https://www.shz.de/deutschland-welt/schleswig-holstein/rss",
+      "title": "shz Schleswig-Holstein",
+      "lang": "de",
+      "category": "schleswig-holstein",
+      "site_url": "https://www.shz.de/",
+      "description": "State news for Schleswig-Holstein from the shz newspaper group.",
+      "description_de": "Landesnachrichten für Schleswig-Holstein von der Zeitungsgruppe shz."
+    },
+    {
+      "url": "https://www.weser-kurier.de/niedersachsen/?view=rss",
+      "title": "Weser-Kurier Niedersachsen",
+      "lang": "de",
+      "category": "niedersachsen",
+      "site_url": "https://www.weser-kurier.de/niedersachsen/",
+      "description": "Lower Saxony news from the Bremen daily newspaper.",
+      "description_de": "Niedersachsen-Nachrichten der Bremer Tageszeitung."
+    },
+    {
+      "url": "https://www.haz.de/arc/outboundfeeds/rss/category/lokales/hannover/",
+      "title": "HAZ Hannover",
+      "lang": "de",
+      "category": "niedersachsen",
+      "site_url": "https://www.haz.de/lokales/hannover/",
+      "description": "Local news for Hanover from the Hannoversche Allgemeine Zeitung.",
+      "description_de": "Lokalnachrichten für Hannover aus der Hannoverschen Allgemeinen Zeitung."
+    },
+    {
+      "url": "https://www.nrz.de/rss",
+      "title": "NRZ",
+      "lang": "de",
+      "category": "nordrhein-westfalen",
+      "site_url": "https://www.nrz.de/",
+      "description": "Daily newspaper for the Lower Rhine region.",
+      "description_de": "Tageszeitung für den Niederrhein."
+    },
+    {
+      "url": "https://www1.wdr.de/nrw/rheinland/uebersicht-rheinland-100.feed",
+      "title": "WDR Rheinland",
+      "lang": "de",
+      "category": "nordrhein-westfalen",
+      "site_url": "https://www1.wdr.de/nrw/rheinland/",
+      "description": "Regional news from the public broadcaster for the Rhineland.",
+      "description_de": "Regionalnachrichten des öffentlich-rechtlichen Senders für das Rheinland."
+    },
+    {
+      "url": "https://www1.wdr.de/nrw/koeln/uebersicht-koeln-100.feed",
+      "title": "WDR Köln",
+      "lang": "de",
+      "category": "nordrhein-westfalen",
+      "site_url": "https://www1.wdr.de/nrw/koeln/",
+      "description": "Regional news from the public broadcaster for Cologne.",
+      "description_de": "Regionalnachrichten des öffentlich-rechtlichen Senders für Köln."
+    },
+    {
+      "url": "https://www1.wdr.de/nrw/ruhrgebiet/uebersicht-ruhrgebiet-100.feed",
+      "title": "WDR Ruhrgebiet",
+      "lang": "de",
+      "category": "nordrhein-westfalen",
+      "site_url": "https://www1.wdr.de/nrw/ruhrgebiet/",
+      "description": "Regional news from the public broadcaster for the Ruhr area.",
+      "description_de": "Regionalnachrichten des öffentlich-rechtlichen Senders für das Ruhrgebiet."
+    },
+    {
+      "url": "https://www1.wdr.de/nrw/ostwestfalen-lippe/uebersicht-westfalen-lippe-100.feed",
+      "title": "WDR Ostwestfalen-Lippe",
+      "lang": "de",
+      "category": "nordrhein-westfalen",
+      "site_url": "https://www1.wdr.de/nrw/ostwestfalen-lippe/",
+      "description": "Regional news from the public broadcaster for East Westphalia-Lippe.",
+      "description_de": "Regionalnachrichten des öffentlich-rechtlichen Senders für Ostwestfalen-Lippe."
+    },
+    {
+      "url": "https://www.hessenschau.de/index.rss",
+      "title": "hessenschau",
+      "lang": "de",
+      "category": "hessen",
+      "site_url": "https://www.hessenschau.de/",
+      "description": "Regional news from the public broadcaster for Hesse.",
+      "description_de": "Regionalnachrichten des öffentlich-rechtlichen Senders für Hessen."
+    },
+    {
+      "url": "https://www.faz.net/rss/aktuell/rhein-main/region-und-hessen/",
+      "title": "FAZ Rhein-Main und Hessen",
+      "lang": "de",
+      "category": "hessen",
+      "site_url": "https://www.faz.net/aktuell/rhein-main/",
+      "description": "Regional news for the Rhine-Main area and Hesse from the national daily.",
+      "description_de": "Regionalnachrichten für Rhein-Main und Hessen aus der überregionalen Tageszeitung."
+    },
+    {
+      "url": "https://www.faz.net/rss/aktuell/rhein-main/frankfurt/",
+      "title": "FAZ Frankfurt",
+      "lang": "de",
+      "category": "hessen",
+      "site_url": "https://www.faz.net/aktuell/rhein-main/frankfurt/",
+      "description": "Local news for Frankfurt am Main from the national daily.",
+      "description_de": "Lokalnachrichten für Frankfurt am Main aus der überregionalen Tageszeitung."
+    },
+    {
+      "url": "https://www.ostsee-zeitung.de/arc/outboundfeeds/rss/category/mecklenburg-vorpommern/",
+      "title": "Ostsee-Zeitung Mecklenburg-Vorpommern",
+      "lang": "de",
+      "category": "mecklenburg-vorpommern",
+      "site_url": "https://www.ostsee-zeitung.de/",
+      "description": "State news for Mecklenburg-Western Pomerania from the Rostock daily newspaper.",
+      "description_de": "Landesnachrichten für Mecklenburg-Vorpommern aus der Rostocker Tageszeitung."
+    },
+    {
+      "url": "https://www.ostsee-zeitung.de/arc/outboundfeeds/rss/category/lokales/rostock/",
+      "title": "Ostsee-Zeitung Rostock",
+      "lang": "de",
+      "category": "mecklenburg-vorpommern",
+      "site_url": "https://www.ostsee-zeitung.de/lokales/rostock/",
+      "description": "Local news for Rostock from the Rostock daily newspaper.",
+      "description_de": "Lokalnachrichten für Rostock aus der Rostocker Tageszeitung."
+    },
+    {
+      "url": "https://www.ostsee-zeitung.de/arc/outboundfeeds/rss/category/lokales/schwerin/",
+      "title": "Ostsee-Zeitung Schwerin",
+      "lang": "de",
+      "category": "mecklenburg-vorpommern",
+      "site_url": "https://www.ostsee-zeitung.de/lokales/schwerin/",
+      "description": "Local news for Schwerin from the Rostock daily newspaper.",
+      "description_de": "Lokalnachrichten für Schwerin aus der Rostocker Tageszeitung."
+    },
+    {
+      "url": "https://www.morgenpost.de/berlin/rss",
+      "title": "Berliner Morgenpost",
+      "lang": "de",
+      "category": "berlin",
+      "site_url": "https://www.morgenpost.de/berlin/",
+      "description": "Berlin news from the city's daily newspaper.",
+      "description_de": "Berlin-Nachrichten der Berliner Tageszeitung."
+    },
+    {
+      "url": "https://www.maz-online.de/arc/outboundfeeds/rss/category/brandenburg/",
+      "title": "MAZ Brandenburg",
+      "lang": "de",
+      "category": "brandenburg",
+      "site_url": "https://www.maz-online.de/brandenburg/",
+      "description": "State news for Brandenburg from the Märkische Allgemeine daily.",
+      "description_de": "Landesnachrichten für Brandenburg aus der Märkischen Allgemeinen."
+    },
+    {
+      "url": "https://www.maz-online.de/arc/outboundfeeds/rss/tags_slug/potsdam/",
+      "title": "MAZ Potsdam",
+      "lang": "de",
+      "category": "brandenburg",
+      "site_url": "https://www.maz-online.de/lokales/potsdam/",
+      "description": "Local news for Potsdam from the Märkische Allgemeine daily.",
+      "description_de": "Lokalnachrichten für Potsdam aus der Märkischen Allgemeinen."
+    },
+    {
+      "url": "https://www.mdr.de/nachrichten/sachsen/index~rss2.xml",
+      "title": "MDR Sachsen",
+      "lang": "de",
+      "category": "sachsen",
+      "site_url": "https://www.mdr.de/nachrichten/sachsen/",
+      "description": "Regional news from the public broadcaster for Saxony.",
+      "description_de": "Regionalnachrichten des öffentlich-rechtlichen Senders für Sachsen."
+    },
+    {
+      "url": "https://www.dnn.de/arc/outboundfeeds/rss/tags_slug/dresden/",
+      "title": "DNN Dresden",
+      "lang": "de",
+      "category": "sachsen",
+      "site_url": "https://www.dnn.de/",
+      "description": "Local news for Dresden from the Dresdner Neueste Nachrichten daily.",
+      "description_de": "Lokalnachrichten für Dresden aus den Dresdner Neuesten Nachrichten."
+    },
+    {
+      "url": "https://www.mdr.de/nachrichten/sachsen-anhalt/index~rss2.xml",
+      "title": "MDR Sachsen-Anhalt",
+      "lang": "de",
+      "category": "sachsen-anhalt",
+      "site_url": "https://www.mdr.de/nachrichten/sachsen-anhalt/",
+      "description": "Regional news from the public broadcaster for Saxony-Anhalt.",
+      "description_de": "Regionalnachrichten des öffentlich-rechtlichen Senders für Sachsen-Anhalt."
+    },
+    {
+      "url": "https://rss.sueddeutsche.de/rss/Bayern",
+      "title": "SZ Bayern",
+      "lang": "de",
+      "category": "bayern",
+      "site_url": "https://www.sueddeutsche.de/bayern",
+      "description": "Bavaria news from the national daily.",
+      "description_de": "Bayern-Nachrichten der überregionalen Tageszeitung."
+    },
+    {
+      "url": "https://rss.sueddeutsche.de/rss/Muenchen",
+      "title": "SZ München",
+      "lang": "de",
+      "category": "bayern",
+      "site_url": "https://www.sueddeutsche.de/muenchen",
+      "description": "Munich news from the national daily.",
+      "description_de": "München-Nachrichten der überregionalen Tageszeitung."
+    },
+    {
+      "url": "https://nachrichtenfeeds.br.de/rdf/boards/UZlNk5T",
+      "title": "BR24 Mittelfranken",
+      "lang": "de",
+      "category": "bayern",
+      "site_url": "https://www.br24.de/",
+      "description": "Regional news for Middle Franconia from the public broadcaster.",
+      "description_de": "Regionalnachrichten für Mittelfranken vom öffentlich-rechtlichen Sender."
+    },
+    {
+      "url": "https://nachrichtenfeeds.br.de/rdf/boards/UZlLX5M",
+      "title": "BR24 Niederbayern",
+      "lang": "de",
+      "category": "bayern",
+      "site_url": "https://www.br24.de/",
+      "description": "Regional news for Lower Bavaria from the public broadcaster.",
+      "description_de": "Regionalnachrichten für Niederbayern vom öffentlich-rechtlichen Sender."
+    },
+    {
+      "url": "https://nachrichtenfeeds.br.de/rdf/boards/UZlJdUE",
+      "title": "BR24 Oberbayern",
+      "lang": "de",
+      "category": "bayern",
+      "site_url": "https://www.br24.de/",
+      "description": "Regional news for Upper Bavaria from the public broadcaster.",
+      "description_de": "Regionalnachrichten für Oberbayern vom öffentlich-rechtlichen Sender."
+    },
+    {
+      "url": "https://nachrichtenfeeds.br.de/rdf/boards/UZlNKwl",
+      "title": "BR24 Oberfranken",
+      "lang": "de",
+      "category": "bayern",
+      "site_url": "https://www.br24.de/",
+      "description": "Regional news for Upper Franconia from the public broadcaster.",
+      "description_de": "Regionalnachrichten für Oberfranken vom öffentlich-rechtlichen Sender."
+    },
+    {
+      "url": "https://nachrichtenfeeds.br.de/rdf/boards/UZlL3V1",
+      "title": "BR24 Oberpfalz",
+      "lang": "de",
+      "category": "bayern",
+      "site_url": "https://www.br24.de/",
+      "description": "Regional news for the Upper Palatinate from the public broadcaster.",
+      "description_de": "Regionalnachrichten für die Oberpfalz vom öffentlich-rechtlichen Sender."
+    },
+    {
+      "url": "https://nachrichtenfeeds.br.de/rdf/boards/UZlMIJH",
+      "title": "BR24 Schwaben",
+      "lang": "de",
+      "category": "bayern",
+      "site_url": "https://www.br24.de/",
+      "description": "Regional news for Swabia from the public broadcaster.",
+      "description_de": "Regionalnachrichten für Schwaben vom öffentlich-rechtlichen Sender."
+    },
+    {
+      "url": "https://nachrichtenfeeds.br.de/rdf/boards/UZlMw8z",
+      "title": "BR24 Unterfranken",
+      "lang": "de",
+      "category": "bayern",
+      "site_url": "https://www.br24.de/",
+      "description": "Regional news for Lower Franconia from the public broadcaster.",
+      "description_de": "Regionalnachrichten für Unterfranken vom öffentlich-rechtlichen Sender."
+    },
+    {
+      "url": "https://echtstuttgart.de/feed/",
+      "title": "Echt Stuttgart",
+      "lang": "de",
+      "category": "baden-wuerttemberg",
+      "site_url": "https://echtstuttgart.de/",
+      "description": "Online magazine for the Stuttgart region.",
+      "description_de": "Online-Magazin für die Region Stuttgart."
+    },
+    {
+      "url": "https://rss.nytimes.com/services/xml/rss/nyt/World.xml",
+      "title": "The New York Times – World",
+      "lang": "en",
+      "category": "international",
+      "site_url": "https://www.nytimes.com/section/world",
+      "description": "World news from the New York daily newspaper.",
+      "description_de": "Weltnachrichten der New Yorker Tageszeitung."
+    },
+    {
+      "url": "https://feeds.bbci.co.uk/news/world/rss.xml",
+      "title": "BBC News – World",
+      "lang": "en",
+      "category": "international",
+      "site_url": "https://www.bbc.co.uk/news/world",
+      "description": "World news from the British public broadcaster.",
+      "description_de": "Weltnachrichten des britischen öffentlich-rechtlichen Senders."
+    },
+    {
+      "url": "https://asiatimes.com/feed/",
+      "title": "Asia Times",
+      "lang": "en",
+      "category": "international",
+      "site_url": "https://asiatimes.com/",
+      "description": "Online publication covering news and current affairs across Asia.",
+      "description_de": "Online-Medium mit Nachrichten und Hintergründen aus ganz Asien."
+    },
+    {
+      "url": "https://rss.nytimes.com/services/xml/rss/nyt/US.xml",
+      "title": "The New York Times – U.S.",
+      "lang": "en",
+      "category": "usa",
+      "site_url": "https://www.nytimes.com/section/us",
+      "description": "US news from the New York daily newspaper.",
+      "description_de": "US-Nachrichten der New Yorker Tageszeitung."
+    },
+    {
+      "url": "https://feeds.bbci.co.uk/news/uk/rss.xml",
+      "title": "BBC News – UK",
+      "lang": "en",
+      "category": "uk",
+      "site_url": "https://www.bbc.co.uk/news/uk",
+      "description": "UK news from the British public broadcaster.",
+      "description_de": "Nachrichten aus Großbritannien vom britischen öffentlich-rechtlichen Sender."
     }
   ]
 }
