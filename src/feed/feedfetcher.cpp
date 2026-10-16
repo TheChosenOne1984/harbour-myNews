@@ -10,7 +10,13 @@
 namespace feed {
 namespace {
 
-const char *const AppVersion = "0.1.0";
+// From the .spec through the .pro. Builds without a spec -- tests, tools, a quick qmake
+// run -- say so instead of claiming a release they are not.
+#ifdef MYNEWS_VERSION
+const char *const AppVersion = MYNEWS_VERSION;
+#else
+const char *const AppVersion = "dev";
+#endif
 const char *const ProjectUrl = "https://github.com/kaiwiechers/myNews";
 
 QString hostKey(const QUrl &url)

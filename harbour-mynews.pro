@@ -24,6 +24,10 @@ QT += sql network
 
 QMAKE_CXXFLAGS += -std=c++17
 
+# The version lives in rpm/harbour-mynews.spec, which passes it as VERSION=. The
+# User-Agent names it (section 11), so it must not be a second copy kept by hand.
+!isEmpty(VERSION): DEFINES += MYNEWS_VERSION=\\\"$$VERSION\\\"
+
 SOURCES += \
     src/main.cpp \
     src/app/appcontroller.cpp \

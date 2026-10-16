@@ -1,7 +1,7 @@
 Name:       harbour-mynews
 Summary:    News reader that groups the same story across sources
-Version:    0.1.0
-Release:    2
+Version:    1.0.0
+Release:    1
 License:    BSD-3-Clause
 URL:        https://github.com/kaiwiechers/myNews
 Source0:    %{name}-%{version}.tar.bz2
@@ -27,7 +27,8 @@ into a single entry. No backend, no account, no telemetry.
 %setup -q -n %{name}-%{version}
 
 %build
-%qmake5
+# The version has one home, this file: the User-Agent reads it through the .pro.
+%qmake5 VERSION=%{version}
 %make_build
 
 %install
@@ -43,6 +44,9 @@ desktop-file-install --delete-original \
 %{_datadir}/icons/hicolor/*/apps/%{name}.png
 
 %changelog
+* Fri Oct 16 2026 Kai Wiechers <140900215+TheChosenOne1984@users.noreply.github.com> 1.0.0-1
+- First release.
+- Drop stock pictures a feed gives to all its articles; use the article's own image.
 * Fri Oct 16 2026 Kai Wiechers <140900215+TheChosenOne1984@users.noreply.github.com> 0.1.0-2
 - Request the Audio permission, so video in the article view has sound.
 - Keep stories listed when a feed is removed; re-cluster retitled articles.
