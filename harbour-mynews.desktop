@@ -7,6 +7,10 @@ Name=myNews
 Name[de]=myNews
 
 [X-Sailjail]
+# Internet  -- the feeds, article pages and their pictures, and the catalogue (after consent)
+# WebView   -- the built-in article view
+# Documents -- OPML import and export, which read and write ~/Documents
+# Audio     -- sound for video inside an article; Base.permission mutes every app otherwise
 Permissions=Internet;WebView;Documents;Audio
 OrganizationName=harbour-mynews
 ApplicationName=harbour-mynews
