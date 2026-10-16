@@ -266,6 +266,18 @@ private:
     /*! Recomputes lead article, published and member_count for one cluster. */
     bool refreshCluster(qint64 clusterId);
 
+    /*!
+     * Section 6.4/6.5: the cluster of the closest same-language article inside the time
+     * window, or -1 when none is within the threshold. Only articles that already belong
+     * to a cluster are candidates, so an article being re-clustered has to be detached
+     * first or it would find itself.
+     */
+    qint64 closestCluster(quint64 simhash, qint64 published, const QString &lang,
+                          const cluster::Params &params) const;
+
+    /*! A new, empty cluster; -1 on failure. */
+    qint64 createCluster(const QString &lang, qint64 published);
+
     /*! Repairs the given clusters, then deletes those left without members. */
     void repairClusters(const QVector<qint64> &clusterIds);
 

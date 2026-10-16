@@ -662,6 +662,8 @@ IngestResult FeedStore::ingest(qint64 feedId, const QVector<ParsedArticle> &arti
         if (existing.next()) {
             const qint64 id = existing.value(0).toLongLong();
             const QString storedTitle = existing.value(1).toString();
+            const QVariant storedCluster = existing.value(2);
+            const qint64 oldCluster = storedCluster.isNull() ? -1 : storedCluster.toLongLong();
 
             if (storedTitle == incoming.title) {
                 ++result.unchanged;
@@ -669,19 +671,62 @@ IngestResult FeedStore::ingest(qint64 feedId, const QVector<ParsedArticle> &arti
             }
 
             // Section 5: an existing article is updated, not re-inserted, and is only
-            // re-clustered when the title actually changed -- which it just did.
+            // re-clustered when the title actually changed -- which it just did. The hash
+            // is computed from the title alone, so a new title can mean a different story:
+            // a placeholder rewritten into the real headline, or a guid reused.
+            const quint64 simhash = cluster::simhash(cluster::clusterSubject(incoming.title));
+
+            // Detached first, or the article would find itself as its own closest match
+            // and never leave a cluster it no longer belongs to.
+            QSqlQuery detach(m_db);
+            detach.prepare(QStringLiteral("UPDATE article SET cluster_id = NULL WHERE id = ?"));
+            detach.addBindValue(id);
+            if (!detach.exec()) {
+                setError(QStringLiteral("cannot update article"), detach.lastError().text());
+                m_db.rollback();
+                return IngestResult();
+            }
+
+            qint64 clusterId = closestCluster(simhash, published, feed.lang, params);
+            if (clusterId >= 0) {
+                if (clusterId != oldCluster)
+                    ++result.clustersJoined;
+            } else {
+                // Nothing matches. If the article was alone in its cluster that cluster is
+                // free to keep; otherwise it starts one of its own.
+                bool oldClusterEmpty = false;
+                if (oldCluster >= 0) {
+                    QSqlQuery remaining(m_db);
+                    remaining.prepare(QStringLiteral(
+                        "SELECT COUNT(*) FROM article WHERE cluster_id = ?"));
+                    remaining.addBindValue(oldCluster);
+                    oldClusterEmpty = remaining.exec() && remaining.next()
+                        && remaining.value(0).toInt() == 0;
+                }
+                if (oldClusterEmpty) {
+                    clusterId = oldCluster;
+                } else {
+                    clusterId = createCluster(feed.lang, published);
+                    if (clusterId < 0) {
+                        m_db.rollback();
+                        return IngestResult();
+                    }
+                    ++result.clustersCreated;
+                }
+            }
+
             QSqlQuery update(m_db);
             update.prepare(QStringLiteral(
                 "UPDATE article SET title = ?, teaser = ?, link = ?, image_url = ?,"
-                "  published = ?, simhash = ? WHERE id = ?"));
+                "  published = ?, simhash = ?, cluster_id = ? WHERE id = ?"));
             update.addBindValue(incoming.title);
             update.addBindValue(incoming.teaser);
             update.addBindValue(link);
             update.addBindValue(incoming.imageUrl.isEmpty() ? QVariant()
                                                             : QVariant(incoming.imageUrl));
             update.addBindValue(published);
-            update.addBindValue(toSigned(cluster::simhash(
-                cluster::clusterSubject(incoming.title))));
+            update.addBindValue(toSigned(simhash));
+            update.addBindValue(clusterId);
             update.addBindValue(id);
             if (!update.exec()) {
                 setError(QStringLiteral("cannot update article"), update.lastError().text());
@@ -689,58 +734,24 @@ IngestResult FeedStore::ingest(qint64 feedId, const QVector<ParsedArticle> &arti
                 return IngestResult();
             }
             ++result.updated;
+            // Both ends: the cluster it joined gains a member and may want a new lead; the
+            // one it left may have lost its lead, or every member.
+            repairClusters({clusterId, oldCluster});
             continue;
         }
 
         const quint64 simhash = cluster::simhash(cluster::clusterSubject(incoming.title));
         const QString lang = feed.lang;
 
-        // Candidate selection (section 6.4): same language, inside the time window. The
-        // Hamming comparison happens here rather than in SQL because SQLite has no
-        // popcount -- and at a 48h window this is a few hundred rows, so a linear scan
-        // is the right shape. Do not add LSH.
-        QSqlQuery candidates(m_db);
-        candidates.prepare(QStringLiteral(
-            "SELECT id, cluster_id, simhash FROM article"
-            " WHERE cluster_id IS NOT NULL"
-            "   AND published BETWEEN ? AND ?"
-            "   AND ((lang IS NULL AND ? IS NULL) OR lang = ?)"));
-        candidates.addBindValue(published - params.windowSeconds);
-        candidates.addBindValue(published + params.windowSeconds);
-        candidates.addBindValue(lang.isEmpty() ? QVariant() : QVariant(lang));
-        candidates.addBindValue(lang.isEmpty() ? QVariant() : QVariant(lang));
-
-        qint64 bestCluster = -1;
-        int bestDistance = params.hammingThreshold + 1;
-        if (candidates.exec()) {
-            while (candidates.next()) {
-                const quint64 other =
-                    static_cast<quint64>(candidates.value(2).toLongLong());
-                const int distance = cluster::hammingDistance(simhash, other);
-                if (distance < bestDistance) {
-                    bestDistance = distance;
-                    bestCluster = candidates.value(1).toLongLong();
-                }
-            }
-        }
-
-        qint64 clusterId = -1;
-        if (bestCluster >= 0 && bestDistance <= params.hammingThreshold) {
-            clusterId = bestCluster;
+        qint64 clusterId = closestCluster(simhash, published, lang, params);
+        if (clusterId >= 0) {
             ++result.clustersJoined;
         } else {
-            QSqlQuery createCluster(m_db);
-            createCluster.prepare(QStringLiteral(
-                "INSERT INTO cluster (lang, published, member_count) VALUES (?, ?, 0)"));
-            createCluster.addBindValue(lang.isEmpty() ? QVariant() : QVariant(lang));
-            createCluster.addBindValue(published);
-            if (!createCluster.exec()) {
-                setError(QStringLiteral("cannot create cluster"),
-                         createCluster.lastError().text());
+            clusterId = createCluster(lang, published);
+            if (clusterId < 0) {
                 m_db.rollback();
                 return IngestResult();
             }
-            clusterId = createCluster.lastInsertId().toLongLong();
             ++result.clustersCreated;
         }
 
@@ -811,6 +822,53 @@ bool FeedStore::refreshCluster(qint64 clusterId)
     update.addBindValue(clusterId);
     update.addBindValue(clusterId);
     return update.exec();
+}
+
+qint64 FeedStore::closestCluster(quint64 simhash, qint64 published, const QString &lang,
+                                 const cluster::Params &params) const
+{
+    // Candidate selection (section 6.4): same language, inside the time window. The
+    // Hamming comparison happens here rather than in SQL because SQLite has no popcount --
+    // and at a 48h window this is a few hundred rows, so a linear scan is the right shape.
+    // Do not add LSH.
+    QSqlQuery candidates(m_db);
+    candidates.prepare(QStringLiteral(
+        "SELECT id, cluster_id, simhash FROM article"
+        " WHERE cluster_id IS NOT NULL"
+        "   AND published BETWEEN ? AND ?"
+        "   AND ((lang IS NULL AND ? IS NULL) OR lang = ?)"));
+    candidates.addBindValue(published - params.windowSeconds);
+    candidates.addBindValue(published + params.windowSeconds);
+    candidates.addBindValue(lang.isEmpty() ? QVariant() : QVariant(lang));
+    candidates.addBindValue(lang.isEmpty() ? QVariant() : QVariant(lang));
+
+    qint64 bestCluster = -1;
+    int bestDistance = params.hammingThreshold + 1;
+    if (candidates.exec()) {
+        while (candidates.next()) {
+            const quint64 other = static_cast<quint64>(candidates.value(2).toLongLong());
+            const int distance = cluster::hammingDistance(simhash, other);
+            if (distance < bestDistance) {
+                bestDistance = distance;
+                bestCluster = candidates.value(1).toLongLong();
+            }
+        }
+    }
+    return bestDistance <= params.hammingThreshold ? bestCluster : -1;
+}
+
+qint64 FeedStore::createCluster(const QString &lang, qint64 published)
+{
+    QSqlQuery query(m_db);
+    query.prepare(QStringLiteral(
+        "INSERT INTO cluster (lang, published, member_count) VALUES (?, ?, 0)"));
+    query.addBindValue(lang.isEmpty() ? QVariant() : QVariant(lang));
+    query.addBindValue(published);
+    if (!query.exec()) {
+        setError(QStringLiteral("cannot create cluster"), query.lastError().text());
+        return -1;
+    }
+    return query.lastInsertId().toLongLong();
 }
 
 void FeedStore::repairClusters(const QVector<qint64> &clusterIds)

@@ -35,6 +35,9 @@ private slots:
     void storesLanguagesWithoutRegion();
     void ingestDeduplicatesByGuid();
     void ingestUpdatesChangedTitleAndRehashes();
+    void changedTitleJoinsMatchingCluster();
+    void changedTitleLeavesClusterItNoLongerMatches();
+    void changedTitleReachesSearchIndex();
     void ingestFallsBackToFirstSeen();
     void clustersAcrossFeeds();
     void clusterMembersCarryTheirSourceName();
@@ -425,6 +428,79 @@ void TestFeedStore::ingestFallsBackToFirstSeen()
     const ArticleRecord stored = m_store->articlesInCluster(1).first();
     QCOMPARE(stored.published, m_now);
     QCOMPARE(stored.firstSeen, m_now);
+}
+
+void TestFeedStore::changedTitleJoinsMatchingCluster()
+{
+    const qint64 a = m_store->addFeed(QStringLiteral("https://example.invalid/t1"),
+                                      QString(), QStringLiteral("de"));
+    const qint64 b = m_store->addFeed(QStringLiteral("https://example.invalid/t2"),
+                                      QString(), QStringLiteral("de"));
+    const QString story = QStringLiteral("Landgericht eröffnet Verfahren gegen Xavier Naidoo");
+
+    m_store->ingest(a, {article(QStringLiteral("1"), story, m_now)}, m_now);
+    // Published first as a placeholder headline, which matches nothing.
+    m_store->ingest(b, {article(QStringLiteral("1"),
+        QStringLiteral("Eilmeldung aus dem Gerichtssaal folgt in Kürze"), m_now + 60)},
+        m_now + 60);
+    QCOMPARE(m_store->clusterSummaries().size(), 2);
+
+    // The publisher rewrites it into the real headline: now it is the same story.
+    const IngestResult result = m_store->ingest(
+        b, {article(QStringLiteral("1"), story, m_now + 60)}, m_now + 120);
+    QCOMPARE(result.updated, 1);
+    QCOMPARE(result.clustersJoined, 1);
+
+    const QVector<ClusterSummary> clusters = m_store->clusterSummaries();
+    QCOMPARE(clusters.size(), 1);
+    QCOMPARE(clusters.first().memberCount, 2);
+    QCOMPARE(clusters.first().sources.size(), 2);
+}
+
+void TestFeedStore::changedTitleLeavesClusterItNoLongerMatches()
+{
+    const qint64 a = m_store->addFeed(QStringLiteral("https://example.invalid/u1"),
+                                      QString(), QStringLiteral("de"));
+    const qint64 b = m_store->addFeed(QStringLiteral("https://example.invalid/u2"),
+                                      QString(), QStringLiteral("de"));
+    const QString story = QStringLiteral("Landgericht eröffnet Verfahren gegen Xavier Naidoo");
+
+    m_store->ingest(a, {article(QStringLiteral("1"), story, m_now)}, m_now);
+    m_store->ingest(b, {article(QStringLiteral("1"), story, m_now + 60)}, m_now + 60);
+    QCOMPARE(m_store->clusterSummaries().size(), 1);
+
+    // Feed a reuses the guid for a different story -- it must not drag b's along.
+    const IngestResult result = m_store->ingest(a, {article(QStringLiteral("1"),
+        QStringLiteral("Hafenfähre fällt wegen Sturmflut den ganzen Tag aus"), m_now)},
+        m_now + 120);
+    QCOMPARE(result.updated, 1);
+    QCOMPARE(result.clustersCreated, 1);
+
+    const QVector<ClusterSummary> clusters = m_store->clusterSummaries();
+    QCOMPARE(clusters.size(), 2);
+    for (const ClusterSummary &cluster : clusters) {
+        QCOMPARE(cluster.memberCount, 1);
+        // The cluster that kept b's article has to lead with it, not with a's.
+        ArticleRecord lead;
+        QVERIFY(m_store->articleById(cluster.leadArticleId, &lead));
+        QCOMPARE(lead.title, cluster.title);
+    }
+}
+
+void TestFeedStore::changedTitleReachesSearchIndex()
+{
+    if (!m_store->hasFullTextSearch())
+        QSKIP("FTS5 unavailable");
+
+    const qint64 feedId = m_store->addFeed(QStringLiteral("https://example.invalid/v"),
+                                           QString(), QStringLiteral("de"));
+    m_store->ingest(feedId, {article(QStringLiteral("1"),
+        QStringLiteral("Großbrand in der Hamburger Speicherstadt"), m_now)}, m_now);
+    m_store->ingest(feedId, {article(QStringLiteral("1"),
+        QStringLiteral("Großfeuer in der Hamburger Hafencity"), m_now)}, m_now + 60);
+
+    QCOMPARE(m_store->search(QStringLiteral("Hafencity")).size(), 1);
+    QCOMPARE(m_store->search(QStringLiteral("Speicherstadt")).size(), 0);
 }
 
 void TestFeedStore::clustersAcrossFeeds()
