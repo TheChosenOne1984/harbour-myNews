@@ -1,9 +1,9 @@
 # Implementation plan for the audit findings
 
-Derived from [AUDIT.md](AUDIT.md) at commit `5c980e5`. Ordered by urgency, then by what
+Derived from [AUDIT.md](AUDIT.md) at commit `8f1cfa6`. Ordered by urgency, then by what
 depends on what.
 
-> **Status: all fifteen packages done**, `eb4e254`..`9409140`. The four questions in
+> **Status: all fifteen packages done**, `4db25f6`..`8471604`. The four questions in
 > stage 4 were answered: OPML finished and permitted, search shipped, ConnectTimeoutMs
 > deleted, consent prompt reworded rather than re-asked. Outcomes and the two deviations
 > from this plan are recorded at the end.
@@ -267,7 +267,7 @@ Nothing else in this plan depends on hardware.
 
 ## Outcome
 
-Fifteen packages, thirteen commits, `eb4e254`..`9409140`. 191 tests at the start, 214 at
+Fifteen packages, thirteen commits, `4db25f6`..`8471604`. 191 tests at the start, 214 at
 the end; Harbour clean throughout.
 
 Two places where the work departed from this plan, both deliberate:

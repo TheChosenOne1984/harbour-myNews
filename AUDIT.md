@@ -1,6 +1,6 @@
 # Code audit — myNews
 
-Full read of `src/`, `qml/`, `tools/`, packaging and build files at commit `5c980e5`.
+Full read of `src/`, `qml/`, `tools/`, packaging and build files at commit `8f1cfa6`.
 Nothing in this report has been applied; every item is a proposal.
 
 Where a finding could be settled by running something rather than by reading, it was.

@@ -254,7 +254,7 @@ Ruled out, each by experiment rather than argument:
 * the view sitting below a `PageHeader` at non-zero y (filled the page; unchanged),
 * `layers.async-pan-zoom.enabled` and `apz.enabled` (set false; unchanged),
 * the gesture itself -- programmatic scrolling displaces the layer identically,
-* **our own code**: commit `5c980e5`, from before the audit work, hangs exactly the same
+* **our own code**: commit `8f1cfa6`, from before the audit work, hangs exactly the same
   way. Whatever this is, it is not something the app grew,
 * **pointer delivery in the VM**: every other part of the app -- list, pulley, page stack
   -- responds to drags normally in the same session.
