@@ -7,6 +7,6 @@ Name=myNews
 Name[de]=myNews
 
 [X-Sailjail]
-Permissions=Internet;WebView;Documents
+Permissions=Internet;WebView;Documents;Audio
 OrganizationName=harbour-mynews
 ApplicationName=harbour-mynews

@@ -1,7 +1,7 @@
 Name:       harbour-mynews
 Summary:    News reader that groups the same story across sources
 Version:    0.1.0
-Release:    1
+Release:    2
 License:    BSD-3-Clause
 URL:        https://github.com/kaiwiechers/myNews
 Source0:    %{name}-%{version}.tar.bz2
@@ -43,5 +43,9 @@ desktop-file-install --delete-original \
 %{_datadir}/icons/hicolor/*/apps/%{name}.png
 
 %changelog
+* Fri Oct 16 2026 Kai Wiechers <140900215+TheChosenOne1984@users.noreply.github.com> 0.1.0-2
+- Request the Audio permission, so video in the article view has sound.
+- Keep stories listed when a feed is removed; re-cluster retitled articles.
+- Refresh on start; apply the chosen UI language on start, to dates and the catalogue.
 * Mon Sep 07 2026 Kai Wiechers <140900215+TheChosenOne1984@users.noreply.github.com> 0.1.0-1
 - Project skeleton: build, packaging, Sailjail, and runtime UI language switching.

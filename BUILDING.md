@@ -112,7 +112,7 @@ here. The decision lives in a plain INI file, so write it directly:
 ssh $SSHOPT -p 2223 root@127.0.0.1 '
   systemctl stop sailjaild
   sed -i "/\[harbour-mynews\]/,/^$/{s/^Allowed=0/Allowed=1/;
-          s/^Granted=$/Granted=Internet;WebView;Documents;/}" \
+          s/^Granted=$/Granted=Internet;WebView;Documents;Audio;/}" \
       /home/.system/var/lib/sailjail/settings/user-100000.settings
   systemctl start sailjaild'
 ```
