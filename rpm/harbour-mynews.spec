@@ -1,7 +1,7 @@
 Name:       harbour-mynews
 Summary:    News reader that groups the same story across sources
 Version:    1.0.0
-Release:    1
+Release:    2
 License:    BSD-3-Clause
 URL:        https://github.com/TheChosenOne1984/harbour-myNews
 Source0:    %{name}-%{version}.tar.bz2
@@ -44,6 +44,8 @@ desktop-file-install --delete-original \
 %{_datadir}/icons/hicolor/*/apps/%{name}.png
 
 %changelog
+* Fri Oct 16 2026 Kai Wiechers <140900215+TheChosenOne1984@users.noreply.github.com> 1.0.0-2
+- New application icon.
 * Fri Oct 16 2026 Kai Wiechers <140900215+TheChosenOne1984@users.noreply.github.com> 1.0.0-1
 - First release.
 - Drop stock pictures a feed gives to all its articles; use the article's own image.

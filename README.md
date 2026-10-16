@@ -1,3 +1,5 @@
+<p align="center"><img src="artwork/myNews_Logo.png" alt="myNews" width="200"></p>
+
 # myNews
 
 A news reader for Sailfish OS that groups the same story across sources. When NDR, MOPO
