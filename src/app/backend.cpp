@@ -222,7 +222,7 @@ void Backend::reloadFeeds()
     emitFeeds();
 }
 
-void Backend::refreshFeeds(int hammingThreshold, int windowHours)
+void Backend::refreshFeeds(int hammingThreshold, int windowHours, int retentionDays)
 {
     if (!m_refresher || m_busy)
         return;
@@ -235,6 +235,9 @@ void Backend::refreshFeeds(int hammingThreshold, int windowHours)
     params.hammingThreshold = hammingThreshold;
     params.windowSeconds = static_cast<qint64>(windowHours) * 3600;
     m_refresher->setClusterParams(params);
+    // The same cutoff the purge on start applies, so nothing is stored only to be
+    // deleted again.
+    m_refresher->setMaxArticleAge(static_cast<qint64>(retentionDays) * 24 * 3600);
 
     setBusy(true);
     m_refresher->refreshDue(nowSeconds());

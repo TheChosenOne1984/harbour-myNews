@@ -43,6 +43,7 @@ private slots:
     void migrationResetsSharedPlaceholderImages();
     void markClusterReadCoversEveryMember();
     void ingestFallsBackToFirstSeen();
+    void ingestSkipsArticlesOlderThanRetention();
     void clustersAcrossFeeds();
     void clusterMembersCarryTheirSourceName();
     void ingestBlanksUnusableLinks();
@@ -636,6 +637,37 @@ void TestFeedStore::markClusterReadCoversEveryMember()
     QCOMPARE(m_store->unreadCount(), 1);
     QCOMPARE(m_store->markClusterRead(clusterId, false), 2);
     QCOMPARE(m_store->unreadCount(), 3);
+}
+
+void TestFeedStore::ingestSkipsArticlesOlderThanRetention()
+{
+    // Seen at WDR, NRZ and MDR: a feed that keeps evergreen items years old -- "Lokalzeit
+    // aus Köln - Alle Videos" from 2020. Stored, it was purged on the next start and
+    // stored again on the next refresh, every time.
+    const qint64 feedId = m_store->addFeed(QStringLiteral("https://example.invalid/old"),
+                                           QString(), QStringLiteral("de"));
+    const qint64 day = 24 * 3600;
+    ParsedArticle undated = article(QStringLiteral("3"),
+        QStringLiteral("Ohne Datum, also gilt der Zeitpunkt des ersten Abrufs"), 0);
+
+    const IngestResult result = m_store->ingest(feedId, {
+        article(QStringLiteral("1"), QStringLiteral("Lokalzeit aus Köln - Alle Videos"),
+                m_now - 2151 * day),
+        article(QStringLiteral("2"), QStringLiteral("Frische Meldung von heute Morgen"),
+                m_now - 3600),
+        undated,
+    }, m_now, cluster::Params(), 14 * day);
+
+    QCOMPARE(result.tooOld, 1);
+    QCOMPARE(result.inserted, 2);
+    QCOMPARE(m_store->unreadCount(), 2);
+
+    // No limit keeps everything, which is what the tools rely on.
+    const IngestResult unlimited = m_store->ingest(feedId, {
+        article(QStringLiteral("1"), QStringLiteral("Lokalzeit aus Köln - Alle Videos"),
+                m_now - 2151 * day)}, m_now);
+    QCOMPARE(unlimited.tooOld, 0);
+    QCOMPARE(unlimited.inserted, 1);
 }
 
 void TestFeedStore::clustersAcrossFeeds()

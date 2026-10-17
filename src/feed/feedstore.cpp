@@ -664,7 +664,8 @@ struct Candidate
 } // namespace
 
 IngestResult FeedStore::ingest(qint64 feedId, const QVector<ParsedArticle> &articles,
-                               qint64 now, const cluster::Params &params)
+                               qint64 now, const cluster::Params &params,
+                               qint64 maxAgeSeconds)
 {
     IngestResult result;
 
@@ -683,6 +684,16 @@ IngestResult FeedStore::ingest(qint64 feedId, const QVector<ParsedArticle> &arti
         // Section 5: fall back to first-seen when the feed gave no usable date, so an
         // article without a timestamp still sorts and still clusters.
         const qint64 published = incoming.published > 0 ? incoming.published : now;
+
+        // An article the retention purge would delete on the next start is not worth
+        // storing now. Some feeds carry evergreen items years old, and without this they
+        // were stored on every refresh and purged on every start, round and round. Only
+        // a date the feed gave counts: an undated item is "now" and always kept.
+        if (maxAgeSeconds > 0 && incoming.published > 0
+            && incoming.published < now - maxAgeSeconds) {
+            ++result.tooOld;
+            continue;
+        }
 
         // A link the app will not dereference is worse than no link at all: stored, it
         // would reach the in-process browser engine and the system's URL handler

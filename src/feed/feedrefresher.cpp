@@ -74,7 +74,8 @@ void FeedRefresher::onFetchFinished(const FeedFetcher::Result &result)
             m_store->recordFetchFailure(result.id, result.httpStatus, m_now);
         } else {
             m_store->updateFeedMetadata(result.id, parsed);
-            ingested = m_store->ingest(result.id, parsed.articles, m_now, m_params);
+            ingested = m_store->ingest(result.id, parsed.articles, m_now, m_params,
+                                       m_maxArticleAge);
 
             m_summary.articlesInserted += ingested.inserted;
             m_summary.articlesUpdated += ingested.updated;

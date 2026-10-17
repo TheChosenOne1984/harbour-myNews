@@ -43,6 +43,9 @@ public:
     void setClusterParams(const cluster::Params &params) { m_params = params; }
     cluster::Params clusterParams() const { return m_params; }
 
+    /*! Articles dated further back than this are not stored (retention, §4). 0: no limit. */
+    void setMaxArticleAge(qint64 seconds) { m_maxArticleAge = seconds; }
+
     /*! Refreshes every enabled feed whose backoff has expired. */
     void refreshDue(qint64 now);
 
@@ -63,6 +66,7 @@ private:
     FeedStore *m_store;
     FeedFetcher *m_fetcher;
     cluster::Params m_params;
+    qint64 m_maxArticleAge = 0;
     QSet<qint64> m_outstanding;
     Summary m_summary;
     qint64 m_now = 0;

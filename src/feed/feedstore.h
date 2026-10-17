@@ -127,6 +127,7 @@ struct IngestResult
     int unchanged = 0;
     int clustersCreated = 0;
     int clustersJoined = 0;
+    int tooOld = 0;      //!< dated before the retention cutoff, so not stored at all
 
     int seen() const { return inserted + updated + unchanged; }
 };
@@ -211,9 +212,13 @@ public:
      *
      * Section 5: an article already stored is updated rather than re-inserted, and is
      * only re-clustered when its title changed. Runs in a single transaction.
+     *
+     * \a maxAgeSeconds, when positive, skips articles the feed dates further back than
+     * that: the retention purge would only delete them again. 0 keeps everything.
      */
     IngestResult ingest(qint64 feedId, const QVector<ParsedArticle> &articles, qint64 now,
-                        const cluster::Params &params = cluster::Params());
+                        const cluster::Params &params = cluster::Params(),
+                        qint64 maxAgeSeconds = 0);
 
     /*! Clusters newest first -- the feed page's model. */
     QVector<ClusterRecord> clusters(int limit = 100, int offset = 0) const;

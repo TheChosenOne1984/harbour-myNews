@@ -66,7 +66,7 @@ public slots:
     void markClusterRead(qint64 clusterId, bool read);
     void markAllRead();
 
-    void refreshFeeds(int hammingThreshold, int windowHours);
+    void refreshFeeds(int hammingThreshold, int windowHours, int retentionDays);
     void refreshCatalog(const QString &url, bool force);
 
     void subscribe(const QString &url, const QString &title, const QString &lang,

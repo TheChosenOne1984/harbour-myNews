@@ -288,7 +288,8 @@ void AppController::refresh()
         return;
     QMetaObject::invokeMethod(m_backend, "refreshFeeds", Qt::QueuedConnection,
                               Q_ARG(int, m_settings->clusterThreshold()),
-                              Q_ARG(int, m_settings->clusterWindowHours()));
+                              Q_ARG(int, m_settings->clusterWindowHours()),
+                              Q_ARG(int, m_settings->retentionDays()));
 }
 
 bool AppController::needsCatalogConsent() const
