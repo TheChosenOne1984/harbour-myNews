@@ -66,12 +66,25 @@ Page {
 
         BackgroundItem {
             anchors { left: parent.left; right: toTop.left; top: parent.top; bottom: parent.bottom }
-            onClicked: pageStack.push(Qt.resolvedUrl("FilterPage.qml"))
+            onClicked: page.openFilter()
 
-            Label {
+            // The icon is what says "this is a button": as plain text the bar read as a
+            // status line, and readers did not find the filter through it.
+            Icon {
+                id: filterIcon
                 anchors {
                     left: parent.left
                     leftMargin: Theme.horizontalPageMargin
+                    verticalCenter: parent.verticalCenter
+                }
+                source: "image://theme/icon-m-levels"
+                highlighted: parent.highlighted
+            }
+
+            Label {
+                anchors {
+                    left: filterIcon.right
+                    leftMargin: Theme.paddingMedium
                     right: parent.right
                     rightMargin: Theme.paddingMedium
                     verticalCenter: parent.verticalCenter
@@ -130,7 +143,7 @@ Page {
                 //: opens the page that narrows the article list
                 text: App.filterActive ? qsTr("Filter: %1").arg(App.filterSummary)
                                        : qsTr("Filter")
-                onClicked: pageStack.push(Qt.resolvedUrl("FilterPage.qml"))
+                onClicked: page.openFilter()
 
             }
             MenuItem {
@@ -427,9 +440,29 @@ Page {
     onStatusChanged: {
         if (status === PageStatus.Inactive) {
             savedContentY = listView.contentY
-        } else if (status === PageStatus.Active && savedContentY > 0) {
-            var maximum = Math.max(0, listView.contentHeight - listView.height)
-            listView.contentY = Math.min(savedContentY, maximum)
+        } else if (status === PageStatus.Active) {
+            if (savedContentY > 0) {
+                var maximum = Math.max(0, listView.contentHeight - listView.height)
+                listView.contentY = Math.min(savedContentY, maximum)
+            }
+            /*
+             * The filter as an attached page: a swipe to the left reaches it from anywhere
+             * in the list, which is the Sailfish way to keep a second page always at hand.
+             * The pulley alone only worked at the very top, hundreds of rows away.
+             *
+             * Re-attached on every activation, because pushing anything else from this page
+             * -- an article, the settings -- replaces the attached page.
+             */
+            if (pageStack.nextPage(page) === null)
+                pageStack.pushAttached(Qt.resolvedUrl("FilterPage.qml"))
         }
+    }
+
+    /*! Opens the filter: the attached page when it is there, so back stays a swipe. */
+    function openFilter() {
+        if (pageStack.nextPage(page) !== null)
+            pageStack.navigateForward()
+        else
+            pageStack.push(Qt.resolvedUrl("FilterPage.qml"))
     }
 }

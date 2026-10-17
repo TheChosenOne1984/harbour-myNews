@@ -47,6 +47,7 @@ desktop-file-install --delete-original \
 * Sat Oct 17 2026 Kai Wiechers <140900215+TheChosenOne1984@users.noreply.github.com> 1.1.0-1
 - Share an article's address from the list or the article view.
 - Skip articles older than the retention period when refreshing.
+- Reach the filter by swiping left from the article list.
 * Fri Oct 16 2026 Kai Wiechers <140900215+TheChosenOne1984@users.noreply.github.com> 1.0.0-3
 - Translate article ages ("jetzt", "5 Min.") in the German interface.
 * Fri Oct 16 2026 Kai Wiechers <140900215+TheChosenOne1984@users.noreply.github.com> 1.0.0-2
