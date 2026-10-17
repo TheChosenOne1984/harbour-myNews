@@ -272,6 +272,11 @@
         <extracomment>opens full-text search over downloaded articles</extracomment>
         <translation>Suche</translation>
     </message>
+    <message>
+        <source>Share</source>
+        <extracomment>shares the article&apos;s address through the system share sheet</extracomment>
+        <translation>Teilen</translation>
+    </message>
 </context>
 <context>
     <name>FilterPage</name>
@@ -587,6 +592,14 @@
         <source>Every article opens in the browser instead of inside myNews, and the setting is remembered. The built-in view keeps you in the app, but it runs a full browser engine inside it: switch this on if an article will not scroll, or if a page makes the app close unexpectedly.</source>
         <extracomment>explains the trade-off of the built-in article view</extracomment>
         <translation>Jeder Artikel öffnet sich im Browser statt in myNews, und die Einstellung bleibt erhalten. Die eingebaute Ansicht hält dich in der App, führt dafür aber eine vollständige Browser-Engine darin aus: Schalte dies ein, wenn sich ein Artikel nicht scrollen lässt oder sich die App bei einer Seite unerwartet schließt.</translation>
+    </message>
+</context>
+<context>
+    <name>ShareLink</name>
+    <message>
+        <source>Share article</source>
+        <extracomment>title of the system share sheet</extracomment>
+        <translation>Artikel teilen</translation>
     </message>
 </context>
 <context>

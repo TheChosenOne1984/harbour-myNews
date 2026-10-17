@@ -1,7 +1,7 @@
 Name:       harbour-mynews
 Summary:    News reader that groups the same story across sources
-Version:    1.0.0
-Release:    3
+Version:    1.1.0
+Release:    1
 License:    BSD-3-Clause
 URL:        https://github.com/TheChosenOne1984/harbour-myNews
 Source0:    %{name}-%{version}.tar.bz2
@@ -44,6 +44,9 @@ desktop-file-install --delete-original \
 %{_datadir}/icons/hicolor/*/apps/%{name}.png
 
 %changelog
+* Sat Oct 17 2026 Kai Wiechers <140900215+TheChosenOne1984@users.noreply.github.com> 1.1.0-1
+- Share an article's address from the list or the article view.
+- Skip articles older than the retention period when refreshing.
 * Fri Oct 16 2026 Kai Wiechers <140900215+TheChosenOne1984@users.noreply.github.com> 1.0.0-3
 - Translate article ages ("jetzt", "5 Min.") in the German interface.
 * Fri Oct 16 2026 Kai Wiechers <140900215+TheChosenOne1984@users.noreply.github.com> 1.0.0-2

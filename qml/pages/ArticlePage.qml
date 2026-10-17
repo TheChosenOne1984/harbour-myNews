@@ -1,5 +1,6 @@
 import QtQuick 2.0
 import Sailfish.Silica 1.0
+import "../components"
 
 /*
  * The article itself (plan section 9). No reader-mode extraction and no print-view
@@ -42,6 +43,8 @@ Page {
         if (status === PageStatus.Inactive && webViewLoader.item)
             webViewLoader.item.releaseMemory()
     }
+
+    ShareLink { id: shareLink }
 
     Loader {
         id: webViewLoader
@@ -111,6 +114,11 @@ Page {
                 visible: page.linkUsable
                 icon.source: "image://theme/icon-m-website"
                 onClicked: Qt.openUrlExternally(page.articleLink)
+            }
+            IconButton {
+                visible: page.linkUsable
+                icon.source: "image://theme/icon-m-share"
+                onClicked: shareLink.share(page.articleTitle, page.articleLink)
             }
         }
     }

@@ -82,6 +82,7 @@ INCLUDEPATH += $$PWD/src
 DISTFILES += \
     qml/harbour-mynews.qml \
     qml/cover/CoverPage.qml \
+    qml/components/ShareLink.qml \
     qml/components/SourcePill.qml \
     qml/components/Thumbnail.qml \
     qml/pages/AddFeedPage.qml \

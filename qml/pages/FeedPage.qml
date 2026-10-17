@@ -101,6 +101,9 @@ Page {
         }
     }
 
+    // One for the page rather than one per row: the share sheet is modal anyway.
+    ShareLink { id: shareLink }
+
     SilicaListView {
         id: listView
         anchors.fill: parent
@@ -220,6 +223,12 @@ Page {
                     visible: item.linkUsable
                     text: qsTr("Open in browser")
                     onClicked: Qt.openUrlExternally(model.link)
+                }
+                MenuItem {
+                    visible: item.linkUsable
+                    //: shares the article's address through the system share sheet
+                    text: qsTr("Share")
+                    onClicked: shareLink.share(model.title, model.link)
                 }
                 MenuItem {
                     text: item.isUnread ? qsTr("Mark as read") : qsTr("Mark as unread")
